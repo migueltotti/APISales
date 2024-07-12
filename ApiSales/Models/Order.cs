@@ -5,10 +5,17 @@ namespace ApiSales.Models;
 
 public class Order
 {
+    public Order()
+    {
+        Products = new Collection<Product>();
+    }
     
     [Key]
     public int OrderId { get; set; }
+    
     public decimal TotalValue { get; set; }
+    
+    [DataType(DataType.Date, ErrorMessage = "Incorrect format for datetime")]
     public DateTime Date { get; set; }
 
     // Order n : 1 Employee
@@ -16,5 +23,5 @@ public class Order
     public Employee? Employee { get; set; }
     
     // Order n : n Product
-    public ICollection<Product>? Products = [];
+    public ICollection<Product>? Products { get; set; }
 }

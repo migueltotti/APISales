@@ -1,5 +1,8 @@
 
 using ApiSales.Context;
+using ApiSales.Extensions;
+using ApiSales.Repositories;
+using ApiSales.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiSales
@@ -18,6 +21,14 @@ namespace ApiSales
             string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ApiSalesDbContext>(options =>
                 options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString)));
+            
+            // Add Repoitories
+            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -30,6 +41,8 @@ namespace ApiSales
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                // Exception Handler global
+                app.ConfigureExceptionHandler();
             }
 
             app.UseHttpsRedirection();
