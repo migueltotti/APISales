@@ -1,4 +1,7 @@
 
+using ApiSales.Context;
+using Microsoft.EntityFrameworkCore;
+
 namespace ApiSales
 {
     public class Program
@@ -10,6 +13,11 @@ namespace ApiSales
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            // configurando a conexao com o banco de dados MySQL
+            string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<ApiSalesDbContext>(options =>
+                options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString)));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

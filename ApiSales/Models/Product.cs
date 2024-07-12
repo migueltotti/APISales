@@ -6,10 +6,6 @@ namespace ApiSales.Models;
 
 public class Product
 {
-    public Product()
-    {
-        Orders = new Collection<Order>();
-    }
     
     [Key]
     public int ProductId { get; set; }
@@ -23,5 +19,5 @@ public class Product
     public Category? Category { get; set; }
 
     // Product n : n Order
-    public ICollection<Order>? Orders { get; set; }
+    public ICollection<Order>? Orders = [];
 }

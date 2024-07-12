@@ -6,10 +6,6 @@ namespace ApiSales.Models;
 
 public class Employee
 {
-    public Employee()
-    {
-        Orders = new Collection<Order>();
-    }
     
     [Key]
     public int EmployeeId { get; set; }
@@ -19,5 +15,5 @@ public class Employee
     public Permission Permission { get; set; }
 
     // Employee 1 : n Order
-    public ICollection<Order>? Orders { get; set; }
+    public ICollection<Order>? Orders = [];
 }
