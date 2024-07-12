@@ -1,9 +1,12 @@
 
+using System.Text.Json.Serialization;
 using ApiSales.Context;
+using ApiSales.ExceptionHandler;
 using ApiSales.Extensions;
 using ApiSales.Repositories;
 using ApiSales.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace ApiSales
 {
@@ -15,7 +18,14 @@ namespace ApiSales
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add(typeof(ControllersExceptionFilter));
+            })
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
 
             // configurando a conexao com o banco de dados MySQL
             string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
