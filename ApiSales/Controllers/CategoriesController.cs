@@ -1,24 +1,27 @@
+using ApiSales.DTOs.CategoryDTO;
 using ApiSales.Models;
-using ApiSales.Repositories;
 using ApiSales.Repositories.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiSales.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CategoriesController(IUnitOfWork _uof) : Controller
+public class CategoriesController(IUnitOfWork _uof, IMapper mapper) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Category>>> Get()
+    public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get()
     {
         var categories = await _uof.CategoryRepository.GetAllAsync();
 
-        return Ok(categories);
+        var categoriesDto = mapper.Map<CategoryDTOOutput>(categories);
+        
+        return Ok(categoriesDto);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public async Task<ActionResult<Category>> GetCategory(int id)
+    public async Task<ActionResult<CategoryDTOOutput>> GetCategory(int id)
     {
         var category = await _uof.CategoryRepository.GetAsync(c => c.CategoryId == id);
 
@@ -27,46 +30,56 @@ public class CategoriesController(IUnitOfWork _uof) : Controller
             return NotFound($"Category with id = {id} NotFound!");
         }
 
-        return Ok(category);
+        var categoryDto = mapper.Map<CategoryDTOOutput>(category);
+
+        return Ok(categoryDto);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Category>> Post(Category category)
+    public async Task<ActionResult<CategoryDTOOutput>> Post(CategoryDTOInput categoryDtoInput)
     {
-        if (category is null)
+        if (categoryDtoInput is null)
         {
             return BadRequest("Incorrect Data: null");
         }
 
+        var category = mapper.Map<Category>(categoryDtoInput);
+
         var categoryCreated = _uof.CategoryRepository.Create(category);
         await _uof.CommitChanges();
 
+        var categoryDtoCreated = mapper.Map<CategoryDTOOutput>(categoryCreated);
+
         return new CreatedAtRouteResult(nameof(GetCategory),
-            new { id = categoryCreated.CategoryId },
-            categoryCreated);
+            new { id = categoryDtoCreated.CategoryId },
+            categoryDtoCreated);
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public async Task<ActionResult<Category>> Put(int id, [FromBody] Category category)
+    public async Task<ActionResult<CategoryDTOOutput>> Put(int id, [FromBody] CategoryDTOInput categoryDtoInput)
     {
-        if (category is null)
+        if (categoryDtoInput is null)
         {
             return BadRequest("Incorrect Data: null"); 
         }
 
-        if (id != category.CategoryId)
+        if (id != categoryDtoInput.CategoryId)
         {
             return BadRequest("Incorrect Data: id mismatch");
         }
 
+        var category = mapper.Map<Category>(categoryDtoInput);
+
         var categoryUpdated = _uof.CategoryRepository.Update(category);
         await _uof.CommitChanges();
 
-        return Ok(categoryUpdated);
+        var categoryDtoUpdated = mapper.Map<CategoryDTOInput>(categoryUpdated);
+
+        return Ok(categoryDtoUpdated);
     }
     
     [HttpDelete("{id:int:min(1)}")]
-    public async Task<ActionResult<Category>> Delete(int id)
+    public async Task<ActionResult<CategoryDTOOutput>> Delete(int id)
     {
         var category = await _uof.CategoryRepository.GetAsync(c => c.CategoryId == id);
 
@@ -78,6 +91,8 @@ public class CategoriesController(IUnitOfWork _uof) : Controller
         var categoryDeleted = _uof.CategoryRepository.Delete(category);
         await _uof.CommitChanges();
 
-        return Ok(categoryDeleted);
+        var categoryDtoDeleted = mapper.Map<CategoryDTOOutput>(categoryDeleted);
+
+        return Ok(categoryDtoDeleted);
     }
 }

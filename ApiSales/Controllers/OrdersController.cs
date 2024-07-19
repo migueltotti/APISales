@@ -1,23 +1,30 @@
+using ApiSales.DTOs.OrderDTO;
+using ApiSales.DTOs.ProductDTO;
 using ApiSales.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ApiSales.Models;
+using AutoMapper;
 
 namespace ApiSales.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrdersController(IUnitOfWork _uof) : ControllerBase
+public class OrdersController(IUnitOfWork _uof, IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Order>>> Get()
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> Get()
     {
-        return Ok(await _uof.OrderRepository.GetAllAsync());
+        var orders = await _uof.OrderRepository.GetAllAsync();
+
+        var ordersDto = mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
+        
+        return Ok(ordersDto);
     }
 
     // GET api/<OrdersController>/5
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
-    public async Task<ActionResult<Order>> Get(int id)
+    public async Task<ActionResult<OrderDTOOutput>> Get(int id)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
 
@@ -26,49 +33,59 @@ public class OrdersController(IUnitOfWork _uof) : ControllerBase
             return NotFound($"Order with id = {id} NotFound!");
         }
 
-        return Ok(order);
+        var orderDto = mapper.Map<OrderDTOOutput>(order);
+
+        return Ok(orderDto);
     }
 
     // POST api/<OrdersController>
     [HttpPost]
-    public async Task<ActionResult<Order>> Post([FromBody] Order order)
+    public async Task<ActionResult<OrderDTOOutput>> Post([FromBody] OrderDTOInput orderDtoInput)
     {
-        if (order is null)
+        if (orderDtoInput is null)
         {
             return BadRequest("Incorrect Data: null");
         }
+
+        var order = mapper.Map<Order>(orderDtoInput);
 
         var orderCreated = _uof.OrderRepository.Create(order);
         await _uof.CommitChanges();
 
+        var orderDtoCreated = mapper.Map<OrderDTOOutput>(orderCreated);
+
         return new CreatedAtRouteResult("GetOrder",
-            new { id = orderCreated.OrderId },
-            orderCreated);
+            new { id = orderDtoCreated.OrderId },
+            orderDtoCreated);
     }
 
     // PUT api/<OrdersController>/5
     [HttpPut("{id:int:min(1)}")]
-    public async Task<ActionResult<Order>> Put(int id, [FromBody] Order order)
+    public async Task<ActionResult<OrderDTOOutput>> Put(int id, [FromBody] OrderDTOInput orderDtoInput)
     {
-        if (order is null)
+        if (orderDtoInput is null)
         {
             return BadRequest("Incorrect Data: null");
         }
 
-        if (id != order.OrderId)
+        if (id != orderDtoInput.OrderId)
         {
             return BadRequest("Incorrect Data: id mismatch");
         }
 
+        var order = mapper.Map<Order>(orderDtoInput);
+
         var orderUpdated = _uof.OrderRepository.Update(order);
         await _uof.CommitChanges();
 
-        return Ok(orderUpdated);
+        var orderDtoUpdated = mapper.Map<OrderDTOOutput>(orderUpdated);
+
+        return Ok(orderDtoUpdated);
     }
 
     // DELETE api/<OrdersController>/5
     [HttpDelete("{id:int:min(1)}")]
-    public async Task<ActionResult<Order>> Delete(int id)
+    public async Task<ActionResult<OrderDTOOutput>> Delete(int id)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
         
@@ -80,7 +97,9 @@ public class OrdersController(IUnitOfWork _uof) : ControllerBase
         var orderDeleted = _uof.OrderRepository.Delete(order);
         await _uof.CommitChanges();
 
-        return Ok(orderDeleted);
+        var orderDtoDeleted = mapper.Map<OrderDTOOutput>(orderDeleted);
+
+        return Ok(orderDtoDeleted);
     }
 }
 

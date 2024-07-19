@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ApiSales.Extensions;
+namespace ApiSales.ExceptionHandler;
 
 public class ErrorDetail
 {

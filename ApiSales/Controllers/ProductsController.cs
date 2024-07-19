@@ -1,23 +1,29 @@
+using ApiSales.DTOs;
+using ApiSales.DTOs.ProductDTO;
 using ApiSales.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ApiSales.Models;
+using AutoMapper;
 
 namespace ApiSales.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProductsController(IUnitOfWork _uof) : ControllerBase
+public class ProductsController(IUnitOfWork _uof, IMapper mapper) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> Get()
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get()    
     {
-        return Ok(await _uof.ProductRepository.GetAllAsync());
-    }
+        var products = await _uof.ProductRepository.GetAllAsync();
 
-    // GET api/<OrdersController>/5
+        var productsDto = mapper.Map<IEnumerable<ProductDTOOutput>>(products);
+        
+        return Ok(productsDto);
+    }
+    
     [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
-    public async Task<ActionResult<Product>> Get(int id)
+    public async Task<ActionResult<ProductDTOOutput>> Get(int id)
     {
         var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == id);
 
@@ -26,49 +32,57 @@ public class ProductsController(IUnitOfWork _uof) : ControllerBase
             return BadRequest("Incorrect Data: product not found");
         }
 
-        return Ok(product);
+        var productDto = mapper.Map<ProductDTOOutput>(product);
+        
+        return Ok(productDto);
     }
-
-    // POST api/<OrdersController>
+    
     [HttpPost]
-    public async Task<ActionResult<Product>> Post([FromBody] Product product)
+    public async Task<ActionResult<ProductDTOOutput>> Post([FromBody] ProductDTOInput productDtoInput)  
     {
-        if (product is null)
+        if (productDtoInput is null)
         {
             return BadRequest("Incorrect Data: null");
         }
+
+        var product = mapper.Map<Product>(productDtoInput);
 
         var productCreated = _uof.ProductRepository.Create(product);
         await _uof.CommitChanges();
 
-        return new CreatedAtRouteResult("GetProduct",
-            new { id = productCreated.ProductId },
-            productCreated);
-    }
+        var productDtoCreated = mapper.Map<ProductDTOOutput>(productCreated);   
 
-    // PUT api/<OrdersController>/5
+        return new CreatedAtRouteResult("GetProduct",
+            new { id = productDtoCreated.ProductId },
+            productDtoCreated);
+    }
+    
     [HttpPut("{id:int:min(1)}")]
-    public async Task<ActionResult<Product>> Put(int id, [FromBody] Product product)
+    public async Task<ActionResult<ProductDTOOutput>> Put(int id, [FromBody] ProductDTOOutput productDtoInput)  
     {
-        if (product is null)
+        if (productDtoInput is null)
         {
             return BadRequest("Incorrect Data: null");
         }
 
-        if (id != product.ProductId)
+        if (id != productDtoInput.ProductId)
         {
             return BadRequest("Incorrect Data: id mismatch");
         }
 
+        var product = mapper.Map<Product>(productDtoInput);
+
         var productUpdated = _uof.ProductRepository.Update(product);
         await _uof.CommitChanges();
 
-        return Ok(productUpdated);
+        var productDtoUpdated = mapper.Map<ProductDTOOutput>(productUpdated);
+
+        return Ok(productDtoUpdated);
     }
 
     // DELETE api/<OrdersController>/5
     [HttpDelete("{id:int:min(1)}")]
-    public async Task<ActionResult<Product>> Delete(int id)
+    public async Task<ActionResult<ProductDTOOutput>> Delete(int id)
     {
         var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == id);
         
@@ -80,6 +94,8 @@ public class ProductsController(IUnitOfWork _uof) : ControllerBase
         var productDeleted = _uof.ProductRepository.Delete(product);
         await _uof.CommitChanges();
 
-        return Ok(productDeleted);
+        var productDtoDeleted = mapper.Map<ProductDTOOutput>(productDeleted);
+
+        return Ok(productDtoDeleted);
     }
 }

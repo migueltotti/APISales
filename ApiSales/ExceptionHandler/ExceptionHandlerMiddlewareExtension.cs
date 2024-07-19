@@ -1,7 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace ApiSales.Extensions;
+namespace ApiSales.ExceptionHandler;
 
 public static class ExceptionHandlerMiddlewareExtension
 {

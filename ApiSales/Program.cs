@@ -1,8 +1,8 @@
 
 using System.Text.Json.Serialization;
 using ApiSales.Context;
+using ApiSales.DTOs;
 using ApiSales.ExceptionHandler;
-using ApiSales.Extensions;
 using ApiSales.Repositories;
 using ApiSales.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -18,14 +18,17 @@ namespace ApiSales
 
             // Add services to the container.
 
-            builder.Services.AddControllers(options =>
+            builder.Services.AddControllers()/*(options =>
             {
                 options.Filters.Add(typeof(ControllersExceptionFilter));
-            })
+            })*/
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
+
+            builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+            builder.Services.AddProblemDetails();
 
             // configurando a conexao com o banco de dados MySQL
             string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -39,6 +42,9 @@ namespace ApiSales
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            
+            // Add DTO Mapping
+            builder.Services.AddAutoMapper(typeof(MappingDTO));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -52,13 +58,17 @@ namespace ApiSales
                 app.UseSwagger();
                 app.UseSwaggerUI();
                 // Exception Handler global
+                app.UseExceptionHandler();
+            }
+            else
+            {
+                // Exception Handler global
                 app.ConfigureExceptionHandler();
             }
 
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

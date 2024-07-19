@@ -8,9 +8,9 @@ public class ControllersExceptionFilter(ILogger<ControllersExceptionFilter> _log
     
     public void OnException(ExceptionContext context)
     {
-        _logger.LogError(context.Exception, "An unhandled exception ocurred: Status code 500");
+        _logger.LogError(context.Exception, "An unhandled exception occurred: Status code 500");
 
-        context.Result = new ObjectResult("An error ocurred while treating your request: Status code 500")
+        context.Result = new ObjectResult("An error occurred while treating your request: Status code 500")
         {
             StatusCode = StatusCodes.Status500InternalServerError
         };
