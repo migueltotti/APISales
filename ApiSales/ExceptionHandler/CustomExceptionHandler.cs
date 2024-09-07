@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiSales.ExceptionHandler;
 
-internal sealed class CustomExceptionHandler(ILogger<CustomExceptionHandler> logger) : IExceptionHandler
+internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    // MELHORAR ESTE CODIGO
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {   
         logger.LogError("Error Message: {exceptionMessage}, occurred at: {time}",
@@ -13,10 +12,9 @@ internal sealed class CustomExceptionHandler(ILogger<CustomExceptionHandler> log
 
         ProblemDetails problemDetails = new()
         {
-            Title = exception.GetType().Name,
-            Detail = exception.Message,
+            Title = "Server Error",
             Status = StatusCodes.Status500InternalServerError,
-            Instance = httpContext.Request.Path
+            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
         };
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;

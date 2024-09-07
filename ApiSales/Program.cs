@@ -1,4 +1,3 @@
-
 using System.Text.Json.Serialization;
 using ApiSales.Context;
 using ApiSales.DTOs;
@@ -8,71 +7,67 @@ using ApiSales.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace ApiSales
+namespace ApiSales;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+
+        builder.Services.AddControllers()/*(options =>
         {
-            var builder = WebApplication.CreateBuilder(args);
+            options.Filters.Add(typeof(ControllersExceptionFilter));
+        })*/
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
 
-            // Add services to the container.
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails();
 
-            builder.Services.AddControllers()/*(options =>
-            {
-                options.Filters.Add(typeof(ControllersExceptionFilter));
-            })*/
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-            });
+        // configurando a conexao com o banco de dados MySQL
+        string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        builder.Services.AddDbContext<ApiSalesDbContext>(options =>
+            options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString)));
+        
+        // Add Repoitories
+        builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+        builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+        builder.Services.AddScoped<IProductRepository, ProductRepository>();
+        builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        // Add DTO Mapping
+        builder.Services.AddAutoMapper(typeof(MappingDTO));
 
-            builder.Services.AddExceptionHandler<CustomExceptionHandler>();
-            builder.Services.AddProblemDetails();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
 
-            // configurando a conexao com o banco de dados MySQL
-            string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            builder.Services.AddDbContext<ApiSalesDbContext>(options =>
-                options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString)));
-            
-            // Add Repoitories
-            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-            builder.Services.AddScoped<IProductRepository, ProductRepository>();
-            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            
-            // Add DTO Mapping
-            builder.Services.AddAutoMapper(typeof(MappingDTO));
+        var app = builder.Build();
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-                // Exception Handler global
-                app.UseExceptionHandler();
-            }
-            else
-            {
-                // Exception Handler global
-                app.ConfigureExceptionHandler();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-            app.MapControllers();
-
-            app.Run();
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseHttpsRedirection();
+
+        app.UseAuthorization();
+        
+        // Tratamento de execao global usando Middleware, biblioteca IExceptionHandler e ProblemDetails
+        // Em conformidade com a RFC 7231 section 6.6.2
+        app.UseExceptionHandler();
+
+        app.MapControllers();
+
+        app.Run();
     }
 }
