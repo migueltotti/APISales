@@ -1,11 +1,6 @@
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Sales.API.Context;
-using Sales.API.DTOs;
 using Sales.API.ExceptionHandler;
-using Sales.API.Repositories;
-using Sales.API.Repositories.Interfaces;
+using Sales.CrossCutting.IoC;
 
 namespace Sales.API;
 
@@ -17,10 +12,7 @@ public class Program
 
         // Add services to the container.
 
-        builder.Services.AddControllers()/*(options =>
-        {
-            options.Filters.Add(typeof(ControllersExceptionFilter));
-        })*/
+        builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -28,14 +20,17 @@ public class Program
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
+        
+        // Add Services
+        builder.Services.AddInfrastructure(builder.Configuration);
 
-        // configurando a conexao com o banco de dados MySQL
+/*        // configurando a conexao com o banco de dados MySQL
         string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        builder.Services.AddDbContext<ApiSalesDbContext>(options =>
+        builder.Services.AddDbContext<SalesDbContext>(options =>
             options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString)));
         
         // Add Repoitories
-        builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IOrderRepository, OrderRepository>();
         builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -44,7 +39,7 @@ public class Program
         
         // Add DTO Mapping
         builder.Services.AddAutoMapper(typeof(MappingDTO));
-
+*/
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();

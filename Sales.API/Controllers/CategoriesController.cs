@@ -1,8 +1,8 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Sales.API.DTOs.CategoryDTO;
-using Sales.API.Models;
-using Sales.API.Repositories.Interfaces;
+using Sales.Application.DTOs.CategoryDTO;
+using Sales.Domain.Models;
+using Sales.Domain.Interfaces;
 
 namespace Sales.API.Controllers;
 
@@ -10,6 +10,13 @@ namespace Sales.API.Controllers;
 [ApiController]
 public class CategoriesController(IUnitOfWork _uof, IMapper mapper) : Controller
 {
+    [HttpGet]
+    [Route("TesteCleanArchiteture")]
+    public string TesteSalesCleanArchiteture()
+    {
+        return "CleanArchiteture";
+    }
+    
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get()
     {

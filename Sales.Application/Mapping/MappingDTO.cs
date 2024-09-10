@@ -1,11 +1,11 @@
 using AutoMapper;
-using Sales.API.DTOs.CategoryDTO;
-using Sales.API.DTOs.EmployeeDTO;
-using Sales.API.DTOs.OrderDTO;
-using Sales.API.DTOs.ProductDTO;
-using Sales.API.Models;
+using Sales.Application.DTOs.CategoryDTO;
+using Sales.Application.DTOs.UserDTO;
+using Sales.Application.DTOs.OrderDTO;
+using Sales.Application.DTOs.ProductDTO;
+using Sales.Domain.Models;
 
-namespace Sales.API.DTOs;
+namespace Sales.Application.Mapping;
 
 public class MappingDTO : Profile
 {
@@ -20,7 +20,7 @@ public class MappingDTO : Profile
         CreateMap<Order, OrderDTOOutput>().ReverseMap();
         CreateMap<Order, OrderDTOInput>().ReverseMap();
         
-        CreateMap<Employee, EmployeeDTOOutput>().ReverseMap();
-        CreateMap<Employee, EmployeeDTOInput>().ReverseMap();
+        CreateMap<User, UserDTOOutput>().ReverseMap();
+        CreateMap<User, UserDTOInput>().ReverseMap();
     }
 }

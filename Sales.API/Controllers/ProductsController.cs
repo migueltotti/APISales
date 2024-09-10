@@ -1,10 +1,8 @@
-using Sales.API.DTOs;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
-using Sales.API.DTOs.ProductDTO;
-using Sales.API.Models;
-using Sales.API.Repositories.Interfaces;
+using Sales.Application.DTOs.ProductDTO;
+using Sales.Domain.Models;
+using Sales.Domain.Interfaces;
 
 namespace Sales.API.Controllers;
 

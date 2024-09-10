@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Sales.API.Validations;
+namespace Sales.Application.Validations;
 
 public class FirstLetterUpperCase : ValidationAttribute
 {

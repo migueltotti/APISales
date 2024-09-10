@@ -1,124 +1,124 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Sales.API.DTOs.EmployeeDTO;
-using Sales.API.Models;
-using Sales.API.Repositories.Interfaces;
+using Sales.Application.DTOs.UserDTO;
+using Sales.Domain.Interfaces;
+using Sales.Domain.Models;
 
 namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class EmployeesController(IUnitOfWork _uof, IMapper mapper) : ControllerBase
+public class UsersController(IUnitOfWork _uof, IMapper mapper) : ControllerBase
 {
 
-    [HttpGet("getEmployees")]
-    public async Task<ActionResult<IEnumerable<EmployeeDTOOutput>>> Get()
+    [HttpGet("getUsers")]
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> Get()
     {
-        var employees = await _uof.EmployeeRepository.GetAllAsync();
+        var users = await _uof.UserRepository.GetAllAsync();
 
-        var employeesDto = mapper.Map<IEnumerable<EmployeeDTOOutput>>(employees);
+        var usersDto = mapper.Map<IEnumerable<UserDTOOutput>>(users);
         
-        return Ok(employeesDto);
+        return Ok(usersDto);
     }
 
-    [HttpGet("{id:int:min(1)}", Name = "GetEmployee")]
-    public async Task<ActionResult<EmployeeDTOOutput>> GetEmployee(int id)
+    [HttpGet("{id:int:min(1)}", Name = "GetUser")]
+    public async Task<ActionResult<UserDTOOutput>> GetUser(int id)
     {
-        var employee = await _uof.EmployeeRepository.GetAsync(e => e.EmployeeId == id);
+        var user = await _uof.UserRepository.GetAsync(e => e.UserId == id);
 
-        if (employee is null)
+        if (user is null)
         {
-            return NotFound($"Employee with id = {id} not found");
+            return NotFound($"User with id = {id} not found");
         }
         
-        var employeeDto = mapper.Map<EmployeeDTOOutput>(employee);
+        var userDto = mapper.Map<UserDTOOutput>(user);
 
-        return Ok(employeeDto);
+        return Ok(userDto);
     }
 
     [HttpGet("Orders/{id:int:min(1)}")]
-    public async Task<ActionResult<EmployeeDTOOutput>> GetEmployeeOrders(int id)
+    public async Task<ActionResult<UserDTOOutput>> GetUserOrders(int id)
     {
-        var employeeOrder = await _uof.EmployeeRepository.GetEmployeeOrders(id);
+        var userOrder = await _uof.UserRepository.GetUserOrders(id);
 
-        if (employeeOrder is null)
+        if (userOrder is null)
         {
-            return NotFound($"Employee with id = {id} not found");
+            return NotFound($"User with id = {id} not found");
         }
 
-        var employeeDtoOrder = mapper.Map<EmployeeDTOOutput>(employeeOrder);
+        var userDtoOrder = mapper.Map<UserDTOOutput>(userOrder);
 
-        return Ok(employeeDtoOrder);
+        return Ok(userDtoOrder);
     }
 
     [HttpGet("Orders")]
-    public async Task<ActionResult<IEnumerable<EmployeeDTOOutput>>> GetEmployeesOrders()
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersOrders()
     {
-        var employeesOrders = await _uof.EmployeeRepository.GetEmployeesOrders();
+        var usersOrders = await _uof.UserRepository.GetUsersOrders();
 
-        var employeesDtoOrders = mapper.Map<IEnumerable<EmployeeDTOOutput>>(employeesOrders);
+        var usersDtoOrders = mapper.Map<IEnumerable<UserDTOOutput>>(usersOrders);
         
-        return Ok(employeesDtoOrders);
+        return Ok(usersDtoOrders);
     }
 
     [HttpPost]
-    public async Task<ActionResult<EmployeeDTOOutput>> Post(EmployeeDTOInput employeeDtoInput)
+    public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
     {
-        if (employeeDtoInput is null)
+        if (userDtoInput is null)
         {
-            return BadRequest("Employee is null!!");
+            return BadRequest("User is null!!");
         }
 
-        var employee = mapper.Map<Employee>(employeeDtoInput);
+        var user = mapper.Map<User>(userDtoInput);
 
-        var employeeCreated = _uof.EmployeeRepository.Create(employee);
+        var userCreated = _uof.UserRepository.Create(user);
         await _uof.CommitChanges();
 
-        var employeeDtoCreated = mapper.Map<EmployeeDTOOutput>(employeeCreated);
+        var userDtoCreated = mapper.Map<UserDTOOutput>(userCreated);
 
-        return new CreatedAtRouteResult("GetEmployee", 
-            new { id = employeeDtoCreated.EmployeeId },
-            employeeDtoCreated);
+        return new CreatedAtRouteResult("GetUser", 
+            new { id = userDtoCreated.UserId },
+            userDtoCreated);
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public async Task<ActionResult<EmployeeDTOOutput>> Put(EmployeeDTOInput employeeDtoInput, int id)
+    public async Task<ActionResult<UserDTOOutput>> Put(UserDTOInput userDtoInput, int id)
     {
-        if (employeeDtoInput is null)
+        if (userDtoInput is null)
         {
             return BadRequest("Incorrect Data");
         }
 
-        if (employeeDtoInput.EmployeeId != id)
+        if (userDtoInput.UserId != id)
         {
-            return BadRequest("Id does not match Employee Id");
+            return BadRequest("Id does not match User Id");
         }
 
-        var employee = mapper.Map<Employee>(employeeDtoInput);
+        var user = mapper.Map<User>(userDtoInput);
 
-        var employeeUpdate = _uof.EmployeeRepository.Update(employee);
+        var userUpdate = _uof.UserRepository.Update(user);
         await _uof.CommitChanges();
 
-        var employeeDtoUpdated = mapper.Map<EmployeeDTOOutput>(employeeUpdate);
+        var userDtoUpdated = mapper.Map<UserDTOOutput>(userUpdate);
 
-        return Ok(employeeDtoUpdated);
+        return Ok(userDtoUpdated);
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public async Task<ActionResult<EmployeeDTOOutput>> Delete(int id)
+    public async Task<ActionResult<UserDTOOutput>> Delete(int id)
     {
-        var employee = await _uof.EmployeeRepository.GetAsync(e => e.EmployeeId == id);
+        var user = await _uof.UserRepository.GetAsync(e => e.UserId == id);
 
-        if (employee is null)
+        if (user is null)
         {
-            return NotFound($"Employee with id = {id} Not Found!");
+            return NotFound($"User with id = {id} Not Found!");
         }
 
-        var employeeDeleted = _uof.EmployeeRepository.Delete(employee);
+        var userDeleted = _uof.UserRepository.Delete(user);
         await _uof.CommitChanges();
 
-        var employeeDtoDeleted = mapper.Map<EmployeeDTOOutput>(employeeDeleted);
+        var userDtoDeleted = mapper.Map<UserDTOOutput>(userDeleted);
 
-        return Ok(employeeDtoDeleted);
+        return Ok(userDtoDeleted);
     }
 }

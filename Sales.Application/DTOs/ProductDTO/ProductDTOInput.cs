@@ -1,6 +1,6 @@
-using Sales.API.Models.Enums;
+using Sales.Domain.Models.Enums;
 
-namespace Sales.API.DTOs.ProductDTO; 
+namespace Sales.Application.DTOs.ProductDTO; 
 
 public record ProductDTOInput(
     int ProductId,

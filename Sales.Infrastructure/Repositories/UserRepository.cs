@@ -22,7 +22,7 @@ public class UserRepository(SalesDbContext context) : Repository<User>(context),
         var employeeOrders = await _context.Users
             .AsNoTracking()
             .Include(e => e.Orders)
-            .FirstOrDefaultAsync(e => e.EmployeeId == id);
+            .FirstOrDefaultAsync(e => e.UserId == id);
         
         return employeeOrders;
     }

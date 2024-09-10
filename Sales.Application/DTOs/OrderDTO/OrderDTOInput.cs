@@ -1,6 +1,6 @@
-namespace Sales.API.DTOs.OrderDTO;
+namespace Sales.Application.DTOs.OrderDTO;   
 
-public record OrderDTOOutput(
+public record OrderDTOInput(
     int OrderId,
     decimal TotalValue,
     DateTime Date,
