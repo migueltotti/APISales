@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using Sales.Domain.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sales.Domain.Models.Enums;
 
 namespace Sales.Infrastructure.ModelsConfiguration;
 
@@ -26,5 +27,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasMany(x => x.Orders)
             .WithMany(x => x.Products);
+
+        builder.HasData(
+            new Product(1, "Coca-Cola 250", "Coca Cola 250ml garrafinha", 3.5m, TypeValue.Uni, "coca-cola-250.jpg", 10, 2),
+            new Product(2, "Pão Caseiro", "Pão Caseiro feito no dia", 9.9m, TypeValue.Uni, "pao-caseiro.jpg", 3, 2),
+            new Product(3, "Picanha", "Picanha", 69.99m, TypeValue.Kg, "picanha.jpg", 5, 1)
+        );
     }
 }

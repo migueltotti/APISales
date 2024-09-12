@@ -20,4 +20,8 @@ public class SalesDbContext : DbContext
         // Apply configurations of ModelsConfigurations files
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SalesDbContext).Assembly);
     }
+    
+    //dotnet ef database update -s ..\Sales.API\Sales.API.csproj -v
+    //dotnet ef migrations add "" -s ..\Sales.API\Sales.API.csproj
+    // para executar ambos os comandos, precisamos estar na pasta Sales.Infrastructure no terminal
 }

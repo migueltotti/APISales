@@ -11,18 +11,11 @@ namespace Sales.API.Controllers;
 public class CategoriesController(IUnitOfWork _uof, IMapper mapper) : Controller
 {
     [HttpGet]
-    [Route("TesteCleanArchiteture")]
-    public string TesteSalesCleanArchiteture()
-    {
-        return "CleanArchiteture";
-    }
-    
-    [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get()
     {
         var categories = await _uof.CategoryRepository.GetAllAsync();
 
-        var categoriesDto = mapper.Map<CategoryDTOOutput>(categories);
+        var categoriesDto = mapper.Map<IEnumerable<CategoryDTOOutput>>(categories);
         
         return Ok(categoriesDto);
     }

@@ -19,5 +19,10 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.HasMany(c => c.Products)
             .WithOne(p => p.Category)
             .HasForeignKey(p => p.CategoryId);
+
+        builder.HasData(
+            new Category(1, "Carnes Bovinas", "carnes-bovinas.jpg"),
+            new Category(2, "Produtos Diversos", "produtos-diversos.jpg")
+        );
     }
 }
