@@ -23,6 +23,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired();
         builder.Property(x => x.ImageUrl).HasMaxLength(250);
         builder.Property(x => x.StockQuantity).HasDefaultValue(0)
+            .HasMaxLength(80)
             .IsRequired();
 
         builder.HasMany(x => x.Orders)

@@ -1,6 +1,3 @@
-using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
-
 namespace Sales.Domain.Models;
 
 public sealed class Category
@@ -12,14 +9,14 @@ public sealed class Category
     // Category 1 : n Product
     public ICollection<Product>? Products { get; private set; }
 
-    public Category(int categoryId, string? name, string imageUrl)
+    public Category(int categoryId, string? name, string? imageUrl)
     {
         CategoryId = categoryId;
         Name = name;
         ImageUrl = imageUrl;
     }
 
-    public Category(string? name, string imageUrl)
+    public Category(string? name, string? imageUrl)
     {
         Name = name;
         ImageUrl = imageUrl;

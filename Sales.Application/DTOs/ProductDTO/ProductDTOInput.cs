@@ -8,5 +8,7 @@ public record ProductDTOInput(
     string Description,
     decimal Value,
     TypeValue TypeValue,
+    int StockQuantity,
+    string ImageUrl,
     int CategoryId
     );

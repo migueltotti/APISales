@@ -1,34 +1,123 @@
 using System.Linq.Expressions;
+using AutoMapper;
+using FluentValidation;
+using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.ResultPattern;
+using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 
 namespace Sales.Application.Services;
 
 public class UserService : IUserService
 {
-    public Task<IEnumerable<UserDTOOutput>> GetAllUsers()
+    private readonly IUnitOfWork _uof;
+    private readonly IValidator<UserDTOInput> _validator;
+    private readonly IMapper _mapper;
+
+    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper)
     {
-        throw new NotImplementedException();
+        _uof = uof;
+        _validator = validator;
+        _mapper = mapper;
     }
 
-    public Task<UserDTOOutput> GetUserBy(Expression<Func<User, bool>> expression)
+    public async Task<IEnumerable<UserDTOOutput>> GetAllUsers()
     {
-        throw new NotImplementedException();
+        var users = await _uof.UserRepository.GetAllAsync();
+
+        return _mapper.Map<IEnumerable<UserDTOOutput>>(users);
     }
 
-    public Task CreateUser(UserDTOInput user)
+    public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)
     {
-        throw new NotImplementedException();
+        var user = await _uof.UserRepository.GetAsync(expression);
+
+        if (user is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        }
+        
+        var userDto = _mapper.Map<UserDTOOutput>(user);
+
+        return Result<UserDTOOutput>.Success(userDto);
     }
 
-    public Task UpdateUser(UserDTOInput user)
+    public async Task<Result<UserDTOOutput>> CreateUser(UserDTOInput userDtoInput)
     {
-        throw new NotImplementedException();
+        if (userDtoInput is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.DataIsNull);
+        }
+        
+        var validation = await _validator.ValidateAsync(userDtoInput);
+
+        if (!validation.IsValid)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData);
+        }
+
+        var user = _mapper.Map<User>(userDtoInput);
+
+        var userCreated = _uof.UserRepository.Create(user);
+        await _uof.CommitChanges();
+
+        var userDtoCreated = _mapper.Map<UserDTOOutput>(userCreated);
+
+        return Result<UserDTOOutput>.Success(userDtoCreated);
     }
 
-    public Task DeleteUser(int? id)
+    public async Task<Result<UserDTOOutput>> UpdateUser(UserDTOInput userDtoInput, int id)
     {
-        throw new NotImplementedException();
+        if (userDtoInput is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.DataIsNull);
+        }
+
+        if (userDtoInput.UserId != id)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.IdMismatch);
+        }
+        
+        var user = await _uof.UserRepository.GetAsync(x => x.UserId == id);
+
+        if (user is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        }
+        
+        var validation = await _validator.ValidateAsync(userDtoInput);
+
+        if (!validation.IsValid)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData);
+        }
+        
+        var userForUpdate = _mapper.Map<User>(userDtoInput);
+
+        var userUpdate = _uof.UserRepository.Update(userForUpdate);
+        await _uof.CommitChanges();
+
+        var userDtoUpdated = _mapper.Map<UserDTOOutput>(userUpdate);
+        
+        return Result<UserDTOOutput>.Success(userDtoUpdated);
+    }
+
+    public async Task<Result<UserDTOOutput>> DeleteUser(int? id)
+    {
+        var user = await _uof.UserRepository.GetAsync(e => e.UserId == id);
+
+        if (user is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        }
+
+        var userDeleted = _uof.UserRepository.Delete(user);
+        await _uof.CommitChanges();
+
+        var userDtoDeleted = _mapper.Map<UserDTOOutput>(userDeleted);
+
+        return Result<UserDTOOutput>.Success(userDtoDeleted);
     }
 }

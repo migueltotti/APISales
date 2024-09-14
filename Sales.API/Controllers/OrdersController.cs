@@ -1,6 +1,8 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Sales.Application.DTOs.OrderDTO;
+using Sales.Application.Interfaces;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
 
@@ -8,96 +10,66 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrdersController(IUnitOfWork _uof, IMapper mapper) : ControllerBase
+public class OrdersController(IOrderService _service) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> Get()
     {
-        var orders = await _uof.OrderRepository.GetAllAsync();
-
-        var ordersDto = mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
-        
-        return Ok(ordersDto);
+        return Ok(await _service.GetAllOrders());
     }
-
-    // GET api/<OrdersController>/5
+    
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
     public async Task<ActionResult<OrderDTOOutput>> Get(int id)
     {
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
+        var result = await _service.GetOrderBy(o => o.OrderId == id);
 
-        if (order is null)
+        return result.isSuccess switch
         {
-            return NotFound($"Order with id = {id} NotFound!");
-        }
-
-        var orderDto = mapper.Map<OrderDTOOutput>(order);
-
-        return Ok(orderDto);
+            true => Ok(result.value),
+            false => NotFound(result.error.Description)
+        };
     }
-
-    // POST api/<OrdersController>
+    
     [HttpPost]
     public async Task<ActionResult<OrderDTOOutput>> Post([FromBody] OrderDTOInput orderDtoInput)
     {
-        if (orderDtoInput is null)
+        var result = await _service.CreateOrder(orderDtoInput);
+
+        return result.isSuccess switch
         {
-            return BadRequest("Incorrect Data: null");
-        }
-
-        var order = mapper.Map<Order>(orderDtoInput);
-
-        var orderCreated = _uof.OrderRepository.Create(order);
-        await _uof.CommitChanges();
-
-        var orderDtoCreated = mapper.Map<OrderDTOOutput>(orderCreated);
-
-        return new CreatedAtRouteResult("GetOrder",
-            new { id = orderDtoCreated.OrderId },
-            orderDtoCreated);
+            true => new CreatedAtRouteResult("GetOrder",
+                new { id = result.value.OrderId }, result.value),
+            false => BadRequest(result.error.Description)
+        };
     }
-
-    // PUT api/<OrdersController>/5
+    
     [HttpPut("{id:int:min(1)}")]
     public async Task<ActionResult<OrderDTOOutput>> Put(int id, [FromBody] OrderDTOInput orderDtoInput)
     {
-        if (orderDtoInput is null)
+        var result = await _service.UpdateOrder(orderDtoInput, id);
+
+        switch (result.isSuccess)
         {
-            return BadRequest("Incorrect Data: null");
+            case true:
+                return Ok($"Order with id = {result.value.OrderId} has been update successfully");
+            case false:
+                if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
+                    return NotFound(result.error.Description);
+                
+                return BadRequest(result.error.Description);
         }
-
-        if (id != orderDtoInput.OrderId)
-        {
-            return BadRequest("Incorrect Data: id mismatch");
-        }
-
-        var order = mapper.Map<Order>(orderDtoInput);
-
-        var orderUpdated = _uof.OrderRepository.Update(order);
-        await _uof.CommitChanges();
-
-        var orderDtoUpdated = mapper.Map<OrderDTOOutput>(orderUpdated);
-
-        return Ok(orderDtoUpdated);
     }
-
-    // DELETE api/<OrdersController>/5
+    
     [HttpDelete("{id:int:min(1)}")]
     public async Task<ActionResult<OrderDTOOutput>> Delete(int id)
     {
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
+        var result = await _service.DeleteOrder(id);
         
-        if (order is null)
+        return result.isSuccess switch
         {
-            return BadRequest("Incorrect Data: order not found");
-        }
-
-        var orderDeleted = _uof.OrderRepository.Delete(order);
-        await _uof.CommitChanges();
-
-        var orderDtoDeleted = mapper.Map<OrderDTOOutput>(orderDeleted);
-
-        return Ok(orderDtoDeleted);
+            true => Ok($"Order with id = {result.value.OrderId} has been deleted successfully"),
+            false => NotFound(result.error.Description)
+        };
     }
 }
 

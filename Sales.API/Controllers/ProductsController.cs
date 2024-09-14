@@ -1,6 +1,8 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Sales.Application.DTOs.ProductDTO;
+using Sales.Application.Interfaces;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
 
@@ -8,92 +10,66 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProductsController(IUnitOfWork _uof, IMapper mapper) : ControllerBase
+public class ProductsController(IProductService _service, IMapper mapper) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get()    
     {
-        var products = await _uof.ProductRepository.GetAllAsync();
-
-        var productsDto = mapper.Map<IEnumerable<ProductDTOOutput>>(products);
-        
-        return Ok(productsDto);
+        return Ok(await _service.GetAllProducts());
     }
     
     [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
     public async Task<ActionResult<ProductDTOOutput>> Get(int id)
     {
-        var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == id);
+        var result = await _service.GetProductBy(p => p.ProductId == id);
 
-        if (product is null)
+        return result.isSuccess switch
         {
-            return BadRequest("Incorrect Data: product not found");
-        }
-
-        var productDto = mapper.Map<ProductDTOOutput>(product);
-        
-        return Ok(productDto);
+            true => Ok(result.value),
+            false => NotFound(result.error.Description)
+        };
     }
     
     [HttpPost]
     public async Task<ActionResult<ProductDTOOutput>> Post([FromBody] ProductDTOInput productDtoInput)  
     {
-        if (productDtoInput is null)
+        var result = await _service.CreateProduct(productDtoInput);
+
+        return result.isSuccess switch
         {
-            return BadRequest("Incorrect Data: null");
-        }
-
-        var product = mapper.Map<Product>(productDtoInput);
-
-        var productCreated = _uof.ProductRepository.Create(product);
-        await _uof.CommitChanges();
-
-        var productDtoCreated = mapper.Map<ProductDTOOutput>(productCreated);   
-
-        return new CreatedAtRouteResult("GetProduct",
-            new { id = productDtoCreated.ProductId },
-            productDtoCreated);
+            true => new CreatedAtRouteResult("GetProduct",
+                new { id = result.value.ProductId }, result.value),
+            false => BadRequest(result.error.Description)
+        };
     }
     
     [HttpPut("{id:int:min(1)}")]
-    public async Task<ActionResult<ProductDTOOutput>> Put(int id, [FromBody] ProductDTOOutput productDtoInput)  
+    public async Task<ActionResult<ProductDTOOutput>> Put(int id, [FromBody] ProductDTOInput productDtoInput)
     {
-        if (productDtoInput is null)
+        var result = await _service.UpdateProduct(productDtoInput, id);
+
+        switch (result.isSuccess)
         {
-            return BadRequest("Incorrect Data: null");
+            case true:
+                return Ok($"Product with id = {result.value.ProductId} was updated successfully");
+            case false:
+                if (result.error.HttpStatusCode == HttpStatusCode.NotFound)
+                    return NotFound(result.error.Description);
+                
+                return BadRequest(result.error.Description);
         }
-
-        if (id != productDtoInput.ProductId)
-        {
-            return BadRequest("Incorrect Data: id mismatch");
-        }
-
-        var product = mapper.Map<Product>(productDtoInput);
-
-        var productUpdated = _uof.ProductRepository.Update(product);
-        await _uof.CommitChanges();
-
-        var productDtoUpdated = mapper.Map<ProductDTOOutput>(productUpdated);
-
-        return Ok(productDtoUpdated);
     }
 
     // DELETE api/<OrdersController>/5
     [HttpDelete("{id:int:min(1)}")]
     public async Task<ActionResult<ProductDTOOutput>> Delete(int id)
     {
-        var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == id);
+        var result = await _service.DeleteProduct(id);
         
-        if (product is null)
+        return result.isSuccess switch
         {
-            return BadRequest("Incorrect Data: product not found");
-        }
-
-        var productDeleted = _uof.ProductRepository.Delete(product);
-        await _uof.CommitChanges();
-
-        var productDtoDeleted = mapper.Map<ProductDTOOutput>(productDeleted);
-
-        return Ok(productDtoDeleted);
+            true => Ok($"Category with id = {result.value.CategoryId} was deleted successfully"),
+            false => NotFound(result.error.Description)
+        };
     }
 }

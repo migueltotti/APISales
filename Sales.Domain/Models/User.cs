@@ -9,7 +9,6 @@ public sealed class User
     public string? Name { get; private set; }
     public string? Email { get; private set; }
     public string? Password { get; private set; }
-    //[RegularExpression("^[0-9]{3}\\.?[0-9]{3}\\.?[0-9]{3}\\-?[0-9]{2}$")]
     public string? Cpf { get; private set; }
     public DateTime DateBirth { get; private set; }
     
