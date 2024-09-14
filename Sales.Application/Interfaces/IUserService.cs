@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Models;

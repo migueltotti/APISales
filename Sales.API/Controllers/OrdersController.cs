@@ -26,7 +26,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
         return result.isSuccess switch
         {
             true => Ok(result.value),
-            false => NotFound(result.error.Description)
+            false => NotFound(result.GenerateErrorResponse())
         };
     }
     
@@ -39,7 +39,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
         {
             true => new CreatedAtRouteResult("GetOrder",
                 new { id = result.value.OrderId }, result.value),
-            false => BadRequest(result.error.Description)
+            false => BadRequest(result.GenerateErrorResponse())
         };
     }
     
@@ -54,9 +54,9 @@ public class OrdersController(IOrderService _service) : ControllerBase
                 return Ok($"Order with id = {result.value.OrderId} has been update successfully");
             case false:
                 if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
-                    return NotFound(result.error.Description);
+                    return NotFound(result.GenerateErrorResponse());
                 
-                return BadRequest(result.error.Description);
+                return BadRequest(result.GenerateErrorResponse());
         }
     }
     
@@ -68,7 +68,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
         return result.isSuccess switch
         {
             true => Ok($"Order with id = {result.value.OrderId} has been deleted successfully"),
-            false => NotFound(result.error.Description)
+            false => NotFound(result.GenerateErrorResponse())
         };
     }
 }

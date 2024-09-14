@@ -54,7 +54,7 @@ public class ProductService : IProductService
 
         if (!validation.IsValid)
         {
-            return Result<ProductDTOOutput>.Failure(ProductErrors.IncorrectFormatData);
+            return Result<ProductDTOOutput>.Failure(ProductErrors.IncorrectFormatData, validation.Errors);
         }
 
         var product = _mapper.Map<Product>(productDtoInput);
@@ -90,7 +90,7 @@ public class ProductService : IProductService
 
         if (!validation.IsValid)
         {
-            return Result<ProductDTOOutput>.Failure(ProductErrors.IncorrectFormatData);
+            return Result<ProductDTOOutput>.Failure(ProductErrors.IncorrectFormatData, validation.Errors);
         }
         
         var productForUpdate = _mapper.Map<Product>(productDtoInput);

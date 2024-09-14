@@ -26,7 +26,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
         return result.isSuccess switch
         {
             true => Ok(result.value),
-            false => NotFound(result.error.Description)
+            false => NotFound(result.GenerateErrorResponse())
         };
     }
     
@@ -39,7 +39,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
         {
             true => new CreatedAtRouteResult("GetProduct",
                 new { id = result.value.ProductId }, result.value),
-            false => BadRequest(result.error.Description)
+            false => BadRequest(result.GenerateErrorResponse())
         };
     }
     
@@ -56,7 +56,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
                 if (result.error.HttpStatusCode == HttpStatusCode.NotFound)
                     return NotFound(result.error.Description);
                 
-                return BadRequest(result.error.Description);
+                return BadRequest(result.GenerateErrorResponse());
         }
     }
 
@@ -69,7 +69,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
         return result.isSuccess switch
         {
             true => Ok($"Category with id = {result.value.CategoryId} was deleted successfully"),
-            false => NotFound(result.error.Description)
+            false => NotFound(result.GenerateErrorResponse())
         };
     }
 }

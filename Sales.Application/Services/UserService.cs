@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text;
 using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.ProductDTO;
@@ -55,7 +56,7 @@ public class UserService : IUserService
 
         if (!validation.IsValid)
         {
-            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData);
+            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
         }
 
         var user = _mapper.Map<User>(userDtoInput);
@@ -91,7 +92,7 @@ public class UserService : IUserService
 
         if (!validation.IsValid)
         {
-            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData);
+            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
         }
         
         var userForUpdate = _mapper.Map<User>(userDtoInput);

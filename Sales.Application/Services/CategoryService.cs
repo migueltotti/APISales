@@ -50,11 +50,11 @@ public class CategoryService : ICategoryService
             return Result<CategoryDTOOutput>.Failure(CategoryErrors.DataIsNull);
         }
         
-        var validationResult = await _validator.ValidateAsync(categoryDto);
+        var validation = await _validator.ValidateAsync(categoryDto);
         
-        if (!validationResult.IsValid)
+        if (!validation.IsValid)
         {
-            return Result<CategoryDTOOutput>.Failure(CategoryErrors.IncorrectFormatData);
+            return Result<CategoryDTOOutput>.Failure(CategoryErrors.IncorrectFormatData, validation.Errors);
         }
 
         var category = _mapper.Map<Category>(categoryDto);
@@ -84,7 +84,7 @@ public class CategoryService : ICategoryService
         
         if (!validation.IsValid)
         {
-            return Result<CategoryDTOOutput>.Failure(CategoryErrors.IncorrectFormatData);
+            return Result<CategoryDTOOutput>.Failure(CategoryErrors.IncorrectFormatData, validation.Errors);
         }
         
         var category = await _uof.CategoryRepository.GetAsync(c => c.CategoryId == id);

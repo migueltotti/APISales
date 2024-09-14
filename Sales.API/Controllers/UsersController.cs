@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.UserDTO;
@@ -29,7 +30,7 @@ public class UsersController(IUserService _service) : ControllerBase
         return result.isSuccess switch
         {
             true => Ok(result.value),
-            false => NotFound(result.error.Description)
+            false => NotFound(result.GenerateErrorResponse())
         };
     }
 
@@ -64,12 +65,12 @@ public class UsersController(IUserService _service) : ControllerBase
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
     {
         var result = await _service.CreateUser(userDtoInput);
-
+        
         return result.isSuccess switch
         {
             true => CreatedAtRoute("GetUser", 
                 new { id = result.value.UserId }, result.value),
-            false => BadRequest(result.error.Description)
+            false => BadRequest(result.GenerateErrorResponse())
         };
     }
 
@@ -84,9 +85,9 @@ public class UsersController(IUserService _service) : ControllerBase
                 return Ok($"Category with id = {result.value.UserId} was updated successfully");
             case false:
                 if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
-                    return NotFound(result.error.Description);
+                    return NotFound(result.GenerateErrorResponse());
                 
-                return BadRequest(result.error.Description);
+                return BadRequest(result.GenerateErrorResponse());
         }
     }
 
@@ -98,7 +99,7 @@ public class UsersController(IUserService _service) : ControllerBase
         return result.isSuccess switch
         {
             true => Ok($"Category with id = {result.value.UserId} was deleted successfully"),
-            false => NotFound(result.error.Description)
+            false => NotFound(result.GenerateErrorResponse())
         };
     }
 }

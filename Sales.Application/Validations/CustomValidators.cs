@@ -12,12 +12,12 @@ public class CustomValidators
 
     public static bool PasswordFormat(string? password)
     {
-        return Regex.IsMatch(password, "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])\\S.{8,}$");
+        return Regex.IsMatch(password, "^(?=.*\\d)(?=.*[!@#\\$%^&*])(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])\\S.{8,30}$");
         // Must contain at least 8 characters, a-z, A-Z, 0-9 and no line breakers or whitespaces 
     }
 
     public static bool CpfFormat(string? cpf)
     {
-        return Regex.IsMatch(cpf, "^[0-9]{3}\\.?[0-9]{3}\\.?[0-9]{3}\\-?[0-9]{2}$");
+        return Regex.IsMatch(cpf, "^([0-9]{3}\\.[0-9]{3}\\.[0-9]{3}\\-[0-9]{2}|\\[0-9]{11})$");
     }
 }

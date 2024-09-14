@@ -55,7 +55,7 @@ public class OrderService : IOrderService
 
         if (!validation.IsValid)
         {
-            Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData);
+            Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
         }
 
         var order = _mapper.Map<Order>(orderDtoInput);
@@ -84,7 +84,7 @@ public class OrderService : IOrderService
 
         if (!validation.IsValid)
         {
-            Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData);
+            Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
         }
         
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
