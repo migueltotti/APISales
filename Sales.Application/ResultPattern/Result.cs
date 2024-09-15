@@ -3,11 +3,71 @@ using FluentValidation.Results;
 
 namespace Sales.Application.ResultPattern;
 
-public class Result<TValue>
+/*
+public class Result
 {
     public readonly bool isSuccess;
-    public readonly TValue? value;
     public readonly Error error;
+    
+    public readonly List<ValidationFailure> validationFailures = new List<ValidationFailure>();
+    
+    public Result(bool isSuccess, Error error)
+    {
+        if (isSuccess && error != null ||
+            !isSuccess && error == null)
+        {
+            throw new ArgumentException("Result is invalid");
+        }
+        
+        this.isSuccess = isSuccess;
+        this.error = error;
+    }
+    
+    public Result(bool isSuccess, Error error, List<ValidationFailure> validationFailures)
+    {
+        if (isSuccess && error != null ||
+            !isSuccess && error == null)
+        {
+            throw new ArgumentException("Result is invalid");
+        }
+        
+        this.isSuccess = isSuccess;
+        this.error = error;
+        this.validationFailures = validationFailures;
+    }
+    
+    public static Result Success() => new Result(true, Error.None);
+    public static Result Failure(Error error) => new Result(false, error);
+    public static Result Failure(Error error, List<ValidationFailure> validationFailures) => new Result(false, error, validationFailures);
+    
+    public string GenerateErrorResponse()
+    {
+        StringBuilder returnError = new StringBuilder();
+
+        returnError.AppendLine(error.Description);
+
+        if (validationFailures.Any())
+        {
+            foreach (var failures in validationFailures)
+            {
+                returnError.AppendLine($"{failures.PropertyName} : {{");
+                returnError.AppendLine($"    {failures.ErrorMessage}");
+                if(!failures.Equals(validationFailures.Last()))
+                    returnError.AppendLine("},");
+                else
+                    returnError.AppendLine("}");
+            }
+        }
+
+        return returnError.ToString();
+    }
+}*/
+
+public class Result<TValue> //: Result
+{
+    public readonly bool isSuccess;
+    public readonly Error error;
+    public readonly TValue? value;
     
     public readonly List<ValidationFailure> validationFailures = new List<ValidationFailure>();
 
@@ -16,12 +76,11 @@ public class Result<TValue>
         if (isSuccess && value == null ||
             !isSuccess && value != null)
         {
-            throw new Exception("Result is invalid");
+            throw new ArgumentException("Result is invalid");
         }
-        
         this.isSuccess = isSuccess;
-        this.value = value;
         this.error = Error.None;
+        this.value = value;
     }
     
     public Result(bool isSuccess, Error error)

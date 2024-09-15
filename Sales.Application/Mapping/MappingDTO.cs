@@ -19,6 +19,7 @@ public class MappingDTO : Profile
         
         CreateMap<Order, OrderDTOOutput>().ReverseMap();
         CreateMap<Order, OrderDTOInput>().ReverseMap();
+        CreateMap<Order, OrderProductDTO>().ReverseMap();
         
         CreateMap<User, UserDTOOutput>().ReverseMap();
         CreateMap<User, UserDTOInput>().ReverseMap();

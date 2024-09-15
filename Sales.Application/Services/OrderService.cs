@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text.Encodings.Web;
 using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.OrderDTO;
@@ -121,18 +122,76 @@ public class OrderService : IOrderService
         return Result<OrderDTOOutput>.Success(orderDtoDeleted);
     }
 
-    public async Task AddProduct(ProductDTOInput product)
+    public async Task<Result<OrderProductDTO>> AddProduct(int orderId, int productId)
     {
-        throw new NotImplementedException();
+        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+        
+        if(order is null)
+            return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
+        
+        var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
+        
+        if(product is null)
+            return Result<OrderProductDTO>.Failure(ProductErrors.NotFound);
+        
+        var rowsAffected = await _uof.OrderRepository.AddProduct(order.OrderId, product.ProductId);
+
+        if (!(rowsAffected > 0))
+        {
+            return Result<OrderProductDTO>.Failure(OrderErrors.DataIsNull);
+        }
+        
+        _uof.CommitChanges();
+        order.Products.Add(product);
+
+        return Result<OrderProductDTO>.Success(_mapper.Map<OrderProductDTO>(order));
     }
 
-    public async Task RemoveProduct(ProductDTOInput product)
+    public async Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId)
     {
-        throw new NotImplementedException();
+        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+        
+        if(order is null)
+            return Result<IEnumerable<ProductDTOOutput>>.Failure(OrderErrors.NotFound);
+        
+        var productsOrder = await _uof.OrderRepository.GetProducts(orderId);
+
+        if (!productsOrder.Any())
+            return Result<IEnumerable<ProductDTOOutput>>.Failure(OrderErrors.ProductsNotFound);
+        
+        return Result<IEnumerable<ProductDTOOutput>>.Success(_mapper.Map<IEnumerable<ProductDTOOutput>>(productsOrder));
+    }
+
+    public async Task<Result<OrderProductDTO>> RemoveProduct(int orderId, int productId)
+    {
+        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+        
+        if(order is null)
+            return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
+        
+        var rowsAffected = await _uof.OrderRepository.RemoveProduct(order.OrderId, productId);
+
+        if (!(rowsAffected > 0))
+            return Result<OrderProductDTO>.Failure(OrderErrors.ProductNotFound);
+        
+        return Result<OrderProductDTO>.Success(_mapper.Map<OrderProductDTO>(order));
     }
 
     public async Task<OrderReportDTO> GetOrderReport(DateTime startDate, DateTime endDate)
     {
-        throw new NotImplementedException();
+        var orders = await GetAllOrders();
+        
+        var ordersByDate = orders.Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate);
+
+        var products = await _uof.OrderRepository.GetProductsByDate(startDate, endDate);
+
+        return new OrderReportDTO()
+        {
+            OrdersCount = ordersByDate.Count(),
+            OrdersTotalValue = ordersByDate.Sum(o => o.TotalValue),
+            OrdersTotalProducts = products.Count(),
+            OrderMinDate = startDate,
+            OrderMaxDate = endDate
+        };
     }
 }

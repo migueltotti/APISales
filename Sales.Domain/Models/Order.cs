@@ -21,6 +21,7 @@ public sealed class Order
         TotalValue = totalValue;
         OrderDate = orderDate;
         UserId = userId;
+        Products = new Collection<Product>();
     }
 
     public Order(decimal totalValue, DateTime orderDate, int userId)
@@ -28,5 +29,6 @@ public sealed class Order
         TotalValue = totalValue;
         OrderDate = orderDate;
         UserId = userId;
+        Products = new Collection<Product>();
     }
 }

@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Sales.Application.DTOs.OrderDTO;
+using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
@@ -71,5 +72,55 @@ public class OrdersController(IOrderService _service) : ControllerBase
             false => NotFound(result.GenerateErrorResponse())
         };
     }
+    
+    [HttpGet]
+    [Route("{orderId:int:min(1)}/GetProducts")]
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProducts(int orderId)
+    {
+        var result = await _service.GetProductsByOrderId(orderId);
+
+        return result.isSuccess switch
+        {
+            true => Ok(result.value),
+            false => NotFound(result.GenerateErrorResponse())
+        };
+    }
+
+    [HttpGet]
+    [Route("OrderReport/{minDate:datetime}/{maxDate:datetime}")]
+    public async Task<OrderReportDTO> GetOrderReport(DateTime minDate, DateTime maxDate)
+    {
+        var orderReport = await _service.GetOrderReport(minDate, maxDate);
+        
+        return orderReport;
+    }
+    
+    [HttpPost]
+    [Route("{orderId:int:min(1)}/AddProduct/{productId:int:min(1)}")]
+    public async Task<ActionResult<OrderProductDTO>> AddProduct(int orderId, int productId)
+    {
+        var result = await _service.AddProduct(orderId, productId);
+        
+        return result.isSuccess switch
+        {
+            true => Ok($"Product with id = {productId} was added successfully on Order with id = {orderId}"),
+            false => NotFound(result.GenerateErrorResponse())
+        };
+    }
+
+    [HttpDelete]
+    [Route("{orderId:int:min(1)}/RemoveProduct/{productId:int:min(1)}")]
+    public async Task<ActionResult<OrderProductDTO>> RemoveProduct(int orderId, int productId)
+    {
+        var result = await _service.RemoveProduct(orderId, productId);
+
+        return result.isSuccess switch
+        {
+            true => Ok($"Product with id = {productId} was removed from Order with id = {orderId} successfully"),
+            false => NotFound(result.GenerateErrorResponse())
+        };
+    }
+    
+    
 }
 
