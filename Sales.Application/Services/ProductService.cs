@@ -3,10 +3,12 @@ using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
-using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.Parameters;
+using Sales.Application.Parameters.ModelsParameters.ProductParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 using X.PagedList;
 using X.PagedList.Extensions;
 
@@ -32,9 +34,58 @@ public class ProductService : IProductService
         return _mapper.Map<IEnumerable<ProductDTOOutput>>(products);
     }
 
-    public async Task<IPagedList<ProductDTOOutput>> GetAllProducts(ProductParameters parameters)
+    public async Task<IPagedList<ProductDTOOutput>> GetAllProducts(QueryStringParameters parameters)
     {
         var products = (await GetAllProducts()).OrderBy(p => p.Name);
+        
+        return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(ProductFilterValue parameters)
+    {
+        var products = await GetAllProducts();
+
+        if (parameters is { Price: not null, PriceCriteria: not null })
+        {
+            products = parameters.PriceCriteria.ToLower() switch
+            {
+                "greater" => products.Where(p => p.Value > parameters.Price).OrderBy(p => p.Value),
+                "equal" => products.Where(p => p.Value == parameters.Price).OrderBy(p => p.Value),
+                "less" => products.Where(p => p.Value < parameters.Price).OrderBy(p => p.Value),
+                _ => products
+            };
+        }
+        
+        return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByTypeValue(ProductFilterTypeValue parameters)
+    {
+        var products = await GetAllProducts();
+
+        if (parameters is { TypeValue: not null })
+        {
+            products = parameters.TypeValue.ToLower() switch
+            {
+                "un" => products.Where(p => p.TypeValue == TypeValue.Uni).OrderBy(p => p.Value),
+                "kg" => products.Where(p => p.TypeValue == TypeValue.Kg).OrderBy(p => p.Value),
+                _ => products.OrderBy(p => p.Value)
+            };
+        }
+        
+        return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByName(ProductFilterName parameters)
+    {
+        var products = await GetAllProducts();
+
+        if (parameters.Name is not null)
+        {
+            products = products.Where(p => p.Name.Contains(parameters.Name,
+                                                            StringComparison.InvariantCultureIgnoreCase))
+                                .OrderBy(p => p.Name);
+        }
         
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }

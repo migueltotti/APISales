@@ -12,6 +12,12 @@ public interface IUserService
 {
     Task<IEnumerable<UserDTOOutput>> GetAllUsers();
     Task<IPagedList<UserDTOOutput>> GetAllUsers(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByPermission(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByName(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByCpf(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserParameters parameters);
     Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression);
     Task<Result<UserDTOOutput>> CreateUser(UserDTOInput user);
     Task<Result<UserDTOOutput>> UpdateUser(UserDTOInput user, int id);

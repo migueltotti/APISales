@@ -1,9 +1,13 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.CategoryDTO;
+using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
-using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.Parameters;
+using Sales.Application.Parameters.ModelsParameters.CategoryParameters;
+using Sales.Application.Parameters.ModelsParameters.ProductParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
@@ -32,10 +36,24 @@ public class CategoryService : ICategoryService
         return _mapper.Map<IEnumerable<CategoryDTOOutput>>(categories);
     }
     
-    public async Task<IPagedList<CategoryDTOOutput>> GetAllCategories(CategoryParameters parameters)
+    public async Task<IPagedList<CategoryDTOOutput>> GetAllCategories(QueryStringParameters parameters)
     {
         var categories = (await GetAllCategories()).OrderBy(c => c.Name);
 
+        return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesByName(CategoryFilterName parameters)
+    {
+        var categories = await GetAllCategories();
+
+        if (parameters.Name is not null)
+        {
+            categories = categories.Where(c => c.Name.Contains(parameters.Name,
+                    StringComparison.InvariantCultureIgnoreCase))
+                .OrderBy(c => c.Name);
+        } 
+        
         return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
@@ -51,6 +69,39 @@ public class CategoryService : ICategoryService
         var categoryDto = _mapper.Map<CategoryDTOOutput>(category);
 
         return Result<CategoryDTOOutput>.Success(categoryDto);
+    }
+
+    public async Task<IPagedList<ProductDTOOutput>> GetProducts(int categoryId, QueryStringParameters parameters)
+    {
+        var products = await _uof.ProductRepository.GetAllAsync();
+        
+        var categoryProducts = products.Where(p => p.CategoryId == categoryId);
+        
+        var categoryProductsDto = _mapper.Map<IEnumerable<ProductDTOOutput>>(categoryProducts);
+        
+        return categoryProductsDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(int categoryId, ProductFilterValue parameters)
+    {
+        var products = await _uof.ProductRepository.GetAllAsync();
+        
+        var categoryProducts = products.Where(p => p.CategoryId == categoryId);
+
+        if (parameters is { Price: not null, PriceCriteria: not null })
+        {
+            categoryProducts = parameters.PriceCriteria.ToLower() switch
+            {
+                "greater" => categoryProducts.Where(p => p.Value > parameters.Price).OrderBy(p => p.Value),
+                "equal" => categoryProducts.Where(p => p.Value == parameters.Price).OrderBy(p => p.Value),
+                "less" => categoryProducts.Where(p => p.Value < parameters.Price).OrderBy(p => p.Value),
+                _ => categoryProducts
+            };
+        }
+        
+        var categoryProductsDto = _mapper.Map<IEnumerable<ProductDTOOutput>>(categoryProducts);
+        
+        return categoryProductsDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<Result<CategoryDTOOutput>> CreateCategory(CategoryDTOInput categoryDto)

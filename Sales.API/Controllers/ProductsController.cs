@@ -4,8 +4,9 @@ using AutoMapper;
 using System.Text.Json;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
-using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.Parameters.ModelsParameters.ProductParameters;
 
 namespace Sales.API.Controllers;
 
@@ -14,9 +15,45 @@ namespace Sales.API.Controllers;
 public class ProductsController(IProductService _service, IMapper mapper) : ControllerBase
 {
     [HttpGet]   
-    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get([FromQuery] ProductParameters parameters)    
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)    
     {
         var productsPaged = await _service.GetAllProducts(parameters);
+
+        var metadata = productsPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(productsPaged.ToList());
+    }
+    
+    [HttpGet("value")]
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByValue([FromQuery] ProductFilterValue parameters)    
+    {
+        var productsPaged = await _service.GetProductsByValue(parameters);
+
+        var metadata = productsPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(productsPaged.ToList());
+    }
+    
+    [HttpGet("typeValue")]
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByTypeValue([FromQuery] ProductFilterTypeValue parameters)    
+    {
+        var productsPaged = await _service.GetProductsByTypeValue(parameters);
+
+        var metadata = productsPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(productsPaged.ToList());
+    }
+    
+    [HttpGet("name")]
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByName([FromQuery] ProductFilterName parameters)    
+    {
+        var productsPaged = await _service.GetProductsByName(parameters);  
 
         var metadata = productsPaged.GenerateMetadataHeader();
         
