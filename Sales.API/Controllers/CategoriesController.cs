@@ -1,9 +1,9 @@
-using AutoMapper;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.Interfaces;
-using Sales.Application.ResultPattern;
-using Sales.Domain.Interfaces;
+using Sales.Application.Parameters.Extension;
+using Sales.Application.Parameters.ModelsParameters;
 
 namespace Sales.API.Controllers;
 
@@ -12,9 +12,15 @@ namespace Sales.API.Controllers;
 public class CategoriesController(ICategoryService service) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get()
+    public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get([FromQuery] CategoryParameters parameters)
     {
-        return Ok(await service.GetAllCategories());
+        var categories = await service.GetAllCategories(parameters);
+
+        var metadata = categories.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(categories.ToList());
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]

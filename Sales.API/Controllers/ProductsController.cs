@@ -1,10 +1,11 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
+using System.Text.Json;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
-using Sales.Domain.Models;
-using Sales.Domain.Interfaces;
+using Sales.Application.Parameters.Extension;
+using Sales.Application.Parameters.ModelsParameters;
 
 namespace Sales.API.Controllers;
 
@@ -12,10 +13,16 @@ namespace Sales.API.Controllers;
 [ApiController]
 public class ProductsController(IProductService _service, IMapper mapper) : ControllerBase
 {
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get()    
+    [HttpGet]   
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get([FromQuery] ProductParameters parameters)    
     {
-        return Ok(await _service.GetAllProducts());
+        var productsPaged = await _service.GetAllProducts(parameters);
+
+        var metadata = productsPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(productsPaged.ToList());
     }
     
     [HttpGet("{id:int:min(1)}", Name = "GetProduct")]

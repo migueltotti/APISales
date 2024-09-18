@@ -1,9 +1,12 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters.Extension;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 
@@ -15,11 +18,15 @@ public class UsersController(IUserService _service) : ControllerBase
 {
 
     [HttpGet("getUsers")]
-    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> Get()
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> Get([FromQuery] UserParameters parameters)
     {
-        var usersDto = await _service.GetAllUsers();
+        var usersPaged = await _service.GetAllUsers(parameters);
+
+        var metadata = usersPaged.GenerateMetadataHeader();
         
-        return Ok(usersDto);
+        Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(usersPaged.ToList());
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetUser")]

@@ -5,9 +5,12 @@ using FluentValidation;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace Sales.Application.Services;
 
@@ -29,6 +32,13 @@ public class OrderService : IOrderService
         var orders = await _uof.OrderRepository.GetAllAsync();
 
         return _mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
+    }
+
+    public async Task<IPagedList<OrderDTOOutput>> GetAllOrders(OrderParameters parameters)
+    {
+        var orders = (await GetAllOrders()).OrderBy(o => o.OrderDate);
+        
+        return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<Result<OrderDTOOutput>> GetOrderBy(Expression<Func<Order, bool>> expression)

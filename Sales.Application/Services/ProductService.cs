@@ -3,9 +3,12 @@ using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace Sales.Application.Services;
 
@@ -27,6 +30,13 @@ public class ProductService : IProductService
         var products = await _uof.ProductRepository.GetAllAsync();
 
         return _mapper.Map<IEnumerable<ProductDTOOutput>>(products);
+    }
+
+    public async Task<IPagedList<ProductDTOOutput>> GetAllProducts(ProductParameters parameters)
+    {
+        var products = (await GetAllProducts()).OrderBy(p => p.Name);
+        
+        return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<Result<ProductDTOOutput>> GetProductBy(Expression<Func<Product, bool>> expression)

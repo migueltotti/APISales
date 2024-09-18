@@ -1,13 +1,14 @@
 using System.Linq.Expressions;
-using System.Text;
 using AutoMapper;
 using FluentValidation;
-using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace Sales.Application.Services;
 
@@ -29,6 +30,13 @@ public class UserService : IUserService
         var users = await _uof.UserRepository.GetAllAsync();
 
         return _mapper.Map<IEnumerable<UserDTOOutput>>(users);
+    }
+
+    public async Task<IPagedList<UserDTOOutput>> GetAllUsers(UserParameters parameters)
+    {
+        var users = (await GetAllUsers()).OrderBy(u => u.Name);
+        
+        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)

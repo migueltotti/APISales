@@ -3,9 +3,12 @@ using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace Sales.Application.Services;
 
@@ -27,6 +30,13 @@ public class CategoryService : ICategoryService
         var categories = await _uof.CategoryRepository.GetAllAsync();
         
         return _mapper.Map<IEnumerable<CategoryDTOOutput>>(categories);
+    }
+    
+    public async Task<IPagedList<CategoryDTOOutput>> GetAllCategories(CategoryParameters parameters)
+    {
+        var categories = (await GetAllCategories()).OrderBy(c => c.Name);
+
+        return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<Result<CategoryDTOOutput>> GetCategoryBy(Expression<Func<Category, bool>> expression)

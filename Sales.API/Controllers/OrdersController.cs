@@ -1,9 +1,12 @@
 using System.Net;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters.Extension;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
 
@@ -14,9 +17,15 @@ namespace Sales.API.Controllers;
 public class OrdersController(IOrderService _service) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> Get()
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> Get([FromQuery] OrderParameters parameters)
     {
-        return Ok(await _service.GetAllOrders());
+        var ordersPaged = await _service.GetAllOrders(parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
     }
     
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
