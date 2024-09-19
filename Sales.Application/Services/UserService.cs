@@ -3,10 +3,13 @@ using AutoMapper;
 using FluentValidation;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.Parameters.ModelsParameters.UserParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 using X.PagedList;
 using X.PagedList.Extensions;
 
@@ -32,11 +35,90 @@ public class UserService : IUserService
         return _mapper.Map<IEnumerable<UserDTOOutput>>(users);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetAllUsers(UserParameters parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetAllUsers(QueryStringParameters parameters)
     {
         var users = (await GetAllUsers()).OrderBy(u => u.Name);
         
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByRole(UserFilterRole parameters)
+    {
+        var users = await GetAllUsers();
+
+        if (parameters.Role.ToLower() is not null)
+        {
+            users = parameters.Role switch
+            {
+                "admin" => users.Where(u => u.Role == Role.Admin).OrderBy(u => u.Name),
+                "employee" => users.Where(u => u.Role == Role.Employee).OrderBy(u => u.Name),
+                "customer" => users.Where(u => u.Role == Role.Customer).OrderBy(u => u.Name),
+                _ => users.OrderBy(u => u.Name)
+            };
+        }
+        
+        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByName(UserFilterName parameters)
+    {
+        var users = await GetAllUsers();
+
+        if (parameters.Name is not null)
+        {
+            users = users.Where(u => u.Name.Contains(parameters.Name,
+                StringComparison.InvariantCultureIgnoreCase))
+                .OrderBy(u => u.Name);
+        }
+        
+        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<Result<UserDTOOutput>> GetUsersByCpf(UserFilterCpf parameters)
+    {
+        var user = await _uof.UserRepository.GetAsync(u => u.Cpf == parameters.Cpf);
+
+        if (user is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.CpfNotFound);
+        }
+        
+        return Result<UserDTOOutput>.Success(_mapper.Map<UserDTOOutput>(user));
+    }
+
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserFilterPoints parameters)
+    {
+        var users = await GetAllUsers();
+
+        if (parameters is { Points: not null, PointsCriteria: not null })
+        {
+            users = parameters.PointsCriteria.ToLower() switch
+            {
+                //"greater" => users.Where(u => u.Points > parameters.Points).OrderBy(u => u.Name),
+                //"equal" => users.Where(u => u.Points == parameters.Points).OrderBy(u => u.Name),
+                //"less" => users.Where(u => u.Points < parameters.Points).OrderBy(u => u.Name),
+                _ => users.OrderBy(u => u.Name)
+            };
+        }
+        
+        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserFilterAffiliation parameters)
+    {
+        var users = await GetAllUsers();
+
+        if (parameters.Affiliation is not null)
+        {
+            //users = users.Where(u => u.Affiliation == parameters.Affiliation).OrderBy(u => u.Name);
+        }
+        
+        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserFilterByOrders parameters)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)

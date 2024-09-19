@@ -5,7 +5,9 @@ using FluentValidation;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.Parameters.ModelsParameters.OrderParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -34,11 +36,69 @@ public class OrderService : IOrderService
         return _mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
     }
 
-    public async Task<IPagedList<OrderDTOOutput>> GetAllOrders(OrderParameters parameters)
+    public async Task<IPagedList<OrderDTOOutput>> GetAllOrders(QueryStringParameters parameters)
     {
         var orders = (await GetAllOrders()).OrderBy(o => o.OrderDate);
         
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByDate(OrderFilterDate parameters)
+    {
+        var orders = await GetAllOrders();
+
+        if (parameters.From is not null)
+        {
+            orders = parameters.To switch
+            {
+                null => orders.Where(o => o.OrderDate >= parameters.From)
+                    .OrderBy(o => o.OrderDate),
+                not null => orders.Where(o => o.OrderDate >= parameters.From && o.OrderDate <= parameters.To)
+                    .OrderBy(o => o.OrderDate)
+            };
+        }
+        
+        return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByValue(OrderFilterValue parameters)
+    {
+        var orders = await GetAllOrders();
+
+        if (parameters is { Price: not null, PriceCriteria: not null })
+        {
+            orders = parameters.PriceCriteria.ToLower() switch
+            {
+                "greater" => orders.Where(o => o.TotalValue > parameters.Price)
+                    .OrderBy(o => o.OrderDate),
+                "equal" => orders.Where(o => o.TotalValue == parameters.Price)
+                    .OrderBy(o => o.OrderDate),
+                "less" => orders.Where(o => o.TotalValue < parameters.Price)
+                    .OrderBy(o => o.OrderDate),
+                _ => orders.OrderBy(o => o.OrderDate)
+            };
+        }
+        
+        return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderFilterProduct parameters)
+    {
+        var orders = new List<Order>();
+
+        if (parameters.ProductName is not null)
+        {
+            orders = (await _uof.OrderRepository.GetOrdersByProduct(parameters.ProductName)).ToList();
+        }
+        
+        var orderDto = _mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
+        
+        return orderDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public Task<IPagedList<OrderDTOOutput>> GetOrdersNotCompleted(QueryStringParameters parameters)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<Result<OrderDTOOutput>> GetOrderBy(Expression<Func<Order, bool>> expression)

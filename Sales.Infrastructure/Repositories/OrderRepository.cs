@@ -11,6 +11,14 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
     }
 
+    public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)
+    {
+        var orders = _context.Orders.FromSql(
+            $"SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId FROM salesdb.Order o JOIN salesdb.OrderProduct op On op.OrdersOrderId = o.OrderId JOIN salesdb.Product p ON op.ProductsProductId = p.ProductId WHERE p.Name LIKE (concat('%', {productName}, '%'))");
+        
+        return await orders.ToListAsync();
+    }
+
     public async Task<IEnumerable<Product>> GetProductsByDate(DateTime minDate, DateTime maxDate)
     {
         var products = _context.Products.FromSql(

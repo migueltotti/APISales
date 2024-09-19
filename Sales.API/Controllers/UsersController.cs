@@ -2,11 +2,14 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using AutoMapper;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.Parameters.ModelsParameters.UserParameters;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 
@@ -18,13 +21,49 @@ public class UsersController(IUserService _service) : ControllerBase
 {
 
     [HttpGet("getUsers")]
-    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> Get([FromQuery] UserParameters parameters)
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)
     {
         var usersPaged = await _service.GetAllUsers(parameters);
 
         var metadata = usersPaged.GenerateMetadataHeader();
         
-        Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(metadata));
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(usersPaged.ToList());
+    }
+    
+    [HttpGet("name")]
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByName([FromQuery] UserFilterName parameters)
+    {
+        var usersPaged = await _service.GetUsersByName(parameters);
+
+        var metadata = usersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(usersPaged.ToList());
+    }
+    
+    [HttpGet("cpf")]
+    public async Task<ActionResult<UserDTOOutput>> GetUsersBycpf([FromQuery] UserFilterCpf parameters)
+    {
+        var result = await _service.GetUsersByCpf(parameters);
+
+        return result.isSuccess switch
+        {
+            true => Ok(result.value),
+            false => NotFound(result.GenerateErrorResponse())
+        };
+    }
+    
+    [HttpGet("role")]
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByRole([FromQuery] UserFilterRole parameters)
+    {
+        var usersPaged = await _service.GetUsersByRole(parameters);
+
+        var metadata = usersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
         
         return Ok(usersPaged.ToList());
     }
@@ -39,33 +78,6 @@ public class UsersController(IUserService _service) : ControllerBase
             true => Ok(result.value),
             false => NotFound(result.GenerateErrorResponse())
         };
-    }
-
-    [HttpGet("Orders/{id:int:min(1)}")]
-    public async Task<ActionResult<UserDTOOutput>> GetUserOrders(int id)
-    {
-        /*var userOrder = await _uof.UserRepository.GetUserOrders(id);
-
-        if (userOrder is null)
-        {
-            return NotFound($"User with id = {id} not found");
-        }
-
-        var userDtoOrder = mapper.Map<UserDTOOutput>(userOrder);
-
-        return Ok(userDtoOrder);*/
-        return Ok("Not implemented");
-    }
-
-    [HttpGet("Orders")]
-    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersOrders()
-    {
-        /*var usersOrders = await _uof.UserRepository.GetUsersOrders();
-
-        var usersDtoOrders = mapper.Map<IEnumerable<UserDTOOutput>>(usersOrders);
-        
-        return Ok(usersDtoOrders);*/
-        return Ok("Not implemented");
     }
 
     [HttpPost]
