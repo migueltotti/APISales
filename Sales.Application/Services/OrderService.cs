@@ -10,6 +10,7 @@ using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 using X.PagedList;
 using X.PagedList.Extensions;
 
@@ -158,12 +159,32 @@ public class OrderService : IOrderService
         return Result<OrderDTOOutput>.Success(orderDtoDeleted);
     }
 
+    public async Task<Result<OrderDTOOutput>> FinishOrder(int orderId)
+    {
+        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+
+        if (order is null)
+        {
+            return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
+        }
+        
+        order.FinishOrder();
+        _uof.OrderRepository.Update(order);
+        
+        await _uof.CommitChanges();
+        
+        return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
+    }
+
     public async Task<Result<OrderProductDTO>> AddProduct(int orderId, int productId)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
         
         if(order is null)
             return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
+
+        if (order.OrderStatus is Status.Finished)
+            return Result<OrderProductDTO>.Failure(OrderErrors.OrderFinished);
         
         var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
         

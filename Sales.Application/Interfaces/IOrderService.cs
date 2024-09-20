@@ -23,6 +23,7 @@ public interface IOrderService
     Task<Result<OrderDTOOutput>> CreateOrder(OrderDTOInput order);
     Task<Result<OrderDTOOutput>> UpdateOrder(OrderDTOInput order, int id);
     Task<Result<OrderDTOOutput>> DeleteOrder(int? id);
+    Task<Result<OrderDTOOutput>> FinishOrder(int orderId);
     Task<Result<OrderProductDTO>> AddProduct(int orderId, int  productId);
     Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId);
     Task<Result<OrderProductDTO>> RemoveProduct(int orderId, int productId);

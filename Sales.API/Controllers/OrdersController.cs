@@ -168,7 +168,17 @@ public class OrdersController(IOrderService _service) : ControllerBase
             false => NotFound(result.GenerateErrorResponse())
         };
     }
-    
-    
+
+    [HttpGet("finish/{orderId:int:min(1)}")]
+    public async Task<ActionResult<OrderDTOOutput>> FinishOrder(int orderId)
+    {
+        var result = await _service.FinishOrder(orderId);
+
+        return result.isSuccess switch
+        {
+            true => Ok(result.value),
+            false => NotFound(result.GenerateErrorResponse())
+        };
+    }
 }
 
