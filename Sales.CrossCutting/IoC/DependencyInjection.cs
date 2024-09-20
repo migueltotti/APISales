@@ -9,6 +9,12 @@ using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Mapping;
 using Sales.Application.Services;
+using Sales.Application.Strategy;
+using Sales.Application.Strategy.Factory;
+using Sales.Application.Strategy.FilterImplementation.CategoryStrategy;
+using Sales.Application.Strategy.FilterImplementation.OrderStrategy;
+using Sales.Application.Strategy.FilterImplementation.ProductStrategy;
+using Sales.Application.Strategy.FilterImplementation.UserStrategy;
 using Sales.Application.Validations;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -39,6 +45,25 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IOrderService, OrderService>();
+        
+        // Add Strategy Pattern
+        services.AddScoped<ICategoryFilterStrategy, CategoryNameFilter>();
+        
+        services.AddScoped<IProductFilterStrategy, ProductNameFilter>();
+        services.AddScoped<IProductFilterStrategy, ProductValueFilter>();
+        services.AddScoped<IProductFilterStrategy, ProductTypeValueFilter>();
+        
+        services.AddScoped<IUserFilterStrategy, UserNameFilter>();
+        services.AddScoped<IUserFilterStrategy, UserRoleFilter>();
+        
+        services.AddScoped<IOrderFilterStrategy, OrderDateFilter>();
+        services.AddScoped<IOrderFilterStrategy, OrderValueFilter>();
+        
+        // Add Factory Pattern
+        services.AddScoped<ICategoryFilterFactory, CategoryFilterFactory>();
+        services.AddScoped<IProductFilterFactory, ProductFilterFactory>();
+        services.AddScoped<IUserFilterFactory, UserFilterFactory>();
+        services.AddScoped<IOrderFilterFactory, OrderFilterFactory>();
         
         // Add FluentValidation
         services.AddScoped<IValidator<CategoryDTOInput>, CategoryValidator>();

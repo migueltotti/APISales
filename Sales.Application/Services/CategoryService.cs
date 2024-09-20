@@ -43,7 +43,7 @@ public class CategoryService : ICategoryService
         return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesByName(CategoryFilterName parameters)
+    public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesByName(CategoryParameters parameters)
     {
         var categories = await GetAllCategories();
 

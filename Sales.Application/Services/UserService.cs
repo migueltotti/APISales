@@ -42,11 +42,11 @@ public class UserService : IUserService
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByRole(UserFilterRole parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByRole(UserParameters parameters)
     {
         var users = await GetAllUsers();
 
-        if (parameters.Role.ToLower() is not null)
+        /*if (parameters.Role.ToLower() is not null)
         {
             users = parameters.Role switch
             {
@@ -55,26 +55,26 @@ public class UserService : IUserService
                 "customer" => users.Where(u => u.Role == Role.Customer).OrderBy(u => u.Name),
                 _ => users.OrderBy(u => u.Name)
             };
-        }
+        }*/
         
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByName(UserFilterName parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByName(UserParameters parameters)
     {
         var users = await GetAllUsers();
 
-        if (parameters.Name is not null)
+        /*if (parameters.Name is not null)
         {
             users = users.Where(u => u.Name.Contains(parameters.Name,
                 StringComparison.InvariantCultureIgnoreCase))
                 .OrderBy(u => u.Name);
-        }
+        }*/
         
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<Result<UserDTOOutput>> GetUsersByCpf(UserFilterCpf parameters)
+    public async Task<Result<UserDTOOutput>> GetUsersByCpf(UserParameters parameters)
     {
         var user = await _uof.UserRepository.GetAsync(u => u.Cpf == parameters.Cpf);
 
@@ -86,7 +86,7 @@ public class UserService : IUserService
         return Result<UserDTOOutput>.Success(_mapper.Map<UserDTOOutput>(user));
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserFilterPoints parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserParameters parameters)
     {
         var users = await GetAllUsers();
 
@@ -104,7 +104,7 @@ public class UserService : IUserService
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserFilterAffiliation parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserParameters parameters)
     {
         var users = await GetAllUsers();
 
@@ -116,7 +116,7 @@ public class UserService : IUserService
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserFilterByOrders parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserParameters parameters)
     {
         throw new NotImplementedException();
     }

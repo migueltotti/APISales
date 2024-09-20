@@ -43,11 +43,11 @@ public class OrderService : IOrderService
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByDate(OrderFilterDate parameters)
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByDate(OrderParameters parameters)
     {
         var orders = await GetAllOrders();
 
-        if (parameters.From is not null)
+        /*if (parameters.From is not null)
         {
             orders = parameters.To switch
             {
@@ -56,16 +56,16 @@ public class OrderService : IOrderService
                 not null => orders.Where(o => o.OrderDate >= parameters.From && o.OrderDate <= parameters.To)
                     .OrderBy(o => o.OrderDate)
             };
-        }
+        }*/
         
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByValue(OrderFilterValue parameters)
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByValue(OrderParameters parameters)
     {
         var orders = await GetAllOrders();
 
-        if (parameters is { Price: not null, PriceCriteria: not null })
+        /*if (parameters is { Price: not null, PriceCriteria: not null })
         {
             orders = parameters.PriceCriteria.ToLower() switch
             {
@@ -77,12 +77,12 @@ public class OrderService : IOrderService
                     .OrderBy(o => o.OrderDate),
                 _ => orders.OrderBy(o => o.OrderDate)
             };
-        }
+        }*/
         
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderFilterProduct parameters)
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters)
     {
         var orders = new List<Order>();
 

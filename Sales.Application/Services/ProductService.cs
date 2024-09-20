@@ -4,6 +4,7 @@ using FluentValidation;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.Parameters.ModelsParameters.ProductParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
@@ -41,7 +42,7 @@ public class ProductService : IProductService
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(ProductFilterValue parameters)
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(ProductParameters parameters)
     {
         var products = await GetAllProducts();
 
@@ -59,7 +60,7 @@ public class ProductService : IProductService
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByTypeValue(ProductFilterTypeValue parameters)
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByTypeValue(ProductParameters parameters)
     {
         var products = await GetAllProducts();
 
@@ -76,16 +77,16 @@ public class ProductService : IProductService
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByName(ProductFilterName parameters)
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByName(ProductParameters parameters)
     {
         var products = await GetAllProducts();
 
-        if (parameters.Name is not null)
+        /*if (parameters.Name is not null)
         {
             products = products.Where(p => p.Name.Contains(parameters.Name,
                                                             StringComparison.InvariantCultureIgnoreCase))
                                 .OrderBy(p => p.Name);
-        }
+        }*/
         
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
