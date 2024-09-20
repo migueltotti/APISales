@@ -177,7 +177,11 @@ public class OrderService : IOrderService
             return Result<OrderProductDTO>.Failure(OrderErrors.DataIsNull);
         }
         
-        _uof.CommitChanges();
+        // Increase Order TotalValue
+        order.IncreaseValue(product.Value);
+        _uof.OrderRepository.Update(order);
+        
+        await _uof.CommitChanges();
         order.Products.Add(product);
 
         return Result<OrderProductDTO>.Success(_mapper.Map<OrderProductDTO>(order));
@@ -209,6 +213,13 @@ public class OrderService : IOrderService
 
         if (!(rowsAffected > 0))
             return Result<OrderProductDTO>.Failure(OrderErrors.ProductNotFound);
+        
+        // Decrease Order TotalValue
+        var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
+        order.DecreaseValue(product.Value);
+        _uof.OrderRepository.Update(order);
+        
+        await _uof.CommitChanges();
         
         return Result<OrderProductDTO>.Success(_mapper.Map<OrderProductDTO>(order));
     }

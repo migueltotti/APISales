@@ -23,7 +23,9 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasData(
            new Category(1, "Carnes Bovinas", "carnes-bovinas.jpg"),
-           new Category(2, "Produtos Diversos", "produtos-diversos.jpg")
+           new Category(2, "Produtos Diversos", "produtos-diversos.jpg"),
+           new Category(3, "Aves", "aves.jpg"),
+           new Category(4, "Carnes Suinas", "carnes-suinas.jpg")
         );
     }
 }

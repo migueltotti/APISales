@@ -145,7 +145,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     
     [HttpPost]
     [Route("{orderId:int:min(1)}/AddProduct/{productId:int:min(1)}")]
-    public async Task<ActionResult<OrderProductDTO>> AddProduct(int orderId, int productId)
+    public async Task<ActionResult<OrderDTOOutput>> AddProduct(int orderId, int productId)
     {
         var result = await _service.AddProduct(orderId, productId);
         

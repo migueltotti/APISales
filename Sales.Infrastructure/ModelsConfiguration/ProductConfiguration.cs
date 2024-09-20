@@ -32,7 +32,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasData(
             new Product(1, "Coca-Cola 250", "Coca Cola 250ml garrafinha", 3.5m, TypeValue.Uni, "coca-cola-250.jpg", 10, 2),
             new Product(2, "Pão Caseiro", "Pão Caseiro feito no dia", 9.9m, TypeValue.Uni, "pao-caseiro.jpg", 3, 2),
-            new Product(3, "Picanha", "Picanha", 69.99m, TypeValue.Kg, "picanha.jpg", 5, 1)
+            new Product(3, "Picanha", "Picanha", 69.99m, TypeValue.Kg, "picanha.jpg", 5, 1),
+            new Product(4, "Teste Produto", "TesteProduto", 10.00m, TypeValue.Kg, "TesteProduto.jpg", 10, 2),
+            new Product(5, "Teste2", "Teste2Produto", 69.99m, TypeValue.Uni, "Teste2.jpg", 10, 3)
         );
     }
 }

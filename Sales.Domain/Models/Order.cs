@@ -31,4 +31,14 @@ public sealed class Order
         UserId = userId;
         Products = new Collection<Product>();
     }
+
+    public void IncreaseValue(decimal value)
+    {
+        this.TotalValue += value;
+    }
+    
+    public void DecreaseValue(decimal value)
+    {
+        this.TotalValue -= value;
+    }
 }
