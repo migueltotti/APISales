@@ -4,9 +4,9 @@ namespace Sales.Application.Strategy.Factory;
 
 public class UserFilterFactory : IUserFilterFactory
 {
-    private Dictionary<string, IUserFilterStrategy> _strategies { get; set; }
+    private readonly Dictionary<string, IUserFilterStrategy> _strategies = new();   
 
-    public UserFilterFactory(List<IUserFilterStrategy> strategies)
+    public UserFilterFactory(IEnumerable<IUserFilterStrategy> strategies)
     {
         foreach (var filter in strategies)
         {
@@ -16,6 +16,11 @@ public class UserFilterFactory : IUserFilterFactory
     
     public IUserFilterStrategy GetStrategy(string filter)   
     {
-        throw new NotImplementedException();
+        if (!_strategies.TryGetValue(filter.ToLower(), out IUserFilterStrategy strategy))        
+        {
+            throw new ArgumentException($"No strategy defined for {filter}");
+        }
+        
+        return strategy;
     }
 }

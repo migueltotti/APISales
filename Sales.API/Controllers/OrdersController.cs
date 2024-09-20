@@ -8,7 +8,6 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
-using Sales.Application.Parameters.ModelsParameters.OrderParameters;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
 
@@ -31,9 +30,23 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("value")]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByValue([FromQuery] OrderFilterValue parameters)
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByValue([FromQuery] OrderParameters parameters)
     {
-        var ordersPaged = await _service.GetOrdersByValue(parameters);
+        var ordersPaged = await _service.GetOrdersWithFilter("value", parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
+    }
+    
+    
+    
+    [HttpGet("Date")]
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByDate([FromQuery] OrderParameters parameters)
+    {
+        var ordersPaged = await _service.GetOrdersWithFilter("date", parameters);
         
         var metadata = ordersPaged.GenerateMetadataHeader();
         
@@ -43,21 +56,9 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("Product")]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByProduct([FromQuery] OrderFilterProduct parameters)
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByProduct([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersByProduct(parameters);
-        
-        var metadata = ordersPaged.GenerateMetadataHeader();
-        
-        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
-        
-        return Ok(ordersPaged.ToList());
-    }
-    
-    [HttpGet("Date")]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByDate([FromQuery] OrderFilterDate parameters)
-    {
-        var ordersPaged = await _service.GetOrdersByDate(parameters);
         
         var metadata = ordersPaged.GenerateMetadataHeader();
         

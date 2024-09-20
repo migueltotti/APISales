@@ -6,7 +6,7 @@ using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
-using Sales.Application.Parameters.ModelsParameters.ProductParameters;
+using Sales.Application.Parameters.ModelsParameters;
 
 namespace Sales.API.Controllers;
 
@@ -27,9 +27,9 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
     }
     
     [HttpGet("value")]
-    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByValue([FromQuery] ProductFilterValue parameters)    
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByValue([FromQuery] ProductParameters parameters)    
     {
-        var productsPaged = await _service.GetProductsByValue(parameters);
+        var productsPaged = await _service.GetProductsWithFilter("value", parameters);
 
         var metadata = productsPaged.GenerateMetadataHeader();
         
@@ -39,9 +39,9 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
     }
     
     [HttpGet("typeValue")]
-    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByTypeValue([FromQuery] ProductFilterTypeValue parameters)    
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByTypeValue([FromQuery] ProductParameters parameters)    
     {
-        var productsPaged = await _service.GetProductsByTypeValue(parameters);
+        var productsPaged = await _service.GetProductsWithFilter("typevalue", parameters);
 
         var metadata = productsPaged.GenerateMetadataHeader();
         
@@ -51,9 +51,9 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
     }
     
     [HttpGet("name")]
-    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByName([FromQuery] ProductFilterName parameters)    
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProductsByName([FromQuery] ProductParameters parameters)    
     {
-        var productsPaged = await _service.GetProductsByName(parameters);  
+        var productsPaged = await _service.GetProductsWithFilter("name", parameters);  
 
         var metadata = productsPaged.GenerateMetadataHeader();
         

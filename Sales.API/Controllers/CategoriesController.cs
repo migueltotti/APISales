@@ -5,8 +5,7 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
-using Sales.Application.Parameters.ModelsParameters.CategoryParameters;
-using Sales.Application.Parameters.ModelsParameters.ProductParameters;
+using Sales.Application.Parameters.ModelsParameters;
 
 namespace Sales.API.Controllers;
 
@@ -27,9 +26,9 @@ public class CategoriesController(ICategoryService service) : Controller
     }
     
     [HttpGet("name")]
-    public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> GetCategoriesByName([FromQuery] CategoryFilterName parameters)
+    public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> GetCategoriesByName([FromQuery] CategoryParameters parameters)
     {
-        var categories = await service.GetCategoriesByName(parameters);
+        var categories = await service.GetCategoriesWithFilter("name", parameters);
 
         var metadata = categories.GenerateMetadataHeader();
         
@@ -63,7 +62,7 @@ public class CategoriesController(ICategoryService service) : Controller
     }
     
     [HttpGet("{id:int:min(1)}/products/value")]
-    public async Task<ActionResult<CategoryDTOOutput>> GetCategoryProductsByValue(int id, [FromQuery] ProductFilterValue parameters)  
+    public async Task<ActionResult<CategoryDTOOutput>> GetCategoryProductsByValue(int id, [FromQuery] ProductParameters parameters)  
     {
         var categoryProducts = await service.GetProductsByValue(id, parameters);
 

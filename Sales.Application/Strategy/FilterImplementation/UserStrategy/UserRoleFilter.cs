@@ -10,9 +10,9 @@ public class UserRoleFilter : IUserFilterStrategy
 {
     public IEnumerable<UserDTOOutput> ApplyFilter(IEnumerable<UserDTOOutput> users, UserParameters parameters)  
     {
-        if (parameters.Role.ToLower() is not null)
+        if (parameters.Role is not null)
         {
-            users = parameters.Role switch
+            users = parameters.Role.ToLower() switch
             {
                 "admin" => users.Where(u => u.Role == Role.Admin).OrderBy(u => u.Name),
                 "employee" => users.Where(u => u.Role == Role.Employee).OrderBy(u => u.Name),

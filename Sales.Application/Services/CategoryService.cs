@@ -6,8 +6,7 @@ using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
-using Sales.Application.Parameters.ModelsParameters.CategoryParameters;
-using Sales.Application.Parameters.ModelsParameters.ProductParameters;
+using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Models;
 using Sales.Domain.Interfaces;
@@ -21,12 +20,14 @@ public class CategoryService : ICategoryService
     private readonly IUnitOfWork _uof;
     private readonly IValidator<CategoryDTOInput> _validator;
     private readonly IMapper _mapper;
+    private readonly ICategoryFilterFactory _categoryFilterFactory;
 
-    public CategoryService(IUnitOfWork unitOfWork, IValidator<CategoryDTOInput> validator, IMapper mapper)
+    public CategoryService(IUnitOfWork unitOfWork, IValidator<CategoryDTOInput> validator, IMapper mapper, ICategoryFilterFactory categoryFilterFactory)
     {
         _uof = unitOfWork;
         _validator = validator;
         _mapper = mapper;
+        _categoryFilterFactory = categoryFilterFactory;
     }
 
     public async Task<IEnumerable<CategoryDTOOutput>> GetAllCategories()
@@ -43,7 +44,7 @@ public class CategoryService : ICategoryService
         return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesByName(CategoryParameters parameters)
+    /*public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesByName(CategoryParameters parameters)
     {
         var categories = await GetAllCategories();
 
@@ -55,7 +56,18 @@ public class CategoryService : ICategoryService
         } 
         
         return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }*/
+
+    public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesWithFilter(string filter, CategoryParameters parameters)
+    {
+        var categories = await GetAllCategories();
+        
+        categories = _categoryFilterFactory.GetStrategy(filter).ApplyFilter(categories, parameters);
+        
+        return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
+    
+    
 
     public async Task<Result<CategoryDTOOutput>> GetCategoryBy(Expression<Func<Category, bool>> expression)
     {
@@ -82,7 +94,7 @@ public class CategoryService : ICategoryService
         return categoryProductsDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(int categoryId, ProductFilterValue parameters)
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(int categoryId, ProductParameters parameters)
     {
         var products = await _uof.ProductRepository.GetAllAsync();
         

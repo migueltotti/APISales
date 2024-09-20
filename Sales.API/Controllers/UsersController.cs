@@ -9,7 +9,6 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
-using Sales.Application.Parameters.ModelsParameters.UserParameters;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 
@@ -33,10 +32,10 @@ public class UsersController(IUserService _service) : ControllerBase
     }
     
     [HttpGet("name")]
-    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByName([FromQuery] UserFilterName parameters)
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByName([FromQuery] UserParameters parameters)
     {
-        var usersPaged = await _service.GetUsersByName(parameters);
-
+        var usersPaged = await _service.GetUsersWithFilter("name", parameters);
+        
         var metadata = usersPaged.GenerateMetadataHeader();
         
         Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
@@ -45,9 +44,9 @@ public class UsersController(IUserService _service) : ControllerBase
     }
     
     [HttpGet("cpf")]
-    public async Task<ActionResult<UserDTOOutput>> GetUsersBycpf([FromQuery] UserFilterCpf parameters)
+    public async Task<ActionResult<UserDTOOutput>> GetUsersByCpf([FromQuery] UserParameters parameters)
     {
-        var result = await _service.GetUsersByCpf(parameters);
+        var result = await _service.GetUserBy(u => u.Cpf == parameters.Cpf);
 
         return result.isSuccess switch
         {
@@ -57,9 +56,9 @@ public class UsersController(IUserService _service) : ControllerBase
     }
     
     [HttpGet("role")]
-    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByRole([FromQuery] UserFilterRole parameters)
+    public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByRole([FromQuery] UserParameters parameters)
     {
-        var usersPaged = await _service.GetUsersByRole(parameters);
+        var usersPaged = await _service.GetUsersWithFilter("role", parameters);
 
         var metadata = usersPaged.GenerateMetadataHeader();
         

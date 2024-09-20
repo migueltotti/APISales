@@ -5,7 +5,6 @@ using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
-using Sales.Application.Parameters.ModelsParameters.UserParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -20,12 +19,14 @@ public class UserService : IUserService
     private readonly IUnitOfWork _uof;
     private readonly IValidator<UserDTOInput> _validator;
     private readonly IMapper _mapper;
+    private readonly IUserFilterFactory _userFilterFactory;
 
-    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper)
+    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory)
     {
         _uof = uof;
         _validator = validator;
         _mapper = mapper;
+        _userFilterFactory = userFilterFactory;
     }
 
     public async Task<IEnumerable<UserDTOOutput>> GetAllUsers()
@@ -42,49 +43,16 @@ public class UserService : IUserService
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByRole(UserParameters parameters)
+    public async Task<IPagedList<UserDTOOutput>> GetUsersWithFilter(string filter, UserParameters parameters)
     {
         var users = await GetAllUsers();
 
-        /*if (parameters.Role.ToLower() is not null)
-        {
-            users = parameters.Role switch
-            {
-                "admin" => users.Where(u => u.Role == Role.Admin).OrderBy(u => u.Name),
-                "employee" => users.Where(u => u.Role == Role.Employee).OrderBy(u => u.Name),
-                "customer" => users.Where(u => u.Role == Role.Customer).OrderBy(u => u.Name),
-                _ => users.OrderBy(u => u.Name)
-            };
-        }*/
+        users = _userFilterFactory.GetStrategy(filter).ApplyFilter(users, parameters);
         
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<UserDTOOutput>> GetUsersByName(UserParameters parameters)
-    {
-        var users = await GetAllUsers();
-
-        /*if (parameters.Name is not null)
-        {
-            users = users.Where(u => u.Name.Contains(parameters.Name,
-                StringComparison.InvariantCultureIgnoreCase))
-                .OrderBy(u => u.Name);
-        }*/
-        
-        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
-    }
-
-    public async Task<Result<UserDTOOutput>> GetUsersByCpf(UserParameters parameters)
-    {
-        var user = await _uof.UserRepository.GetAsync(u => u.Cpf == parameters.Cpf);
-
-        if (user is null)
-        {
-            return Result<UserDTOOutput>.Failure(UserErrors.CpfNotFound);
-        }
-        
-        return Result<UserDTOOutput>.Success(_mapper.Map<UserDTOOutput>(user));
-    }
+    
 
     public async Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserParameters parameters)
     {
@@ -120,6 +88,8 @@ public class UserService : IUserService
     {
         throw new NotImplementedException();
     }
+    
+    
 
     public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)
     {

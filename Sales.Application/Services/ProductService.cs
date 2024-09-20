@@ -5,7 +5,6 @@ using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
-using Sales.Application.Parameters.ModelsParameters.ProductParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -20,12 +19,14 @@ public class ProductService : IProductService
     private readonly IUnitOfWork _uof;
     private readonly IValidator<ProductDTOInput> _validator;
     private readonly IMapper _mapper;
+    private readonly IProductFilterFactory _productFilterFactory;
 
-    public ProductService(IUnitOfWork uof, IValidator<ProductDTOInput> validator, IMapper mapper)
+    public ProductService(IUnitOfWork uof, IValidator<ProductDTOInput> validator, IMapper mapper, IProductFilterFactory productFilterFactory)
     {
         _uof = uof;
         _validator = validator;
         _mapper = mapper;
+        _productFilterFactory = productFilterFactory;
     }
 
     public async Task<IEnumerable<ProductDTOOutput>> GetAllProducts()
@@ -41,56 +42,17 @@ public class ProductService : IProductService
         
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
-
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByValue(ProductParameters parameters)
+    
+    public async Task<IPagedList<ProductDTOOutput>> GetProductsWithFilter(string filter, ProductParameters parameters)
     {
         var products = await GetAllProducts();
-
-        if (parameters is { Price: not null, PriceCriteria: not null })
-        {
-            products = parameters.PriceCriteria.ToLower() switch
-            {
-                "greater" => products.Where(p => p.Value > parameters.Price).OrderBy(p => p.Value),
-                "equal" => products.Where(p => p.Value == parameters.Price).OrderBy(p => p.Value),
-                "less" => products.Where(p => p.Value < parameters.Price).OrderBy(p => p.Value),
-                _ => products
-            };
-        }
+        
+        products = _productFilterFactory.GetStrategy(filter).ApplyFilter(products, parameters);
         
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
-
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByTypeValue(ProductParameters parameters)
-    {
-        var products = await GetAllProducts();
-
-        if (parameters is { TypeValue: not null })
-        {
-            products = parameters.TypeValue.ToLower() switch
-            {
-                "un" => products.Where(p => p.TypeValue == TypeValue.Uni).OrderBy(p => p.Value),
-                "kg" => products.Where(p => p.TypeValue == TypeValue.Kg).OrderBy(p => p.Value),
-                _ => products.OrderBy(p => p.Value)
-            };
-        }
-        
-        return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
-    }
-
-    public async Task<IPagedList<ProductDTOOutput>> GetProductsByName(ProductParameters parameters)
-    {
-        var products = await GetAllProducts();
-
-        /*if (parameters.Name is not null)
-        {
-            products = products.Where(p => p.Name.Contains(parameters.Name,
-                                                            StringComparison.InvariantCultureIgnoreCase))
-                                .OrderBy(p => p.Name);
-        }*/
-        
-        return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
-    }
-
+    
+    
     public async Task<Result<ProductDTOOutput>> GetProductBy(Expression<Func<Product, bool>> expression)
     {
         var product = await _uof.ProductRepository.GetAsync(expression);
