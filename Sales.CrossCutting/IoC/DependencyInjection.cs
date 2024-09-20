@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sales.Application.DTOs.AffiliateDTO;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IAffiliateRepository, AffiliateRepository>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
@@ -45,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IAffiliateService, AffiliateService>();
         
         // Add Strategy Pattern
         services.AddScoped<ICategoryFilterStrategy, CategoryNameFilter>();
@@ -70,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<IValidator<ProductDTOInput>, ProductValidator>();
         services.AddScoped<IValidator<UserDTOInput>, UserValidator>();
         services.AddScoped<IValidator<OrderDTOInput>, OrderValidator>();
+        services.AddScoped<IValidator<AffiliateDTOInput>, AffiliateValidator>();
         
         // Add DTO Mapping
         services.AddAutoMapper(typeof(MappingDTO));

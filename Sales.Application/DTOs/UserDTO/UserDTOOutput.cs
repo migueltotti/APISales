@@ -7,5 +7,6 @@ public record UserDTOOutput(
     string Name,
     string Cpf,
     DateTime DateBirth,
+    int AffiliateId,
     Role Role
 );

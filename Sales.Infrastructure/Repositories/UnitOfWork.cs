@@ -9,6 +9,7 @@ public class UnitOfWork(SalesDbContext context) : IUnitOfWork
     private ICategoryRepository? _categoryRepository;
     private IOrderRepository? _orderRepository;
     private IProductRepository? _productRepository;
+    private IAffiliateRepository? _affiliateRepository;
 
     public IUserRepository UserRepository
     {
@@ -39,6 +40,14 @@ public class UnitOfWork(SalesDbContext context) : IUnitOfWork
         get
         {
             return _productRepository = _productRepository ?? new ProductRepository(context);
+        }
+    }
+    
+    public IAffiliateRepository AffiliateRepository
+    {
+        get
+        {
+            return _affiliateRepository = _affiliateRepository ?? new AffiliateRepository(context);
         }
     }
 

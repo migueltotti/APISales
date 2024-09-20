@@ -1,4 +1,5 @@
 using AutoMapper;
+using Sales.Application.DTOs.AffiliateDTO;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.DTOs.OrderDTO;
@@ -23,5 +24,8 @@ public class MappingDTO : Profile
         
         CreateMap<User, UserDTOOutput>().ReverseMap();
         CreateMap<User, UserDTOInput>().ReverseMap();
+        
+        CreateMap<Affiliate, AffiliateDTOOutput>().ReverseMap();
+        CreateMap<Affiliate, AffiliateDTOInput>().ReverseMap();
     }
 }

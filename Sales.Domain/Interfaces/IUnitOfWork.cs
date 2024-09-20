@@ -6,6 +6,7 @@ public interface IUnitOfWork
     public ICategoryRepository CategoryRepository { get; }
     public IOrderRepository OrderRepository { get; }
     public IProductRepository ProductRepository { get; }
+    public IAffiliateRepository AffiliateRepository { get; }
 
     Task CommitChanges();
 }

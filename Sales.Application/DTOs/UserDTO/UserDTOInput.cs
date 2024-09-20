@@ -8,6 +8,8 @@ public record UserDTOInput(
     string Email,
     string Password,
     string Cpf,
+    decimal Points,
     DateTime DateBirth,
+    int AffiliateId,
     Role Role
 );
