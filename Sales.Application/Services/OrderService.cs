@@ -68,6 +68,15 @@ public class OrderService : IOrderService
         return orderDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByAffiliateId(int affiliateId, OrderParameters parameters)
+    {
+        var orders = await _uof.OrderRepository.GetOrdersByAffiliateId(affiliateId);
+        
+        var ordersDto = _mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
+        
+        return ordersDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
     public async Task<Result<OrderDTOOutput>> GetOrderBy(Expression<Func<Order, bool>> expression)
     {
         var order = await _uof.OrderRepository.GetAsync(expression);

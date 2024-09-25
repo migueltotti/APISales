@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using NuGet.Packaging.Signing;
 using Sales.API.ExceptionHandler;
 using Sales.CrossCutting.IoC;
 
@@ -18,28 +20,40 @@ public class Program
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         });
 
+        builder.Services.AddCors(/*options =>
+        {
+            options.AddPolicy("CorsEx",
+                police =>
+                {
+                    police.WithOrigins("https://apirequest.io")
+                        .WithMethods("GET");
+                });
+        }*/);
+
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpcontext =>
+                RateLimitPartition.GetTokenBucketLimiter(httpcontext.User.Identity?.Name ??
+                                                         httpcontext.Request.Headers.Host.ToString(),
+                    partition => new TokenBucketRateLimiterOptions
+                    {
+                        TokenLimit = 3,
+                        ReplenishmentPeriod = TimeSpan.FromSeconds(5),
+                        TokensPerPeriod = 2,
+                        AutoReplenishment = true,
+                        QueueLimit = 0,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    }));
+        });
+
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
         
         // Add Services
         builder.Services.AddInfrastructure(builder.Configuration);
-
-/*        // configurando a conexao com o banco de dados MySQL
-        string mySqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        builder.Services.AddDbContext<SalesDbContext>(options =>
-            options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString)));
         
-        // Add Repoitories
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-        builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-        builder.Services.AddScoped<IProductRepository, ProductRepository>();
-        builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
-        // Add DTO Mapping
-        builder.Services.AddAutoMapper(typeof(MappingDTO));
-*/
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -54,6 +68,9 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+
+        app.UseRateLimiter();
+        app.UseCors("CorsEx");
 
         app.UseAuthorization();
         

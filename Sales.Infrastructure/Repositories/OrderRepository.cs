@@ -14,7 +14,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)
     {
         var orders = _context.Orders.FromSql(
-            $"SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId FROM salesdb.Order o JOIN salesdb.OrderProduct op On op.OrdersOrderId = o.OrderId JOIN salesdb.Product p ON op.ProductsProductId = p.ProductId WHERE p.Name LIKE (concat('%', {productName}, '%'))");
+            $"SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId, o.OrderStatus FROM salesdb.Order o JOIN salesdb.OrderProduct op On op.OrdersOrderId = o.OrderId JOIN salesdb.Product p ON op.ProductsProductId = p.ProductId WHERE p.Name LIKE (concat('%', {productName}, '%'))");
         
         return await orders.ToListAsync();
     }
@@ -25,6 +25,14 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             $"SELECT p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId FROM salesdb.Order o JOIN salesdb.OrderProduct op On op.OrdersOrderId = o.OrderId JOIN salesdb.Product p ON op.ProductsProductId = p.ProductId WHERE o.OrderDate >= {minDate} AND  o.OrderDate <= {maxDate}");
         
         return await products.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId)
+    {
+        var orders = _context.Orders.FromSql(
+            $"SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId, o.OrderStatus FROM salesdb.Order o JOIN salesdb.user u ON u.UserId = o.UserId where u.AffiliateId = {affiliateId}");
+
+        return await orders.ToListAsync();
     }
 
     public async Task<int> AddProduct(int orderId, int productId)

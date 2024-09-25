@@ -9,4 +9,6 @@ public class OrderParameters : QueryStringParameters
     public string? PriceCriteria { get; set; } // greater ; equal ; less
     
     public string? ProductName { get; set; }
+
+    public string? Status { get; set; }
 }

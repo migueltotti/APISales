@@ -61,6 +61,7 @@ public static class DependencyInjection
         
         services.AddScoped<IOrderFilterStrategy, OrderDateFilter>();
         services.AddScoped<IOrderFilterStrategy, OrderValueFilter>();
+        services.AddScoped<IOrderFilterStrategy, OrderStatusFilter>();
         
         // Add Factory Pattern
         services.AddScoped<ICategoryFilterFactory, CategoryFilterFactory>();

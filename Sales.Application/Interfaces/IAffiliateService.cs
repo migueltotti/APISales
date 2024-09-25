@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Sales.Application.DTOs.AffiliateDTO;
+using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Models;

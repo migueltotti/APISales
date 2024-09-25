@@ -30,7 +30,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("value")]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByValue([FromQuery] OrderParameters parameters)
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByValue([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersWithFilter("value", parameters);
         
@@ -41,10 +41,8 @@ public class OrdersController(IOrderService _service) : ControllerBase
         return Ok(ordersPaged.ToList());
     }
     
-    
-    
     [HttpGet("Date")]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByDate([FromQuery] OrderParameters parameters)
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByDate([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersWithFilter("date", parameters);
         
@@ -56,7 +54,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("Product")]
-    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrderByProduct([FromQuery] OrderParameters parameters)
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByProduct([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersByProduct(parameters);
         
@@ -66,6 +64,31 @@ public class OrdersController(IOrderService _service) : ControllerBase
         
         return Ok(ordersPaged.ToList());
     }
+    
+    [HttpGet("Status")]
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByStatus([FromQuery] OrderParameters parameters)
+    {
+        var ordersPaged = await _service.GetOrdersWithFilter("status", parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
+    }
+    
+    [HttpGet("Affiliate/{id:int:min(1)}")]
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByAffiliate(int id, [FromQuery] OrderParameters parameters)
+    {
+        var ordersPaged = await _service.GetOrdersByAffiliateId(id, parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
+    }
+    
     
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
     public async Task<ActionResult<OrderDTOOutput>> Get(int id)
@@ -169,7 +192,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
         };
     }
 
-    [HttpGet("finish/{orderId:int:min(1)}")]
+    [HttpPost("finish/{orderId:int:min(1)}")]
     public async Task<ActionResult<OrderDTOOutput>> FinishOrder(int orderId)
     {
         var result = await _service.FinishOrder(orderId);
