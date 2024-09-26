@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Sales.Infrastructure.Migrations
+namespace Sales.Infrastructure.Migrations.MySQLMigrations
 {
     /// <inheritdoc />
     public partial class AffiliateandUserPoints : Migration

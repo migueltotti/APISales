@@ -118,6 +118,13 @@ public class UserService : IUserService
         {
             return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
         }
+        
+        var userExists = await GetUserBy(u => u.Email == userDtoInput.Email);
+
+        if (userExists.value is not null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.UserExists);
+        }
 
         var user = _mapper.Map<User>(userDtoInput);
 

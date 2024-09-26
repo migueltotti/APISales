@@ -9,7 +9,7 @@ using Sales.Infrastructure.Context;
 
 #nullable disable
 
-namespace Sales.Infrastructure.Migrations
+namespace Sales.Infrastructure.Migrations.MySQLMigrations
 {
     [DbContext(typeof(SalesDbContext))]
     [Migration("20240911235846_Firts Migration")]

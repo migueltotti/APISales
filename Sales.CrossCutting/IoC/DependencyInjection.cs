@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Infrastructure.Repositories;
 using Sales.Infrastructure.Context;
+using Sales.Infrastructure.Identity;
 
 namespace Sales.CrossCutting.IoC;
 
@@ -28,10 +30,22 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        var mySqlConnectionString = configuration.GetConnectionString("DefaultMySqlConnection") ?? throw new NullReferenceException("MySQL connection string is null");
+        var postGreSqlConnectionString = configuration.GetConnectionString("DefaultPostGresConnection") ?? throw new NullReferenceException("PostGreSQL connection string is null");
+        
         // Add DataBase connection
         services.AddDbContext<SalesDbContext>(options => 
-                options.UseMySql(configuration.GetConnectionString("DefaultConnection"),
+                options.UseMySql(mySqlConnectionString,
                 new MySqlServerVersion(new Version(8, 0, 38))));
+        
+        // Add Database UsersData - PostGres connection
+        services.AddEntityFrameworkNpgsql().AddDbContext<UsersDataDbContext>(options =>
+            options.UseNpgsql(postGreSqlConnectionString));
+        
+        // Identity tables configuration
+        services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<UsersDataDbContext>()
+            .AddDefaultTokenProviders();
         
         // Add Repositories
         services.AddScoped<IUserRepository, UserRepository>();
@@ -48,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAffiliateService, AffiliateService>();
+        services.AddScoped<ITokenService, TokenService>();
         
         // Add Strategy Pattern
         services.AddScoped<ICategoryFilterStrategy, CategoryNameFilter>();

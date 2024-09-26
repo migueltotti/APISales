@@ -3,7 +3,10 @@ using System.Text;
 using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Sales.Application.DTOs.TokenDTO;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
@@ -11,12 +14,13 @@ using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Infrastructure.Identity;
 
 namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UsersController(IUserService _service) : ControllerBase
+public class UsersController(IUserService _service, UserManager<ApplicationUser> _userManager) : ControllerBase
 {
 
     [HttpGet("getUsers")]
@@ -83,12 +87,35 @@ public class UsersController(IUserService _service) : ControllerBase
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
     {
         var result = await _service.CreateUser(userDtoInput);
-        
-        return result.isSuccess switch
+
+        if (result.isSuccess)
         {
-            true => CreatedAtRoute("GetUser", 
-                new { id = result.value.UserId }, result.value),
-            false => BadRequest(result.GenerateErrorResponse())
+            ApplicationUser user = new()
+            {
+                Email = userDtoInput.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = userDtoInput.Name
+            };
+
+            var resultUser = await _userManager.CreateAsync(user, userDtoInput.Password);
+
+            if (!resultUser.Succeeded)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,
+                    new Response { Status = "Error", Message = "User creation failed" });
+            }
+        }
+
+        switch (result.isSuccess)
+        {
+            case true:
+                return CreatedAtRoute("GetUser",
+                    new { id = result.value.UserId }, result.value);
+            case false:
+                if (result.error.HttpStatusCode == HttpStatusCode.BadRequest)
+                    return BadRequest(result.GenerateErrorResponse());
+                return StatusCode((int)HttpStatusCode.InternalServerError,
+                    new Response { Status = "Error", Message = "User with this email already exists" });
         };
     }
 

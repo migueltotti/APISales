@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace Sales.Infrastructure.Migrations
+namespace Sales.Infrastructure.Migrations.MySQLMigrations
 {
     /// <inheritdoc />
     public partial class OrderStatus : Migration

@@ -9,4 +9,5 @@ public class UserErrors
     public static readonly Error NotFound = new Error("UserNotFound", "Past Id does not match any user", HttpStatusCode.NotFound);
     public static readonly Error CpfNotFound = new Error("UserNotFound", "Past CPF does not match any user", HttpStatusCode.NotFound);
     public static readonly Error IdMismatch = new Error("UserIdMismatch", "Past Id does not match user id", HttpStatusCode.BadRequest);
+    public static readonly Error UserExists = new Error("UserEmailExists", "User with the same Email already exists", HttpStatusCode.InternalServerError);
 }

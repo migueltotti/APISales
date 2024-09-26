@@ -9,7 +9,7 @@ using Sales.Infrastructure.Context;
 
 #nullable disable
 
-namespace Sales.Infrastructure.Migrations
+namespace Sales.Infrastructure.Migrations.MySQLMigrations
 {
     [DbContext(typeof(SalesDbContext))]
     [Migration("20240920143009_OrderStatus")]
