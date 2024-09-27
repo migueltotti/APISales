@@ -56,7 +56,11 @@ public class Program
         
         // Add Services
         builder.Services.AddInfrastructure(builder.Configuration);
-
+        
+        // Add Authentication and Authorization with JwtBearerToken
+        // IMPORTANT!!!
+        // AddInfrastructure() must come before AddAuthentication
+        // `cause the service AddIdentity<>()... has to be set before the AddAuthentication
         var secretKey = builder.Configuration["JWT:SecretKey"]
                         ?? throw new ArgumentNullException("Invalid SecretKey!");
 

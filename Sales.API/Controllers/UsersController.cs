@@ -15,6 +15,7 @@ using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 using Sales.Infrastructure.Identity;
 
 namespace Sales.API.Controllers;
@@ -102,7 +103,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
             {
                 Email = userDtoInput.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = userDtoInput.Name
+                UserName = userDtoInput.Name.Replace(" ", "")
             };
 
             var resultUser = await _userManager.CreateAsync(user, userDtoInput.Password);
@@ -111,6 +112,14 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError,
                     new Response { Status = "Error", Message = "User creation failed" });
+            }
+            
+            var resultUserRole = await _userManager.AddToRoleAsync(user, userDtoInput.Role.ToString());
+
+            if (!resultUserRole.Succeeded)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,
+                    new Response { Status = "Error", Message = "Assign user to role failed" });
             }
         }
 
@@ -136,7 +145,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
         switch (result.isSuccess)
         {
             case true:
-                return Ok($"Category with id = {result.value.UserId} was updated successfully");
+                return Ok($"User with id = {result.value.UserId} was updated successfully");
             case false:
                 if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
                     return NotFound(result.GenerateErrorResponse());
@@ -153,7 +162,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
         
         return result.isSuccess switch
         {
-            true => Ok($"Category with id = {result.value.UserId} was deleted successfully"),
+            true => Ok($"User with id = {result.value.UserId} was deleted successfully"),
             false => NotFound(result.GenerateErrorResponse())
         };
     }
