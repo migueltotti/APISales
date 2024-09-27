@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.AffiliateDTO;
 using Sales.Application.DTOs.CategoryDTO;
@@ -37,6 +38,7 @@ public class AffiliatesController(IAffiliateService service) : Controller
     }
 
     [HttpPost]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<AffiliateDTOOutput>> Post(AffiliateDTOInput affiliateDtoInput)
     {
         var result = await service.CreateAffiliate(affiliateDtoInput);
@@ -50,6 +52,7 @@ public class AffiliatesController(IAffiliateService service) : Controller
     }
 
     [HttpPut("{id:int:min(1)}")]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<AffiliateDTOOutput>> Put(int id, [FromBody] AffiliateDTOInput affiliateDtoInput)
     {
         var result = await service.UpdateAffiliate(affiliateDtoInput, id);
@@ -67,6 +70,7 @@ public class AffiliatesController(IAffiliateService service) : Controller
     }
     
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<AffiliateDTOOutput>> Delete(int id)
     {
         var result = await service.DeleteAffiliate(id);

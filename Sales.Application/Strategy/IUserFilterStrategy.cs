@@ -8,6 +8,6 @@ namespace Sales.Application.Strategy;
 
 public interface IUserFilterStrategy
 {
-    IEnumerable<UserDTOOutput> ApplyFilter(IEnumerable<UserDTOOutput> categories, UserParameters parameters);    
+    IEnumerable<UserDTOOutput> ApplyFilter(IEnumerable<UserDTOOutput> users, UserParameters parameters);    
     string GetFilter();
 }

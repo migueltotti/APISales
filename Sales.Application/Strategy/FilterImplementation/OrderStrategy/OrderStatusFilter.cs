@@ -6,19 +6,19 @@ namespace Sales.Application.Strategy.FilterImplementation.OrderStrategy;
 
 public class OrderStatusFilter : IOrderFilterStrategy
 {
-    public IEnumerable<OrderDTOOutput> ApplyFilter(IEnumerable<OrderDTOOutput> categories, OrderParameters parameters)
+    public IEnumerable<OrderDTOOutput> ApplyFilter(IEnumerable<OrderDTOOutput> orders, OrderParameters parameters)
     {
         if (parameters.Status is not null)
         {
-            categories = parameters.Status.ToLower() switch
+            orders = parameters.Status.ToLower() switch
             {
-                "finished" => categories.Where(c => c.OrderStatus == Status.Finished),
-                "preparing" => categories.Where(c => c.OrderStatus == Status.Preparing),
-                _ => categories
+                "finished" => orders.Where(c => c.OrderStatus == Status.Finished),
+                "preparing" => orders.Where(c => c.OrderStatus == Status.Preparing),
+                _ => orders
             };
         }
         
-        return categories.OrderBy(o => o.OrderDate);
+        return orders.OrderBy(o => o.OrderDate);
     }
 
     public string GetFilter()

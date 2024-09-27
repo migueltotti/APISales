@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.Interfaces;
@@ -74,6 +75,7 @@ public class CategoriesController(ICategoryService service) : Controller
     }
 
     [HttpPost]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<CategoryDTOOutput>> Post(CategoryDTOInput categoryDtoInput)
     {
         var result = await service.CreateCategory(categoryDtoInput);
@@ -87,6 +89,7 @@ public class CategoriesController(ICategoryService service) : Controller
     }
 
     [HttpPut("{id:int:min(1)}")]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<CategoryDTOOutput>> Put(int id, [FromBody] CategoryDTOInput categoryDtoInput)
     {
         var result = await service.UpdateCategory(categoryDtoInput, id);
@@ -104,6 +107,7 @@ public class CategoriesController(ICategoryService service) : Controller
     }
     
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<CategoryDTOOutput>> Delete(int id)
     {
         var result = await service.DeleteCategory(id);

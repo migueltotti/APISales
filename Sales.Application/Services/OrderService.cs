@@ -54,6 +54,15 @@ public class OrderService : IOrderService
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
+    public async Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters)
+    {
+        var orders = await GetAllOrders();
+        
+        orders = orders.Where(o => o.UserId == userId).OrderBy(o => o.OrderDate);
+        
+        return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters)
     {
         var orders = new List<Order>();

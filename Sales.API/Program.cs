@@ -1,9 +1,11 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using NuGet.Packaging.Signing;
 using Sales.API.ExceptionHandler;
 using Sales.CrossCutting.IoC;
@@ -19,12 +21,12 @@ public class Program
         // Add services to the container.
 
         builder.Services.AddControllers()
-        .AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        });
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
 
-        builder.Services.AddCors(/*options =>
+        builder.Services.AddCors( /*options =>
         {
             options.AddPolicy("CorsEx",
                 police =>
@@ -37,7 +39,7 @@ public class Program
         builder.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            
+
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpcontext =>
                 RateLimitPartition.GetTokenBucketLimiter(httpcontext.User.Identity?.Name ??
                                                          httpcontext.Request.Headers.Host.ToString(),
@@ -52,8 +54,11 @@ public class Program
                     }));
         });
         
+        // Add Services
+        builder.Services.AddInfrastructure(builder.Configuration);
+
         var secretKey = builder.Configuration["JWT:SecretKey"]
-                    ?? throw new ArgumentNullException("Invalid SecretKey!");
+                        ?? throw new ArgumentNullException("Invalid SecretKey!");
 
         builder.Services.AddAuthentication(options =>
         {
@@ -61,8 +66,8 @@ public class Program
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         }).AddJwtBearer(options =>
         {
-            options.RequireHttpsMetadata = false;
             options.SaveToken = true;
+            options.RequireHttpsMetadata = false;
             options.TokenValidationParameters = new TokenValidationParameters()
             {
                 ValidateIssuer = true,
@@ -71,27 +76,58 @@ public class Program
                 ValidateIssuerSigningKey = true,
                 ClockSkew = TimeSpan.Zero,
                 ValidAudience = builder.Configuration["JWT:ValidAudience"],
-                ValidIssuer = builder.Configuration["JWT:ValidAIssuer"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(secretKey))
             };
         });
 
         builder.Services.AddAuthorization(options =>
         {
             options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-            options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
-            options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+            options.AddPolicy("AdminEmployeeOnly", policy => policy.RequireRole("Admin", "Employee"));
+            options.AddPolicy("AllowAnyUser", policy => policy.RequireRole("Admin", "Employee", "Customer"));
         });
+        
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
         
-        // Add Services
-        builder.Services.AddInfrastructure(builder.Configuration);
-        
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sales", Version = "v1" });
+
+            //var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            
+            //c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFile));
+            
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Bearer JWT "
+            });
+
+            c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[]{ }
+                }
+            });
+        });
 
         var app = builder.Build();
 
@@ -103,12 +139,15 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.UseRouting();
 
         app.UseRateLimiter();
         app.UseCors("CorsEx");
 
         app.UseAuthentication();
         app.UseAuthorization();
+        
         
         // Tratamento de execao global usando Middleware, biblioteca IExceptionHandler e ProblemDetails
         // Em conformidade com a RFC 7231 section 6.6.2

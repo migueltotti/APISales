@@ -7,6 +7,7 @@ using Sales.Application.DTOs.AffiliateDTO;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
+using Sales.Application.DTOs.TokenDTO;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Mapping;
@@ -90,6 +91,8 @@ public static class DependencyInjection
         services.AddScoped<IValidator<UserDTOInput>, UserValidator>();
         services.AddScoped<IValidator<OrderDTOInput>, OrderValidator>();
         services.AddScoped<IValidator<AffiliateDTOInput>, AffiliateValidator>();
+        services.AddScoped<IValidator<LoginModel>, LoginValidator>();
+        services.AddScoped<IValidator<RegisterModel>, RegisterValidator>();
         
         // Add DTO Mapping
         services.AddAutoMapper(typeof(MappingDTO));

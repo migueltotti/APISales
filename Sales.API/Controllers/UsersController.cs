@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
 {
 
     [HttpGet("getUsers")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<UserDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)
     {
         var usersPaged = await _service.GetAllUsers(parameters);
@@ -36,6 +38,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     }
     
     [HttpGet("name")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByName([FromQuery] UserParameters parameters)
     {
         var usersPaged = await _service.GetUsersWithFilter("name", parameters);
@@ -48,6 +51,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     }
     
     [HttpGet("cpf")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<UserDTOOutput>> GetUsersByCpf([FromQuery] UserParameters parameters)
     {
         var result = await _service.GetUserBy(u => u.Cpf == parameters.Cpf);
@@ -60,6 +64,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     }
     
     [HttpGet("role")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<UserDTOOutput>>> GetUsersByRole([FromQuery] UserParameters parameters)
     {
         var usersPaged = await _service.GetUsersWithFilter("role", parameters);
@@ -72,6 +77,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetUser")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<UserDTOOutput>> GetUser(int id)
     {
         var result = await _service.GetUserBy(u => u.UserId == id);
@@ -83,6 +89,8 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
         };
     }
 
+    // Users unauthorized can create a User
+    
     [HttpPost]
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
     {
@@ -118,8 +126,9 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
                     new Response { Status = "Error", Message = "User with this email already exists" });
         };
     }
-
+    
     [HttpPut("{id:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<UserDTOOutput>> Put(UserDTOInput userDtoInput, int id)
     {
         var result = await _service.UpdateUser(userDtoInput, id);
@@ -137,6 +146,7 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     }
 
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<UserDTOOutput>> Delete(int id)
     {
         var result = await _service.DeleteUser(id);

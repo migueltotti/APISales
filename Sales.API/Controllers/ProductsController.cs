@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
@@ -75,6 +76,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
     }
     
     [HttpPost]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<ProductDTOOutput>> Post([FromBody] ProductDTOInput productDtoInput)  
     {
         var result = await _service.CreateProduct(productDtoInput);
@@ -88,6 +90,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
     }
     
     [HttpPut("{id:int:min(1)}")]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<ProductDTOOutput>> Put(int id, [FromBody] ProductDTOInput productDtoInput)
     {
         var result = await _service.UpdateProduct(productDtoInput, id);
@@ -103,9 +106,9 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
                 return BadRequest(result.GenerateErrorResponse());
         }
     }
-
-    // DELETE api/<OrdersController>/5
+    
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize("AdminOnly")]
     public async Task<ActionResult<ProductDTOOutput>> Delete(int id)
     {
         var result = await _service.DeleteProduct(id);

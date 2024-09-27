@@ -1,15 +1,13 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
-using Sales.Domain.Models;
-using Sales.Domain.Interfaces;
 
 namespace Sales.API.Controllers;
 
@@ -18,6 +16,7 @@ namespace Sales.API.Controllers;
 public class OrdersController(IOrderService _service) : ControllerBase
 {
     [HttpGet]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)
     {
         var ordersPaged = await _service.GetAllOrders(parameters);
@@ -29,7 +28,21 @@ public class OrdersController(IOrderService _service) : ControllerBase
         return Ok(ordersPaged.ToList());
     }
     
+    [HttpGet("userId/{userId:int:min(1)}")]
+    [Authorize(Policy = "AllowAnyUser")]
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByUserId(int userId, [FromQuery] OrderParameters parameters)
+    {
+        var ordersPaged = await _service.GetOrdersByUserId(userId, parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
+    }
+    
     [HttpGet("value")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByValue([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersWithFilter("value", parameters);
@@ -42,6 +55,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("Date")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByDate([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersWithFilter("date", parameters);
@@ -54,6 +68,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("Product")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByProduct([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersByProduct(parameters);
@@ -66,6 +81,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("Status")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByStatus([FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersWithFilter("status", parameters);
@@ -78,6 +94,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpGet("Affiliate/{id:int:min(1)}")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByAffiliate(int id, [FromQuery] OrderParameters parameters)
     {
         var ordersPaged = await _service.GetOrdersByAffiliateId(id, parameters);
@@ -91,6 +108,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     
     
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderDTOOutput>> Get(int id)
     {
         var result = await _service.GetOrderBy(o => o.OrderId == id);
@@ -103,6 +121,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpPost]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderDTOOutput>> Post([FromBody] OrderDTOInput orderDtoInput)
     {
         var result = await _service.CreateOrder(orderDtoInput);
@@ -116,6 +135,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpPut("{id:int:min(1)}")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<OrderDTOOutput>> Put(int id, [FromBody] OrderDTOInput orderDtoInput)
     {
         var result = await _service.UpdateOrder(orderDtoInput, id);
@@ -133,6 +153,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
     
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<OrderDTOOutput>> Delete(int id)
     {
         var result = await _service.DeleteOrder(id);
@@ -146,6 +167,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     
     [HttpGet]
     [Route("{orderId:int:min(1)}/GetProducts")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProducts(int orderId)
     {
         var result = await _service.GetProductsByOrderId(orderId);
@@ -159,6 +181,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
 
     [HttpGet]
     [Route("OrderReport/{minDate:datetime}/{maxDate:datetime}")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<OrderReportDTO> GetOrderReport(DateTime minDate, DateTime maxDate)
     {
         var orderReport = await _service.GetOrderReport(minDate, maxDate);
@@ -168,6 +191,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     
     [HttpPost]
     [Route("{orderId:int:min(1)}/AddProduct/{productId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderDTOOutput>> AddProduct(int orderId, int productId)
     {
         var result = await _service.AddProduct(orderId, productId);
@@ -181,6 +205,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
 
     [HttpDelete]
     [Route("{orderId:int:min(1)}/RemoveProduct/{productId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderProductDTO>> RemoveProduct(int orderId, int productId)
     {
         var result = await _service.RemoveProduct(orderId, productId);
@@ -193,6 +218,7 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
 
     [HttpPost("finish/{orderId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderDTOOutput>> FinishOrder(int orderId)
     {
         var result = await _service.FinishOrder(orderId);

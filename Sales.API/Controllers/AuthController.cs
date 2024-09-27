@@ -1,5 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.TokenDTO;
@@ -17,19 +20,28 @@ public class AuthController : ControllerBase
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _config;
     private readonly ILogger<AuthController> _logger;
+    private readonly IValidator<LoginModel> _loginValidator;
+    private readonly IValidator<RegisterModel> _registerValidator;
 
-    public AuthController(ITokenService tokenService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration config, ILogger<AuthController> logger)
+    public AuthController(ITokenService tokenService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration config, ILogger<AuthController> logger, IValidator<LoginModel> loginValidator, IValidator<RegisterModel> registerValidator)
     {
         _tokenService = tokenService;
         _userManager = userManager;
         _roleManager = roleManager;
         _config = config;
         _logger = logger;
+        _registerValidator = registerValidator;
+        _loginValidator = loginValidator;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
+        var result = await _loginValidator.ValidateAsync(model);
+        
+        if (!result.IsValid)
+            return BadRequest(result.Errors);
+        
         var user = await _userManager.FindByEmailAsync(model.Email!);
 
         if (user is not null && await _userManager.CheckPasswordAsync(user, model.Password!))
@@ -71,7 +83,45 @@ public class AuthController : ControllerBase
         return Unauthorized();
     }
 
+    [HttpPost("register")]
+    [Authorize("AdminOnly")]
+    public async Task<IActionResult> Register([FromBody] RegisterModel model)
+    {
+        var result = await _registerValidator.ValidateAsync(model);
+        
+        if (!result.IsValid)
+            return BadRequest(result.Errors);
+        
+        var userExists = await _userManager.FindByEmailAsync(model.Email!);
+
+        if (userExists is not null)
+        {
+            _logger.LogInformation(1, "User already exists.");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new Response { Status = "Error", Message = $"User with the same Email already exists!" });
+        }
+
+        ApplicationUser user = new()
+        {
+            Email = model.Email,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            UserName = model.Username.Replace(" ", "")
+        };
+
+        var resultUser = await _userManager.CreateAsync(user, model.Password);
+
+        if (!resultUser.Succeeded)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError,
+                new Response { Status = "Error", Message = "User creation failed!" });
+        }
+        
+        return StatusCode(StatusCodes.Status201Created,
+            new Response { Status = "Success", Message = $"User created successfully!" });
+    }
+
     [HttpPost("refreshToken")]
+    [Authorize()]
     public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
     {
         if (tokenModel is null)
@@ -88,7 +138,7 @@ public class AuthController : ControllerBase
         if (principal is null)
             return BadRequest("Invalid access/refresh token");
         
-        string username = principal.Identity.Name;
+        string username = principal.Identity.Name.Replace(" ", "");
         
         var user = await _userManager.FindByNameAsync(username!);
 
@@ -113,9 +163,10 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("revoke/{username}")]
+    [Authorize()]
     public async Task<IActionResult> Revoke(string username)
     {
-        var user = await _userManager.FindByNameAsync(username);
+        var user = await _userManager.FindByNameAsync(username.Replace(" ", ""));
         
         if(user is null)
             return BadRequest("Invalid client request");
@@ -128,6 +179,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("createRole")]
+    [Authorize("AdminOnly")]
     public async Task<IActionResult> CreateRole(string roleName)
     {
         var roleExists = await _roleManager.RoleExistsAsync(roleName);
@@ -156,6 +208,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("addUserToRole")]
+    [Authorize()]
     public async Task<IActionResult> AddUserToRole(string email, string roleName)
     {
         var user = await _userManager.FindByEmailAsync(email);

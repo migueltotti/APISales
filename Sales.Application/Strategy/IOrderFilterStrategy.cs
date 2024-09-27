@@ -8,6 +8,6 @@ namespace Sales.Application.Strategy;
 
 public interface IOrderFilterStrategy
 {
-    IEnumerable<OrderDTOOutput> ApplyFilter(IEnumerable<OrderDTOOutput> categories, OrderParameters parameters);
+    IEnumerable<OrderDTOOutput> ApplyFilter(IEnumerable<OrderDTOOutput> orders, OrderParameters parameters);
     string GetFilter();
 }
