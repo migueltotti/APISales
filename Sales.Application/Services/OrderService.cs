@@ -1,18 +1,23 @@
 using System.Linq.Expressions;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text.Encodings.Web;
 using AutoMapper;
 using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.IdentityModel.Tokens;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
+using Sales.Application.Strategy.FilterImplementation.ProductStrategy;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Domain.Models.Enums;
 using X.PagedList;
 using X.PagedList.Extensions;
+using ValidationFailure = FluentValidation.Results.ValidationFailure;
 
 namespace Sales.Application.Services;
 
@@ -177,39 +182,91 @@ public class OrderService : IOrderService
         return Result<OrderDTOOutput>.Success(orderDtoDeleted);
     }
 
-    public async Task<Result<OrderDTOOutput>> FinishOrder(int orderId)
+    public async Task<Result<OrderDTOOutput>> SentOrder(int orderId)
     {
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+        var order = await _uof.OrderRepository.GetOrderProductsById(orderId);
 
         if (order is null)
         {
             return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
         }
+
+        if (order.OrderStatus is Status.Sent)
+            return Result<OrderDTOOutput>.Failure(OrderErrors.OrderFinishedOrSent);
         
-        order.FinishOrder();
+        // Get all products and verify if still have all the products in Db
+        var products = await VerifyProductsExist(orderId);
+        
+        // List with 0 elements mean that all the products exists and the order can be sent
+        // List with 1 or more elements mean that these products does not exist
+
+        if (products.Count > 0)
+        {
+            var productsUnavailable = products.Select(p => 
+                new ValidationFailure(p.Name, "product unavailable"))
+                .ToList();
+            
+            // return all the products that are unavailable 
+            return Result<OrderDTOOutput>.Failure(OrderErrors.ProductsStockUnavailable, productsUnavailable);
+        }
+        
+        order.SentOrder();
+        foreach (var p in order.Products) 
+        {
+            p.DecreaseStockQuantity();
+        }
+        
         _uof.OrderRepository.Update(order);
-        
         await _uof.CommitChanges();
         
         return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
     }
 
-    public async Task<Result<OrderProductDTO>> AddProduct(int orderId, int productId)
+    public async Task<Result<OrderDTOOutput>> FinishOrder(int orderId)
+    {
+        var order = await _uof.OrderRepository.GetOrderProductsById(orderId);
+
+        if (order is null)
+        {
+            return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
+        }
+
+        if (order.OrderStatus is not Status.Sent)
+            return Result<OrderDTOOutput>.Failure(OrderErrors.OrderNotSent);
+        
+        if (order.OrderStatus is Status.Finished)
+            return Result<OrderDTOOutput>.Failure(OrderErrors.OrderFinishedOrSent);
+        
+        order.FinishOrder();
+        
+        _uof.OrderRepository.Update(order);
+        await _uof.CommitChanges();
+        
+        return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
+    }
+
+    public async Task<Result<OrderProductDTO>> AddProduct(int orderId, int productId, decimal amount)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
         
         if(order is null)
             return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
 
-        if (order.OrderStatus is Status.Finished)
-            return Result<OrderProductDTO>.Failure(OrderErrors.OrderFinished);
+        if (order.OrderStatus is Status.Finished or Status.Sent)
+            return Result<OrderProductDTO>.Failure(OrderErrors.OrderFinishedOrSent);
         
         var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
         
         if(product is null)
             return Result<OrderProductDTO>.Failure(ProductErrors.NotFound);
+
+        if (product.StockQuantity <= 0)
+            return Result<OrderProductDTO>.Failure(ProductErrors.StockUnavailable);
+
+        if (product.TypeValue is TypeValue.Uni)
+            amount = Math.Truncate(amount);
         
-        var rowsAffected = await _uof.OrderRepository.AddProduct(order.OrderId, product.ProductId);
+        var rowsAffected = await _uof.OrderRepository.AddProduct(order.OrderId, product.ProductId, amount);
 
         if (!(rowsAffected > 0))
         {
@@ -217,7 +274,7 @@ public class OrderService : IOrderService
         }
         
         // Increase Order TotalValue
-        order.IncreaseValue(product.Value);
+        order.IncreaseValue(product.Value * amount);
         _uof.OrderRepository.Update(order);
         
         await _uof.CommitChanges();
@@ -241,6 +298,7 @@ public class OrderService : IOrderService
         return Result<IEnumerable<ProductDTOOutput>>.Success(_mapper.Map<IEnumerable<ProductDTOOutput>>(productsOrder));
     }
 
+    // Refactor
     public async Task<Result<OrderProductDTO>> RemoveProduct(int orderId, int productId)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
@@ -248,14 +306,21 @@ public class OrderService : IOrderService
         if(order is null)
             return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
         
+        // Get the value and the amount of the product that`s gonna be removed.
+        var productValueAmount = await _uof.OrderRepository.GetProductValueAndAmount(orderId, productId);
+        
         var rowsAffected = await _uof.OrderRepository.RemoveProduct(order.OrderId, productId);
 
         if (!(rowsAffected > 0))
             return Result<OrderProductDTO>.Failure(OrderErrors.ProductNotFound);
         
         // Decrease Order TotalValue
-        var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
-        order.DecreaseValue(product.Value);
+        //var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
+
+        var productValue = productValueAmount.First().Value;
+        var productAmount = productValueAmount.First().ProductAmount;
+        
+        order.DecreaseValue(productValue * productAmount);
         _uof.OrderRepository.Update(order);
         
         await _uof.CommitChanges();
@@ -279,5 +344,12 @@ public class OrderService : IOrderService
             OrderMinDate = startDate,
             OrderMaxDate = endDate
         };
+    }
+    
+    public async Task<List<Product>> VerifyProductsExist(int orderId)
+    {
+        var products = await _uof.OrderRepository.GetProducts(orderId);
+        
+        return products.Where(p => p.StockQuantity == 0).ToList();
     }
 }

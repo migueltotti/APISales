@@ -45,6 +45,11 @@ public sealed class Order
     {
         this.TotalValue -= value;
     }
+    
+    public void SentOrder()
+    {
+        this.OrderStatus = Status.Sent;
+    }
 
     public void FinishOrder()
     {

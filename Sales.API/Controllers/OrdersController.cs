@@ -192,14 +192,19 @@ public class OrdersController(IOrderService _service) : ControllerBase
     [HttpPost]
     [Route("{orderId:int:min(1)}/AddProduct/{productId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<OrderDTOOutput>> AddProduct(int orderId, int productId)
+    public async Task<ActionResult<OrderDTOOutput>> AddProduct(int orderId, int productId, [FromQuery] decimal amount)
     {
-        var result = await _service.AddProduct(orderId, productId);
+        var result = await _service.AddProduct(orderId, productId, amount);
         
-        return result.isSuccess switch
+        switch (result.isSuccess)
         {
-            true => Ok($"Product with id = {productId} was added successfully on Order with id = {orderId}"),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok($"Product with id = {productId} was added successfully on Order with id = {orderId}");
+            case false:
+                if (result.error.HttpStatusCode is HttpStatusCode.NotFound)
+                    return NotFound(result.GenerateErrorResponse());
+                
+                return BadRequest(result.GenerateErrorResponse());
         };
     }
 
@@ -216,16 +221,29 @@ public class OrdersController(IOrderService _service) : ControllerBase
             false => NotFound(result.GenerateErrorResponse())
         };
     }
+    
+    [HttpPost("sent/{orderId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
+    public async Task<ActionResult<OrderDTOOutput>> SentOrder(int orderId)
+    {
+        var result = await _service.SentOrder(orderId);
+
+        return result.isSuccess switch
+        {
+            true => Ok($"Order with id = {result.value.OrderId} sent successfully"),
+            false => NotFound(result.GenerateErrorResponse())
+        };
+    }
 
     [HttpPost("finish/{orderId:int:min(1)}")]
-    [Authorize("AllowAnyUser")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<OrderDTOOutput>> FinishOrder(int orderId)
     {
         var result = await _service.FinishOrder(orderId);
 
         return result.isSuccess switch
         {
-            true => Ok(result.value),
+            true => Ok($"Order with id = {result.value.OrderId} finished successfully"),
             false => NotFound(result.GenerateErrorResponse())
         };
     }

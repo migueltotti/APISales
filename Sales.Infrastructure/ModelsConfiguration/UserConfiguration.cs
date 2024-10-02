@@ -34,7 +34,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             new User(2, "Isadora Leao Paludeto", "isadorapaludeto15@gmail.com", "testeisadora","222.222.222-22", 0.00m, new DateTime(0002, 02, 02), Role.Admin, 1),
             new User(31, "TesteAdmin", "testeadmin@gmail.com", "testeadmin","331.331.331-31", 0.00m, new DateTime(0003, 03, 03), Role.Admin, 1),
             new User(32, "TesteEmployee", "testeemployee@gmail.com", "testeemployee","332.332.332-32", 0.00m, new DateTime(0003, 03, 03), Role.Employee, 1),
-            new User(33, "TesteCustomer", "testecustomer@gmail.com", "testecustomer","333.333.333-33", 0.00m, new DateTime(0003, 03, 03), Role.Customer, 1)
+            new User(33, "TesteCustomer", "testecustomer@gmail.com", "testecustomer","333.333.333-33", 0.00m, new DateTime(0003, 03, 03), Role.Customer, 1),
+            new User(35, "TESTEAFILIACAO", "TESTEAFILIACAO@gmail.com", "TESTEAFaaaLIACAO213123@#@#","444.444.444-44", 0.00m, new DateTime(2024, 09, 20), Role.Customer, 3),
+            new User(36, "TesteUsuarioToken", "TesteUsuarioToken@gmail.com", "TesteToken1234@","777.777.777-77", 0.00m, new DateTime(2024, 09, 26), Role.Customer, 1),
+            new User(38, "Teste de User com Role", "testedeusercomrole@gmail.com", "Testeusserrole1@","890.123.434-22", 0.00m, new DateTime(2024, 09, 27), Role.Employee, 1)
         );
     }
 }

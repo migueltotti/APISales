@@ -43,4 +43,9 @@ public sealed class Product
         StockQuantity = stockQuantity;
         CategoryId = categoryId;
     }
+
+    public void DecreaseStockQuantity()
+    {
+        StockQuantity--;
+    }
 }
