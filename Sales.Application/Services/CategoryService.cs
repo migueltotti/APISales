@@ -44,20 +44,6 @@ public class CategoryService : ICategoryService
         return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    /*public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesByName(CategoryParameters parameters)
-    {
-        var categories = await GetAllCategories();
-
-        if (parameters.Name is not null)
-        {
-            categories = categories.Where(c => c.Name.Contains(parameters.Name,
-                    StringComparison.InvariantCultureIgnoreCase))
-                .OrderBy(c => c.Name);
-        } 
-        
-        return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
-    }*/
-
     public async Task<IPagedList<CategoryDTOOutput>> GetCategoriesWithFilter(string filter, CategoryParameters parameters)
     {
         var categories = await GetAllCategories();
@@ -129,6 +115,10 @@ public class CategoryService : ICategoryService
         {
             return Result<CategoryDTOOutput>.Failure(CategoryErrors.IncorrectFormatData, validation.Errors);
         }
+        
+        var categoryExists = await _uof.CategoryRepository.GetAsync(c => c.Name == categoryDto.Name);
+        if (categoryExists is not null)
+            return Result<CategoryDTOOutput>.Failure(CategoryErrors.DuplicateData);
 
         var category = _mapper.Map<Category>(categoryDto);
             

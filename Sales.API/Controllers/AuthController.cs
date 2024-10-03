@@ -121,7 +121,6 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refreshToken")]
-    [Authorize()]
     public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
     {
         if (tokenModel is null)

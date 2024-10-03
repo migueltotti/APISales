@@ -13,6 +13,7 @@ public class OrderStatusFilter : IOrderFilterStrategy
             orders = parameters.Status.ToLower() switch
             {
                 "finished" => orders.Where(c => c.OrderStatus == Status.Finished),
+                "sent" => orders.Where(c => c.OrderStatus == Status.Sent),
                 "preparing" => orders.Where(c => c.OrderStatus == Status.Preparing),
                 _ => orders
             };

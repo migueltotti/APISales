@@ -61,6 +61,10 @@ public class AffiliateService : IAffiliateService
         if (!validationResult.IsValid)
             return Result<AffiliateDTOOutput>.Failure(AffiliateErros.IncorrectFormatData, validationResult.Errors);
         
+        var affiliateExists = await _unitOfWork.AffiliateRepository.GetAsync(a => a.Name == affiliate.Name);
+        if (affiliateExists is not null)
+            return Result<AffiliateDTOOutput>.Failure(AffiliateErros.DuplicateData);
+            
         var affiliateEntity = _mapper.Map<Affiliate>(affiliate);
         
         var affiliateCreated = _unitOfWork.AffiliateRepository.Create(affiliateEntity);

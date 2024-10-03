@@ -180,9 +180,9 @@ public class OrdersController(IOrderService _service) : ControllerBase
     }
 
     [HttpGet]
-    [Route("OrderReport/{minDate:datetime}/{maxDate:datetime}")]
+    [Route("OrderReport")]
     [Authorize("AdminEmployeeOnly")]
-    public async Task<OrderReportDTO> GetOrderReport(DateTime minDate, DateTime maxDate)
+    public async Task<OrderReportDTO> GetOrderReport([FromQuery] DateTime minDate, [FromQuery] DateTime maxDate)
     {
         var orderReport = await _service.GetOrderReport(minDate, maxDate);
         

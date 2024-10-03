@@ -80,6 +80,10 @@ public class ProductService : IProductService
         {
             return Result<ProductDTOOutput>.Failure(ProductErrors.IncorrectFormatData, validation.Errors);
         }
+        
+        var productExists = await _uof.ProductRepository.GetAsync(p => p.Name == productDtoInput.Name);
+        if (productExists is not null)
+            return Result<ProductDTOOutput>.Failure(ProductErrors.DuplicateData);
 
         var product = _mapper.Map<Product>(productDtoInput);
 

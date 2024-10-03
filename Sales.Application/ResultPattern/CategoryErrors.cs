@@ -8,4 +8,6 @@ public class CategoryErrors
     public static readonly Error IncorrectFormatData = new Error("CategoryInputNotValid", "Category input is not in the correct format",HttpStatusCode.BadRequest);
     public static readonly Error NotFound = new Error("CategoryNotFound", "Past Id does not match any category", HttpStatusCode.NotFound);
     public static readonly Error IdMismatch = new Error("CategoryIdMismatch", "Past Id does not match category id", HttpStatusCode.BadRequest);
+    public static readonly Error DuplicateData = new Error("CategoryDuplicateData", "Past category with the same name already exists in stock", HttpStatusCode.BadRequest);
+
 }
