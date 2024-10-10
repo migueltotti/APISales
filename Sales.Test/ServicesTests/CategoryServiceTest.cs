@@ -44,7 +44,7 @@ public class CategoryServiceTest
         Category categoryExists = null;
         var category = _fixture.Create<Category>();
         var categoryDtoOutput = _fixture.Create<CategoryDTOOutput>();
-        var validationResult = new ValidationResult
+        var validationResult = new ValidationResult()
         {
             // IsValid == True caso Erros.Count() seja 0;
             Errors = new List<ValidationFailure>()
