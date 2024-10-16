@@ -176,7 +176,88 @@ public class CategoryServiceTest
     }
     
     [Fact]
-    public async Task GetProductsByValueOfCategory_ShouldReturnAllProductsOfSomeCategoryThatMatchesValueAndCriteria()
+    public async Task GetProductsByValueOfCategory_ShouldReturnAllProductsOfSomeCategoryThatMatchesSomeValueAndGreaterCriteria()
+    {
+        // Arrange
+        var parameters = new ProductParameters()
+        {
+            Price = 1.99m,
+            PriceCriteria = "greater"
+        };
+        var categoryId = _fixture.Create<int>();
+        var products = _fixture.CreateMany<Product>(3);
+        var productsDto = _fixture.CreateMany<ProductDTOOutput>(3);
+
+        _mockUof.ProductRepository.GetAllAsync().Returns(products);
+        _mockMapper.Map<IEnumerable<ProductDTOOutput>>(Arg.Any<IEnumerable<Product>>())
+            .Returns(productsDto);
+        
+        // Act
+        var result = await _categoryService.GetProductsByValue(categoryId, parameters);
+        
+        // Assert
+        result.Should().BeOfType<PagedList<ProductDTOOutput>>();
+        
+        await _mockUof.ProductRepository.Received(1).GetAllAsync();
+        _mockMapper.Received(1).Map<IEnumerable<ProductDTOOutput>>(Arg.Any<IEnumerable<Product>>());
+    }
+    
+    [Fact]
+    public async Task GetProductsByValueOfCategory_ShouldReturnAllProductsOfSomeCategoryThatMatchesSomeValueAndEqualCriteria()
+    {
+        // Arrange
+        var parameters = new ProductParameters()
+        {
+            Price = _fixture.Create<int>(),
+            PriceCriteria = "equal"
+        };
+        var categoryId = _fixture.Create<int>();
+        var products = _fixture.CreateMany<Product>(3);
+        var productsDto = _fixture.CreateMany<ProductDTOOutput>(3);
+
+        _mockUof.ProductRepository.GetAllAsync().Returns(products);
+        _mockMapper.Map<IEnumerable<ProductDTOOutput>>(Arg.Any<IEnumerable<Product>>())
+            .Returns(productsDto);
+        
+        // Act
+        var result = await _categoryService.GetProductsByValue(categoryId, parameters);
+        
+        // Assert
+        result.Should().BeOfType<PagedList<ProductDTOOutput>>();
+        
+        await _mockUof.ProductRepository.Received(1).GetAllAsync();
+        _mockMapper.Received(1).Map<IEnumerable<ProductDTOOutput>>(Arg.Any<IEnumerable<Product>>());
+    }
+    
+    [Fact]
+    public async Task GetProductsByValueOfCategory_ShouldReturnAllProductsOfSomeCategoryThatMatchesSomeValueAndLessCriteria()
+    {
+        // Arrange
+        var parameters = new ProductParameters()
+        {
+            Price = _fixture.Create<int>(),
+            PriceCriteria = "less"
+        };
+        var categoryId = _fixture.Create<int>();
+        var products = _fixture.CreateMany<Product>(3);
+        var productsDto = _fixture.CreateMany<ProductDTOOutput>(3);
+
+        _mockUof.ProductRepository.GetAllAsync().Returns(products);
+        _mockMapper.Map<IEnumerable<ProductDTOOutput>>(Arg.Any<IEnumerable<Product>>())
+            .Returns(productsDto);
+        
+        // Act
+        var result = await _categoryService.GetProductsByValue(categoryId, parameters);
+        
+        // Assert
+        result.Should().BeOfType<PagedList<ProductDTOOutput>>();
+        
+        await _mockUof.ProductRepository.Received(1).GetAllAsync();
+        _mockMapper.Received(1).Map<IEnumerable<ProductDTOOutput>>(Arg.Any<IEnumerable<Product>>());
+    }
+    
+    [Fact]
+    public async Task GetProductsByValueOfCategory_ShouldReturnAllProductsOfSomeCategoryThatMatchesNoneValueAndCriteria()
     {
         // Arrange
         var parameters = new ProductParameters();
