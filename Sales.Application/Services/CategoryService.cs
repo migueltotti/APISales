@@ -128,7 +128,6 @@ public class CategoryService : ICategoryService
         var categoryDtoToReturn = _mapper.Map<CategoryDTOOutput>(categoryCreated);
 
         return Result<CategoryDTOOutput>.Success(categoryDtoToReturn);
-        
     }
 
     public async Task<Result<CategoryDTOOutput>> UpdateCategory(CategoryDTOInput categoryDtoInput, int id)

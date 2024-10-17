@@ -81,9 +81,9 @@ public class AffiliateService : IAffiliateService
         if(affiliate.AffiliateId != id)
             return Result<AffiliateDTOOutput>.Failure(AffiliateErros.IdMismatch);
         
-        var affilaiteEntity = await _unitOfWork.AffiliateRepository.GetAsync(p => p.AffiliateId == id);
+        var affiliateExists = await _unitOfWork.AffiliateRepository.GetAsync(p => p.AffiliateId == id);
 
-        if (affilaiteEntity is null)
+        if (affiliateExists is null)
             return Result<AffiliateDTOOutput>.Failure(AffiliateErros.NotFound);
         
         var validationResult = await _validator.ValidateAsync(affiliate);

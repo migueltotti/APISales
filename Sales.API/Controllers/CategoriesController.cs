@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.DTOs.CategoryDTO;
+using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
@@ -51,7 +52,7 @@ public class CategoriesController(ICategoryService service) : Controller
     }
     
     [HttpGet("{id:int:min(1)}/products")]
-    public async Task<ActionResult<CategoryDTOOutput>> GetCategoryProducts(int id, [FromQuery] QueryStringParameters parameters)  
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetCategoryProducts(int id, [FromQuery] QueryStringParameters parameters)  
     {
         var categoryProducts = await service.GetProducts(id, parameters);
 
@@ -63,7 +64,7 @@ public class CategoriesController(ICategoryService service) : Controller
     }
     
     [HttpGet("{id:int:min(1)}/products/value")]
-    public async Task<ActionResult<CategoryDTOOutput>> GetCategoryProductsByValue(int id, [FromQuery] ProductParameters parameters)  
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetCategoryProductsByValue(int id, [FromQuery] ProductParameters parameters)  
     {
         var categoryProducts = await service.GetProductsByValue(id, parameters);
 

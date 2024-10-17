@@ -52,8 +52,6 @@ public class UserService : IUserService
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    
-
     public async Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserParameters parameters)
     {
         var users = await GetAllUsers();
@@ -62,9 +60,9 @@ public class UserService : IUserService
         {
             users = parameters.PointsCriteria.ToLower() switch
             {
-                //"greater" => users.Where(u => u.Points > parameters.Points).OrderBy(u => u.Name),
-                //"equal" => users.Where(u => u.Points == parameters.Points).OrderBy(u => u.Name),
-                //"less" => users.Where(u => u.Points < parameters.Points).OrderBy(u => u.Name),
+                "greater" => users.Where(u => u.Points > parameters.Points).OrderBy(u => u.Name),
+                "equal" => users.Where(u => u.Points == parameters.Points).OrderBy(u => u.Name),
+                "less" => users.Where(u => u.Points < parameters.Points).OrderBy(u => u.Name),
                 _ => users.OrderBy(u => u.Name)
             };
         }
@@ -75,10 +73,13 @@ public class UserService : IUserService
     public async Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserParameters parameters)
     {
         var users = await GetAllUsers();
+        var affiliate = await _uof.AffiliateRepository
+                            .GetAsync(a => a.Name.Contains(parameters.Affiliation));
+                                        
 
         if (parameters.Affiliation is not null)
         {
-            //users = users.Where(u => u.Affiliation == parameters.Affiliation).OrderBy(u => u.Name);
+            users = users.Where(u => u.AffiliateId == affiliate.AffiliateId).OrderBy(u => u.Name);
         }
         
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
@@ -86,11 +87,20 @@ public class UserService : IUserService
 
     public async Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserParameters parameters)
     {
-        throw new NotImplementedException();
+        var orders = await _uof.OrderRepository.GetAllAsync();
+        
+        HashSet<int> usersIds = new();
+        
+        orders.Where(o => o.OrderStatus is Status.Preparing or Status.Finished)
+            .ToList()
+            .ForEach(o => usersIds.Add(o.OrderId));
+        
+        var users = await GetAllUsers();
+        users = users.Where(u => usersIds.Contains(u.UserId));
+        
+        return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
     
-    
-
     public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)
     {
         var user = await _uof.UserRepository.GetAsync(expression);

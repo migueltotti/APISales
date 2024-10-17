@@ -12,6 +12,12 @@ namespace Sales.Application.Services;
 
 public class TokenService : ITokenService
 {
+    private readonly JwtSecurityTokenHandler _tokenHandler;
+    public TokenService()
+    {
+        _tokenHandler = new JwtSecurityTokenHandler();
+    }
+    
     public JwtSecurityToken GenerateAccessToken(IEnumerable<Claim> claims, IConfiguration _config)
     {
         var key = _config.GetSection("JWT").GetValue<string>("SecretKey")
@@ -32,8 +38,7 @@ public class TokenService : ITokenService
             SigningCredentials = signingCredentials
         };
         
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
+        var token = _tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
 
         return token;
     }
@@ -65,8 +70,7 @@ public class TokenService : ITokenService
             ValidateLifetime = false
         };
         
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        var principal = _tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
 
         if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))

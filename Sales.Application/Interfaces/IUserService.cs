@@ -15,9 +15,9 @@ public interface IUserService
     Task<IPagedList<UserDTOOutput>> GetAllUsers(QueryStringParameters parameters);
     Task<IPagedList<UserDTOOutput>> GetUsersWithFilter(string filter, UserParameters parameters);
     
-    //Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserFilterPoints parameters);
-    //Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserFilterAffiliation parameters);
-    //Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserFilterByOrders parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByPoints(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByAffiliation(UserParameters parameters);
+    Task<IPagedList<UserDTOOutput>> GetUsersByOrdersNotCompleted(UserParameters parameters);
     
     Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression);
     Task<Result<UserDTOOutput>> CreateUser(UserDTOInput user);

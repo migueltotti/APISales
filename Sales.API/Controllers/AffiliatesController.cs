@@ -15,7 +15,7 @@ public class AffiliatesController(IAffiliateService service) : Controller
 {
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get([FromQuery] AffiliateParameters parameters)
+    public async Task<ActionResult<IEnumerable<AffiliateDTOOutput>>> Get([FromQuery] AffiliateParameters parameters)
     {
         var affiliates = await service.GetAllAffiliate(parameters);
 

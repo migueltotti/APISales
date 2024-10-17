@@ -116,7 +116,7 @@ public class OrderService : IOrderService
 
         if (!validation.IsValid)
         {
-            Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
+            return Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
         }
 
         var order = _mapper.Map<Order>(orderDtoInput);
@@ -145,14 +145,14 @@ public class OrderService : IOrderService
 
         if (!validation.IsValid)
         {
-            Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
+            return Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
         }
         
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
 
         if (order is null)
         {
-            Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
+            return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
         }
 
         var orderForUpdate = _mapper.Map<Order>(orderDtoInput);
@@ -171,7 +171,7 @@ public class OrderService : IOrderService
         
         if (order is null)
         {
-            Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
+            return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
         }
 
         var orderDeleted = _uof.OrderRepository.Delete(order);
@@ -231,7 +231,7 @@ public class OrderService : IOrderService
             return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
         }
 
-        if (order.OrderStatus is not Status.Sent)
+        if (order.OrderStatus is not Status.Sent && order.OrderStatus is Status.Preparing)
             return Result<OrderDTOOutput>.Failure(OrderErrors.OrderNotSent);
         
         if (order.OrderStatus is Status.Finished)
@@ -270,7 +270,7 @@ public class OrderService : IOrderService
 
         if (!(rowsAffected > 0))
         {
-            return Result<OrderProductDTO>.Failure(OrderErrors.DataIsNull);
+            return Result<OrderProductDTO>.Failure(OrderErrors.NoRowsAffected);
         }
         
         // Increase Order TotalValue

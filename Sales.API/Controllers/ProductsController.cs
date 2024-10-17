@@ -13,7 +13,7 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProductsController(IProductService _service, IMapper mapper) : ControllerBase
+public class ProductsController(IProductService _service) : ControllerBase
 {
     [HttpGet]   
     public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)    
@@ -115,7 +115,7 @@ public class ProductsController(IProductService _service, IMapper mapper) : Cont
         
         return result.isSuccess switch
         {
-            true => Ok($"Category with id = {result.value.CategoryId} was deleted successfully"),
+            true => Ok($"Category with id = {result.value.ProductId} was deleted successfully"),
             false => NotFound(result.GenerateErrorResponse())
         };
     }

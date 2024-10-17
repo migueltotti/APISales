@@ -182,11 +182,11 @@ public class OrdersController(IOrderService _service) : ControllerBase
     [HttpGet]
     [Route("OrderReport")]
     [Authorize("AdminEmployeeOnly")]
-    public async Task<OrderReportDTO> GetOrderReport([FromQuery] DateTime minDate, [FromQuery] DateTime maxDate)
+    public async Task<ActionResult<OrderReportDTO>> GetOrderReport([FromQuery] DateTime minDate, [FromQuery] DateTime maxDate)
     {
         var orderReport = await _service.GetOrderReport(minDate, maxDate);
         
-        return orderReport;
+        return Ok(orderReport);
     }
     
     [HttpPost]
