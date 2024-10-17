@@ -146,7 +146,10 @@ public class OrderServiceTest
     public async Task GetOrdersByProduct_ShouldReturnAllOrdersThatHaveSpecifiedProduct()
     {
         // Arrange
-        var parameters = new OrderParameters();
+        var parameters = new OrderParameters()
+        {
+            ProductName = "ProductName"
+        };
         var orders = _fixture.CreateMany<Order>(3).ToList();
         var ordersDto = _fixture.CreateMany<OrderDTOOutput>(3).ToList();
         
@@ -175,7 +178,7 @@ public class OrderServiceTest
             .Returns(ordersDto);
         
         // Act
-        var result = await _orderService.GetOrdersByProduct(parameters);
+        var result = await _orderService.GetOrdersByAffiliateId(affiliateId, parameters);
         
         // Assert
         result.Should().BeEquivalentTo(ordersDto.ToPagedList(parameters.PageNumber, parameters.PageSize));
@@ -260,6 +263,9 @@ public class OrderServiceTest
         var validationResult = new ValidationResult()
         {
             Errors = new List<ValidationFailure>()
+            {
+                new ValidationFailure("IncorrectFormatData", "IncorrectFormatData")
+            }
         };
 
         _mockValidator.ValidateAsync(Arg.Any<OrderDTOInput>()).Returns(validationResult);
@@ -460,6 +466,7 @@ public class OrderServiceTest
             10m,
             DateTime.Now,
             1);
+        order.Products.Add(_fixture.Create<Product>());
         var products = new List<Product>();
         var orderDto = _fixture.Create<OrderDTOOutput>();
         
@@ -660,7 +667,15 @@ public class OrderServiceTest
             10m,
             DateTime.Now,
             1);
-        var product = _fixture.Create<Product>();
+        var product = new Product(
+            154,
+            "Product",
+            "Product",
+            10m,
+            TypeValue.Uni,
+            "image.jpg",
+            1,
+            1);
         var orderProductDto = _fixture.Create<OrderProductDTO>();
         
         _mockUof.OrderRepository.GetAsync(Arg.Any<Expression<Func<Order, bool>>>()).Returns(order);
