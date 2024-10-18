@@ -12,6 +12,7 @@ public interface IAffiliateService
 {
     Task<IEnumerable<AffiliateDTOOutput>> GetAllAffiliate();
     Task<IPagedList<AffiliateDTOOutput>> GetAllAffiliate(AffiliateParameters parameters);
+    Task<Result<AffiliateDTOOutput>> GetAffiliateById(int id);
     Task<Result<AffiliateDTOOutput>> GetAffiliateBy(Expression<Func<Affiliate, bool>> expression);
     Task<Result<AffiliateDTOOutput>> CreateAffiliate(AffiliateDTOInput affiliate);
     Task<Result<AffiliateDTOOutput>> UpdateAffiliate(AffiliateDTOInput affiliate, int id);

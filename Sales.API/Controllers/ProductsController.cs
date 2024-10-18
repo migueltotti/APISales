@@ -66,8 +66,9 @@ public class ProductsController(IProductService _service) : ControllerBase
     [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
     public async Task<ActionResult<ProductDTOOutput>> Get(int id)
     {
-        var result = await _service.GetProductBy(p => p.ProductId == id);
-
+        //var result = await _service.GetProductBy(p => p.ProductId == id);
+        var result = await _service.GetProductById(id);
+        
         return result.isSuccess switch
         {
             true => Ok(result.value),

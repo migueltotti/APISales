@@ -88,7 +88,7 @@ public class CategoriesControllerTest
         // Arrange
         var category = _fixture.Create<Result<CategoryDTOOutput>>();
         var categoryId = _fixture.Create<int>();
-        _mockCategoriesService.GetCategoryBy(Arg.Any<Expression<Func<Category, bool>>>())
+        _mockCategoriesService.GetCategoryById(Arg.Any<int>())
             .Returns(category);
         
         // Act
@@ -102,7 +102,7 @@ public class CategoriesControllerTest
             .Which.StatusCode.Should().Be(200);
         obj.Value.Should().BeEquivalentTo(category.value);
         
-        _mockCategoriesService.Received(1).GetCategoryBy(Arg.Any<Expression<Func<Category, bool>>>());
+        await _mockCategoriesService.Received(1).GetCategoryById(Arg.Any<int>());
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class CategoriesControllerTest
         var error = _fixture.Create<Error>();
         var category = Result<CategoryDTOOutput>.Failure(error);
         var categoryId = _fixture.Create<int>();
-        _mockCategoriesService.GetCategoryBy(Arg.Any<Expression<Func<Category, bool>>>()).Returns(category);
+        _mockCategoriesService.GetCategoryById(Arg.Any<int>()).Returns(category);
         
         // Act
         var result = await _categoriesController.GetCategory(categoryId);
@@ -125,7 +125,7 @@ public class CategoriesControllerTest
             .Which.StatusCode.Should().Be(404);
         obj.Value.Should().BeEquivalentTo(category.GenerateErrorResponse());
         
-        _mockCategoriesService.Received(1).GetCategoryBy(Arg.Any<Expression<Func<Category, bool>>>());
+        await _mockCategoriesService.Received(1).GetCategoryById(Arg.Any<int>());
     }
 
     [Fact]

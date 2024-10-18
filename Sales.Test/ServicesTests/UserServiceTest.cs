@@ -240,6 +240,47 @@ public class UserServiceTest
     }
     
     [Fact]
+    public async Task GetUsersById_ShouldReturnUserThatMatchesId()
+    {
+        // Arrange
+        var userId = _fixture.Create<int>();
+        var user = _fixture.Create<User>();
+        var userDto = _fixture.Create<UserDTOOutput>();
+        
+        _mockUof.UserRepository.GetByIdAsync(Arg.Any<int>()).Returns(user);
+        _mockMapper.Map<UserDTOOutput>(Arg.Any<User>()).Returns(userDto);
+        
+        // Act
+        var result = await _userService.GetUserById(userId);
+        
+        // Assert
+        result.isSuccess.Should().BeTrue();
+        result.value.Should().BeEquivalentTo(userDto);
+        
+        await _mockUof.UserRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+        _mockMapper.Received(1).Map<UserDTOOutput>(Arg.Any<User>());
+    }
+    
+    [Fact]
+    public async Task GetUsersById_ShouldReturnNotFoundWithNotFoundResponse_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var userId = _fixture.Create<int>();
+        User user = null;
+        
+        _mockUof.UserRepository.GetByIdAsync(Arg.Any<int>()).Returns(user);
+        
+        // Act
+        var result = await _userService.GetUserById(userId);
+        
+        // Assert
+        result.isSuccess.Should().BeFalse();
+        result.error.Should().BeEquivalentTo(UserErrors.NotFound);
+        
+        await _mockUof.UserRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+    }
+    
+    [Fact]
     public async Task GetUsersBy_ShouldReturnUserThatMatchesSomeExpression()
     {
         // Arrange

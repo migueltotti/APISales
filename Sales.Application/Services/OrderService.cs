@@ -68,6 +68,20 @@ public class OrderService : IOrderService
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
+    public async Task<Result<OrderDTOOutput>> GetOrderById(int id)
+    {
+        var order = await _uof.OrderRepository.GetByIdAsync(id);
+
+        if (order is null)
+        {
+            return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
+        }
+
+        var orderDto = _mapper.Map<OrderDTOOutput>(order);
+        
+        return Result<OrderDTOOutput>.Success(orderDto);
+    }
+
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters)
     {
         var orders = new List<Order>();

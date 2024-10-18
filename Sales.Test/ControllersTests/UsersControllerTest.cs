@@ -187,7 +187,7 @@ public class UsersControllerTest
         var userId = _fixture.Create<int>();
         var userResult = Result<UserDTOOutput>.Success(user);
         
-        _mockUserService.GetUserBy(Arg.Any<Expression<Func<User, bool>>>()).Returns(userResult);
+        _mockUserService.GetUserById(Arg.Any<int>()).Returns(userResult);
         
         // Act
         var result = await _controller.GetUser(userId);
@@ -200,7 +200,7 @@ public class UsersControllerTest
             .Which.StatusCode.Should().Be(200);
         obj.Value.Should().BeEquivalentTo(userResult.value);
 
-        await _mockUserService.Received(1).GetUserBy(Arg.Any<Expression<Func<User, bool>>>());
+        await _mockUserService.Received(1).GetUserById(Arg.Any<int>());
     }
     
     [Fact]
@@ -211,7 +211,7 @@ public class UsersControllerTest
         var userId = _fixture.Create<int>();
         var userResult = Result<UserDTOOutput>.Failure(error);
         
-        _mockUserService.GetUserBy(Arg.Any<Expression<Func<User, bool>>>()).Returns(userResult);
+        _mockUserService.GetUserById(Arg.Any<int>()).Returns(userResult);
         
         // Act
         var result = await _controller.GetUser(userId);
@@ -224,7 +224,7 @@ public class UsersControllerTest
             .Which.StatusCode.Should().Be(404);
         obj.Value.Should().BeEquivalentTo(userResult.GenerateErrorResponse());
 
-        await _mockUserService.Received(1).GetUserBy(Arg.Any<Expression<Func<User, bool>>>());
+        await _mockUserService.Received(1).GetUserById(Arg.Any<int>());
     }
 
     [Fact]

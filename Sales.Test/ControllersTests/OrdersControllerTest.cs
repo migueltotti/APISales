@@ -217,7 +217,7 @@ public class OrdersControllerTest
         var orderId = _fixture.Create<int>();
         var orderResult = Result<OrderDTOOutput>.Success(order);
         
-        _mockOrderService.GetOrderBy(Arg.Any<Expression<Func<Order, bool>>>())
+        _mockOrderService.GetOrderById(Arg.Any<int>())
             .Returns(orderResult);
         
         // Act
@@ -231,7 +231,7 @@ public class OrdersControllerTest
             .Which.StatusCode.Should().Be(200);
         obj.Value.Should().BeEquivalentTo(orderResult.value);
 
-        await _mockOrderService.Received(1).GetOrderBy(Arg.Any<Expression<Func<Order, bool>>>());
+        await _mockOrderService.Received(1).GetOrderById(Arg.Any<int>());
     }
     
     [Fact]
@@ -241,7 +241,7 @@ public class OrdersControllerTest
         var orderId = _fixture.Create<int>();
         var orderResult = Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
         
-        _mockOrderService.GetOrderBy(Arg.Any<Expression<Func<Order, bool>>>())
+        _mockOrderService.GetOrderById(Arg.Any<int>())
             .Returns(orderResult);
         
         // Act
@@ -255,7 +255,7 @@ public class OrdersControllerTest
             .Which.StatusCode.Should().Be(404);
         obj.Value.Should().BeEquivalentTo(orderResult.GenerateErrorResponse());
 
-        await _mockOrderService.Received(1).GetOrderBy(Arg.Any<Expression<Func<Order, bool>>>());
+        await _mockOrderService.Received(1).GetOrderById(Arg.Any<int>());
     }
 
     [Fact]

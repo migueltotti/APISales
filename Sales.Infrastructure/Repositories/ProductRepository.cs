@@ -9,4 +9,9 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public ProductRepository(SalesDbContext context) : base(context)
     {
     }
+
+    public async Task<Product?> GetByIdAsync(int id)
+    {
+        return await GetAsync(p => p.ProductId == id);
+    }
 }

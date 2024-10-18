@@ -41,6 +41,16 @@ public class AffiliateService : IAffiliateService
         return affiliates.ToPagedList<AffiliateDTOOutput>(parameters.PageNumber, parameters.PageSize);
     }
 
+    public async Task<Result<AffiliateDTOOutput>> GetAffiliateById(int id)
+    {
+        var affiliate = await _unitOfWork.AffiliateRepository.GetByIdAsync(id);
+
+        if (affiliate is null)
+            return Result<AffiliateDTOOutput>.Failure(AffiliateErros.NotFound);
+        
+        return Result<AffiliateDTOOutput>.Success(_mapper.Map<AffiliateDTOOutput>(affiliate));
+    }
+
     public async Task<Result<AffiliateDTOOutput>> GetAffiliateBy(Expression<Func<Affiliate, bool>> expression)
     {
         var affiliate = await _unitOfWork.AffiliateRepository.GetAsync(expression);

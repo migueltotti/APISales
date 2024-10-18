@@ -111,7 +111,8 @@ public class OrdersController(IOrderService _service) : ControllerBase
     [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderDTOOutput>> Get(int id)
     {
-        var result = await _service.GetOrderBy(o => o.OrderId == id);
+        //var result = await _service.GetOrderBy(o => o.OrderId == id);
+        var result = await _service.GetOrderById(id);
 
         return result.isSuccess switch
         {

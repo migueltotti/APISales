@@ -101,6 +101,20 @@ public class UserService : IUserService
         return users.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
     
+    public async Task<Result<UserDTOOutput>> GetUserById(int id)
+    {
+        var user = await _uof.UserRepository.GetByIdAsync(id);
+
+        if (user is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        }
+        
+        var userDto = _mapper.Map<UserDTOOutput>(user);
+
+        return Result<UserDTOOutput>.Success(userDto);
+    }
+
     public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)
     {
         var user = await _uof.UserRepository.GetAsync(expression);

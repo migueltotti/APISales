@@ -143,7 +143,7 @@ public class ProductsControllerTest
         var products = _fixture.Create<ProductDTOOutput>();
         var productId = products.ProductId;
         var productResult = Result<ProductDTOOutput>.Success(products);
-        _mockProductService.GetProductBy(Arg.Any<Expression<Func<Product, bool>>>())
+        _mockProductService.GetProductById(Arg.Any<int>())
             .Returns(productResult);
         
         // Act
@@ -157,7 +157,7 @@ public class ProductsControllerTest
             .Which.StatusCode.Should().Be(200);
         obj.Value.Should().BeEquivalentTo(productResult.value);
 
-        await _mockProductService.Received(1).GetProductBy(Arg.Any<Expression<Func<Product, bool>>>());
+        await _mockProductService.Received(1).GetProductById(Arg.Any<int>());
     }
     
     [Fact]
@@ -167,7 +167,7 @@ public class ProductsControllerTest
         var error = _fixture.Create<Error>();
         var productId = _fixture.Create<int>();
         var productResult = Result<ProductDTOOutput>.Failure(error);
-        _mockProductService.GetProductBy(Arg.Any<Expression<Func<Product, bool>>>())
+        _mockProductService.GetProductById(Arg.Any<int>())
             .Returns(productResult);
         
         // Act
@@ -181,7 +181,7 @@ public class ProductsControllerTest
             .Which.StatusCode.Should().Be(404);
         obj.Value.Should().BeEquivalentTo(productResult.GenerateErrorResponse());
 
-        await _mockProductService.Received(1).GetProductBy(Arg.Any<Expression<Func<Product, bool>>>());
+        await _mockProductService.Received(1).GetProductById(Arg.Any<int>());
     }
 
     [Fact]

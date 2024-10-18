@@ -52,8 +52,20 @@ public class CategoryService : ICategoryService
         
         return categories.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
-    
-    
+
+    public async Task<Result<CategoryDTOOutput>> GetCategoryById(int id)
+    {
+        var category = await _uof.CategoryRepository.GetByIdAsync(id);
+
+        if (category is null)
+        {
+            return Result<CategoryDTOOutput>.Failure(CategoryErrors.NotFound);
+        }
+        
+        var categoryDto = _mapper.Map<CategoryDTOOutput>(category);
+
+        return Result<CategoryDTOOutput>.Success(categoryDto);
+    }
 
     public async Task<Result<CategoryDTOOutput>> GetCategoryBy(Expression<Func<Category, bool>> expression)
     {

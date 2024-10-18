@@ -17,6 +17,7 @@ public interface IOrderService
     Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByAffiliateId(int affiliateId, OrderParameters parameters);
+    Task<Result<OrderDTOOutput>> GetOrderById(int id);
     Task<Result<OrderDTOOutput>> GetOrderBy(Expression<Func<Order, bool>> expression);
     Task<Result<OrderDTOOutput>> CreateOrder(OrderDTOInput order);
     Task<Result<OrderDTOOutput>> UpdateOrder(OrderDTOInput order, int id);

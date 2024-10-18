@@ -183,6 +183,48 @@ public class OrderServiceTest
         // Assert
         result.Should().BeEquivalentTo(ordersDto.ToPagedList(parameters.PageNumber, parameters.PageSize));
     }
+    
+    [Fact]
+    public async Task GetOrderById_ShouldReturnOrderThatMatchesId()
+    {
+        // Arrange
+        var order = _fixture.Create<Order>();
+        var orderDto = _fixture.Create<OrderDTOOutput>();
+
+        _mockUof.OrderRepository.GetByIdAsync(Arg.Any<int>())
+            .Returns(order);
+        _mockMapper.Map<OrderDTOOutput>(Arg.Any<Order>()).Returns(orderDto);
+
+        // Act
+        var result = await _orderService.GetOrderById(order.OrderId);
+        
+        // Assert
+        result.isSuccess.Should().BeTrue();
+        result.value.Should().BeEquivalentTo(orderDto);
+
+        await _mockUof.OrderRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+        _mockMapper.Received(1).Map<OrderDTOOutput>(Arg.Any<Order>());
+    }
+    
+    [Fact]
+    public async Task GetOrderById_ShouldReturnNotFoundWithNotFoundResponse_WhenOrderDoesNotExist()
+    {
+        // Arrange
+        var orderId = _fixture.Create<int>();
+        Order order = null;
+
+        _mockUof.OrderRepository.GetByIdAsync(Arg.Any<int>())
+            .Returns(order);
+        
+        // Act
+        var result = await _orderService.GetOrderById(orderId);
+        
+        // Assert
+        result.isSuccess.Should().BeFalse();
+        result.error.Should().BeEquivalentTo(OrderErrors.NotFound);
+
+        await _mockUof.OrderRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+    }
 
     [Fact]
     public async Task GetOrderBy_ShouldReturnOrderThatMatchesExpression()

@@ -113,6 +113,46 @@ public class CategoryServiceTest
         _mockCategoryFilterFactory.Received(1).GetStrategy(Arg.Any<string>())
             .ApplyFilter(Arg.Any<IEnumerable<CategoryDTOOutput>>(), Arg.Any<CategoryParameters>());
     }
+    
+    [Fact]
+    public async Task GetCategoryById_ShouldReturnCategoryThatMatchesExpression_WhenCategoryExists()
+    {
+        // Arrange
+        var categoryId = _fixture.Create<int>();
+        var category = _fixture.Create<Category>();
+        var categoryDTO = _fixture.Create<CategoryDTOOutput>();
+        
+        _mockUof.CategoryRepository.GetByIdAsync(Arg.Any<int>()).Returns(category);
+        _mockMapper.Map<CategoryDTOOutput>(Arg.Any<Category>()).Returns(categoryDTO);
+
+        // Act
+        var result = await _categoryService.GetCategoryById(categoryId);
+
+        // Assert
+        result.Should().BeEquivalentTo(Result<CategoryDTOOutput>.Success(categoryDTO));
+        result.value.Should().BeEquivalentTo(categoryDTO);
+        
+        await _mockUof.CategoryRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+        _mockMapper.Received(1).Map<CategoryDTOOutput>(Arg.Any<Category>());
+    }
+    
+    [Fact]
+    public async Task GetCategoryById_ShouldReturnNotFound_WhenCategoryDoesNotExists()
+    {
+        // Arrange
+        var categoryId = _fixture.Create<int>();
+        Category category = null;
+        
+        _mockUof.CategoryRepository.GetByIdAsync(Arg.Any<int>()).Returns(category);
+
+        // Act
+        var result = await _categoryService.GetCategoryById(categoryId);
+
+        // Assert
+        result.Should().BeEquivalentTo(Result<CategoryDTOOutput>.Failure(CategoryErrors.NotFound));
+        
+        await _mockUof.CategoryRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+    }
 
     [Fact]
     public async Task GetCategoryBy_ShouldReturnCategoryThatMatchesExpression_WhenCategoryExists()

@@ -40,10 +40,11 @@ public class CategoriesController(ICategoryService service) : Controller
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public async Task<ActionResult<CategoryDTOOutput>> GetCategory(int id)  
+    public async Task<ActionResult<CategoryDTOOutput>> GetCategory(int id)
     {
-        var result = await service.GetCategoryBy(c => c.CategoryId == id);
-
+        //var result = await service.GetCategoryBy(c => c.CategoryId == id);
+        var result = await service.GetCategoryById(id);
+        
         return result.isSuccess switch
         {
             true => Ok(result.value),

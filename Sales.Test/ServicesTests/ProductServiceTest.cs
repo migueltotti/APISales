@@ -113,6 +113,47 @@ public class ProductServiceTest
     }
     
     [Fact]
+    public async Task GetProductById_ShouldReturnProductThatMatchesId()
+    {
+        // Arrange
+        var productId = _fixture.Create<int>();
+        var products = _fixture.Create<Product>();
+        var productsDto = _fixture.Create<ProductDTOOutput>();
+        
+        _mockUnitOfWork.ProductRepository.GetByIdAsync(Arg.Any<int>()).Returns(products);
+        _mockMapper.Map<ProductDTOOutput>(Arg.Any<Product>()).Returns(productsDto);
+
+        // Act
+        var result = await _productService.GetProductById(productId);
+
+        // Assert
+        result.Should().BeEquivalentTo(Result<ProductDTOOutput>.Success(productsDto));
+        result.value.Should().BeEquivalentTo(productsDto);
+        
+        await _mockUnitOfWork.ProductRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+        _mockMapper.Received(1).Map<ProductDTOOutput>(Arg.Any<Product>());
+    }
+    
+    [Fact]
+    public async Task GetProductById_ShouldReturnNotFoundError_WhenNoProductMatchesTheExpression()
+    {
+        // Arrange
+        var productId = _fixture.Create<int>();
+        Product products = null;
+        
+        _mockUnitOfWork.ProductRepository.GetByIdAsync(Arg.Any<int>()).Returns(products);
+
+        // Act
+        var result = await _productService.GetProductById(productId);
+
+        // Assert
+        result.Should().BeEquivalentTo(Result<ProductDTOOutput>.Failure(ProductErrors.NotFound));
+        result.error.Should().BeEquivalentTo(ProductErrors.NotFound);
+        
+        await _mockUnitOfWork.ProductRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+    }
+    
+    [Fact]
     public async Task GetProductBy_ShouldReturnProductThatMatchesExpression()
     {
         // Arrange

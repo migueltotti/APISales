@@ -29,7 +29,8 @@ public class AffiliatesController(IAffiliateService service) : Controller
     [HttpGet("{id:int:min(1)}", Name = "GetAffiliate")]
     public async Task<ActionResult<AffiliateDTOOutput>> GetAffiliate(int id)  
     {
-        var result = await service.GetAffiliateBy(c => c.AffiliateId == id);
+        //var result = await service.GetAffiliateBy(c => c.AffiliateId == id);
+        var result = await service.GetAffiliateById(id);
 
         return result.isSuccess switch
         {

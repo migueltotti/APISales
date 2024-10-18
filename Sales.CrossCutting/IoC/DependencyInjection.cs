@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sales.Application.DTOs.AffiliateDTO;
@@ -21,6 +22,7 @@ using Sales.Application.Strategy.FilterImplementation.UserStrategy;
 using Sales.Application.Validations;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Infrastructure.Cache;
 using Sales.Infrastructure.Repositories;
 using Sales.Infrastructure.Context;
 using Sales.Infrastructure.Identity;
@@ -49,11 +51,21 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
         
         // Add Repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<ICategoryRepository, CategoryRepository>();
-        services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<IAffiliateRepository, AffiliateRepository>();
+        services.AddScoped<UserRepository>();
+        services.AddScoped<IUserRepository, CacheUserRepository>();
+        
+        services.AddScoped<CategoryRepository>();
+        services.AddScoped<ICategoryRepository, CacheCategoryRepository>();
+        
+        services.AddScoped<OrderRepository>();
+        services.AddScoped<IOrderRepository, CacheOrderRepository>();
+        
+        services.AddScoped<ProductRepository>();
+        services.AddScoped<IProductRepository, CacheProductRepository>();
+        
+        services.AddScoped<AffiliateRepository>();
+        services.AddScoped<IAffiliateRepository, CacheAffiliateRepository>();
+        
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         

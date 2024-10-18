@@ -81,7 +81,8 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<UserDTOOutput>> GetUser(int id)
     {
-        var result = await _service.GetUserBy(u => u.UserId == id);
+        //var result = await _service.GetUserBy(u => u.UserId == id);
+        var result = await _service.GetUserById(id);
 
         return result.isSuccess switch
         {

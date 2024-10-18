@@ -6,4 +6,8 @@ namespace Sales.Infrastructure.Repositories;
 
 public class CategoryRepository(SalesDbContext context) : Repository<Category>(context), ICategoryRepository
 {
+    public async Task<Category?> GetByIdAsync(int id)
+    {
+        return await GetAsync(c => c.CategoryId == id);
+    }
 }

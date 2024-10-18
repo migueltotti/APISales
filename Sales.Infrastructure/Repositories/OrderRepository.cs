@@ -11,6 +11,11 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
     }
 
+    public Task<Order?> GetByIdAsync(int id)
+    {
+        return GetAsync(o => o.OrderId == id);
+    }
+
     public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)
     {
         var orders = _context.Orders.FromSqlInterpolated(

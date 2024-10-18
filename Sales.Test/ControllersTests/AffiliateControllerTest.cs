@@ -72,7 +72,7 @@ public class AffiliateControllerTest
         var affiliate = _fixture.Create<AffiliateDTOOutput>();
         var affiliateResult = Result<AffiliateDTOOutput>.Success(affiliate);
 
-        _mockAffiliateService.GetAffiliateBy(Arg.Any<Expression<Func<Affiliate, bool>>>())
+        _mockAffiliateService.GetAffiliateById(Arg.Any<int>())
             .Returns(affiliateResult);
 
         // Act
@@ -86,7 +86,7 @@ public class AffiliateControllerTest
             .Which.StatusCode.Should().Be(200);
         obj.Value.Should().BeEquivalentTo(affiliateResult.value);
         
-        await _mockAffiliateService.Received(1).GetAffiliateBy(Arg.Any<Expression<Func<Affiliate, bool>>>());
+        await _mockAffiliateService.Received(1).GetAffiliateById(Arg.Any<int>());
     }
     
     [Fact]
@@ -97,7 +97,7 @@ public class AffiliateControllerTest
         var error = _fixture.Create<Error>();
         var affiliateResult = Result<AffiliateDTOOutput>.Failure(error);
 
-        _mockAffiliateService.GetAffiliateBy(Arg.Any<Expression<Func<Affiliate, bool>>>())
+        _mockAffiliateService.GetAffiliateById(Arg.Any<int>())
             .Returns(affiliateResult);
 
         // Act
@@ -111,7 +111,7 @@ public class AffiliateControllerTest
             .Which.StatusCode.Should().Be(404);
         obj.Value.Should().BeEquivalentTo(affiliateResult.GenerateErrorResponse());
         
-        await _mockAffiliateService.Received(1).GetAffiliateBy(Arg.Any<Expression<Func<Affiliate, bool>>>());
+        await _mockAffiliateService.Received(1).GetAffiliateById(Arg.Any<int>());
     }
     
     [Fact]

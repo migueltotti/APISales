@@ -7,6 +7,11 @@ namespace Sales.Infrastructure.Repositories;
 
 public class UserRepository(SalesDbContext context) : Repository<User>(context), IUserRepository
 {
+    public async Task<User?> GetByIdAsync(int id)
+    {
+        return await GetAsync(u => u.UserId == id);
+    }
+
     public async Task<IEnumerable<User>> GetUsersOrders()
     {
         var employeesOrdersList = await _context.Users

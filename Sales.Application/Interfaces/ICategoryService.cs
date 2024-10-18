@@ -18,6 +18,7 @@ public interface ICategoryService
     Task<IPagedList<ProductDTOOutput>> GetProducts(int categoryId, QueryStringParameters parameters);
     Task<IPagedList<ProductDTOOutput>> GetProductsByValue(int categoryId, ProductParameters parameters);
     
+    Task<Result<CategoryDTOOutput>> GetCategoryById(int id);
     Task<Result<CategoryDTOOutput>> GetCategoryBy(Expression<Func<Category, bool>> expression);
     Task<Result<CategoryDTOOutput>> CreateCategory(CategoryDTOInput category);      
     Task<Result<CategoryDTOOutput>> UpdateCategory(CategoryDTOInput category, int id); 

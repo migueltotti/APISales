@@ -51,8 +51,21 @@ public class ProductService : IProductService
         
         return products.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
-    
-    
+
+    public async Task<Result<ProductDTOOutput>> GetProductById(int id)
+    {
+        var product = await _uof.ProductRepository.GetByIdAsync(id);
+
+        if (product is null)
+        {
+            return Result<ProductDTOOutput>.Failure(ProductErrors.NotFound);
+        }
+
+        var productDto = _mapper.Map<ProductDTOOutput>(product);
+        
+        return Result<ProductDTOOutput>.Success(productDto);
+    }
+
     public async Task<Result<ProductDTOOutput>> GetProductBy(Expression<Func<Product, bool>> expression)
     {
         var product = await _uof.ProductRepository.GetAsync(expression);

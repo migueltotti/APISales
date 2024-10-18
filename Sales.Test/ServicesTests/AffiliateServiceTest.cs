@@ -82,6 +82,50 @@ public class AffiliateServiceTest
         await _mockUnitOfWork.AffiliateRepository.Received(1).GetAllAsync();
         _mockMapper.Received(1).Map<IEnumerable<AffiliateDTOOutput>>(Arg.Any<IEnumerable<Affiliate>>());
     }
+    
+    [Fact]
+    public async Task GetAffiliateById_ShouldReturnAffiliateThatMatchesId()
+    {
+        // Arrange
+        var affiliateId = _fixture.Create<int>();
+        var affiliate = _fixture.Create<Affiliate>();
+        var affiliateDto = _fixture.Create<AffiliateDTOOutput>();
+
+        _mockUnitOfWork.AffiliateRepository.GetByIdAsync(Arg.Any<int>())
+            .Returns(affiliate);
+        _mockMapper.Map<AffiliateDTOOutput>(Arg.Any<Affiliate>())
+            .Returns(affiliateDto);
+
+        // Act
+        var result = await _affiliateService.GetAffiliateById(affiliateId);
+
+        // Assert
+        result.isSuccess.Should().BeTrue();
+        result.value.Should().BeEquivalentTo(affiliateDto);
+
+        await _mockUnitOfWork.AffiliateRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+        _mockMapper.Received(1).Map<AffiliateDTOOutput>(Arg.Any<Affiliate>());
+    }
+
+    [Fact]
+    public async Task GetAffiliateById_ShouldReturnNotFoundWithNotFoundResponse_WhenAffiliateDoesNotExist()
+    {
+        // Arrange
+        var affiliateId = _fixture.Create<int>();
+        Affiliate affiliate = null;
+
+        _mockUnitOfWork.AffiliateRepository.GetByIdAsync(Arg.Any<int>())
+            .Returns(affiliate);
+
+        // Act
+        var result = await _affiliateService.GetAffiliateById(affiliateId);
+
+        // Assert
+        result.isSuccess.Should().BeFalse();
+        result.error.Should().BeEquivalentTo(AffiliateErros.NotFound);
+
+        await _mockUnitOfWork.AffiliateRepository.Received(1).GetByIdAsync(Arg.Any<int>());
+    }
 
     [Fact]
     public async Task GetAffiliateBy_ShouldReturnAffiliateThatMatchesSomeExpression()
