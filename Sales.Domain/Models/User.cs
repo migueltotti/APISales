@@ -22,6 +22,10 @@ public sealed class User
     public int AffiliateId { get; private set; }    
     public Affiliate? Affiliate { get; private set; }
 
+    private User()
+    {
+    }
+
     public User(int userId, string? name, string? email, string? password, string? cpf, decimal points, DateTime dateBirth, Role role, int affiliateId)
     {
         UserId = userId;

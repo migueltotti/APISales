@@ -1,3 +1,5 @@
+
+
 namespace Sales.Domain.Models;
 
 public sealed class Category
@@ -8,7 +10,11 @@ public sealed class Category
     
     // Category 1 : n Product
     public ICollection<Product>? Products { get; private set; }
-
+    
+    private Category()
+    {
+    }
+    
     public Category(int categoryId, string? name, string? imageUrl)
     {
         CategoryId = categoryId;

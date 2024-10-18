@@ -1,21 +1,23 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Infrastructure.Repositories;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Sales.Infrastructure.Cache;
 
 public class CacheAffiliateRepository : IAffiliateRepository
 {
     private readonly AffiliateRepository _decorated;
-    private readonly IMemoryCache _cache;
+    private readonly IDistributedCache _distributedCache;
 
-    public CacheAffiliateRepository(AffiliateRepository decorated, IMemoryCache cache)
+    public CacheAffiliateRepository(AffiliateRepository decorated, IDistributedCache distributedCache)
     {
         _decorated = decorated;
-        _cache = cache;
+        _distributedCache = distributedCache;
     }
 
     public Task<IEnumerable<Affiliate>> GetAllAsync()
@@ -27,15 +29,35 @@ public class CacheAffiliateRepository : IAffiliateRepository
     {
         var key = $"affiliate-{id}";
 
-        return await _cache.GetOrCreateAsync(
-            key,
-            entry =>
+        var cachedAffiliate = await _distributedCache.GetStringAsync(key);
+
+        Affiliate? affiliate;
+        if (string.IsNullOrEmpty(cachedAffiliate))
+        {
+            affiliate = await _decorated.GetByIdAsync(id);
+
+            if (affiliate is null)
             {
-                entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                entry.Size = 1;
-                
-                return _decorated.GetByIdAsync(id);
+                return affiliate;
+            }
+            
+            await _distributedCache.SetStringAsync(
+                key,
+                JsonSerializer.Serialize(affiliate));
+            
+            return affiliate;
+        }
+        
+        affiliate = JsonConvert.DeserializeObject<Affiliate>(
+            cachedAffiliate,
+            new JsonSerializerSettings
+            {
+                ConstructorHandling = 
+                    ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ContractResolver = new PrivateResolver()
             });
+        
+        return affiliate;
     }
 
     public Task<Affiliate?> GetAsync(Expression<Func<Affiliate, bool>> expression)

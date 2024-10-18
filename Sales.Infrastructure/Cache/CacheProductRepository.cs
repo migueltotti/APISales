@@ -1,20 +1,23 @@
 using System.Linq.Expressions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Infrastructure.Repositories;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Sales.Infrastructure.Cache;
 
 public class CacheProductRepository : IProductRepository
 {
     private readonly ProductRepository _decorator;
-    private readonly IMemoryCache _cache;
+    private readonly IDistributedCache _distributedCache;
 
-    public CacheProductRepository(ProductRepository decorator, IMemoryCache cache)
+    public CacheProductRepository(ProductRepository decorator, IDistributedCache distributedCache)
     {
         _decorator = decorator;
-        _cache = cache;
+        _distributedCache = distributedCache;
     }
     public async Task<IEnumerable<Product>> GetAllAsync()
     {
@@ -25,15 +28,35 @@ public class CacheProductRepository : IProductRepository
     {
         var key = $"product-{id}";
 
-        return await _cache.GetOrCreateAsync(
-            key,
-            entry =>
+        var cachedProduct = await _distributedCache.GetStringAsync(key);
+
+        Product? product;
+        if (string.IsNullOrEmpty(cachedProduct))
+        {
+            product = await _decorator.GetByIdAsync(id);
+
+            if (product is null)
             {
-                entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                entry.Size = 1;
-                
-                return _decorator.GetByIdAsync(id);
+                return product;
+            }
+            
+            await _distributedCache.SetStringAsync(
+                key,
+                JsonSerializer.Serialize(product));
+            
+            return product;
+        }
+        
+        product = JsonConvert.DeserializeObject<Product>(
+            cachedProduct,
+            new JsonSerializerSettings
+            {
+                ConstructorHandling = 
+                    ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ContractResolver = new PrivateResolver()
             });
+        
+        return product;
     }
 
     public async Task<Product?> GetAsync(Expression<Func<Product, bool>> expression)

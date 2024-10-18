@@ -49,6 +49,14 @@ public static class DependencyInjection
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<UsersDataDbContext>()
             .AddDefaultTokenProviders();
+
+        // Configure Redis
+        services.AddStackExchangeRedisCache(redisOptions =>
+        {
+            string connection = configuration.GetConnectionString("Redis")!;
+
+            redisOptions.Configuration = connection;
+        });
         
         // Add Repositories
         services.AddScoped<UserRepository>();

@@ -1,20 +1,23 @@
 using System.Linq.Expressions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Infrastructure.Repositories;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Sales.Infrastructure.Cache;
 
 public class CacheOrderRepository : IOrderRepository
 {
     private readonly OrderRepository _decorator;
-    private readonly IMemoryCache _cache;
+    private readonly IDistributedCache _distributedCache;
 
-    public CacheOrderRepository(OrderRepository decorator, IMemoryCache cache)
+    public CacheOrderRepository(OrderRepository decorator, IDistributedCache distributedCache)
     {
         _decorator = decorator;
-        _cache = cache;
+        _distributedCache = distributedCache;
     }
 
     public async Task<IEnumerable<Order>> GetAllAsync()
@@ -46,15 +49,35 @@ public class CacheOrderRepository : IOrderRepository
     {
         var key = $"order-{id}";
 
-        return await _cache.GetOrCreateAsync(
-            key,
-            entry =>
+        var cachedOrder = await _distributedCache.GetStringAsync(key);
+
+        Order? order;
+        if (string.IsNullOrEmpty(cachedOrder))
+        {
+            order = await _decorator.GetByIdAsync(id);
+
+            if (order is null)
             {
-                entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-                entry.Size = 1;
-                
-                return _decorator.GetByIdAsync(id);
+                return order;
+            }
+            
+            await _distributedCache.SetStringAsync(
+                key,
+                JsonSerializer.Serialize(order));
+            
+            return order;
+        }
+        
+        order = JsonConvert.DeserializeObject<Order>(
+            cachedOrder,
+            new JsonSerializerSettings
+            {
+                ConstructorHandling = 
+                    ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ContractResolver = new PrivateResolver()
             });
+        
+        return order;
     }
 
     public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)

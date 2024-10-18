@@ -7,8 +7,12 @@ public class Affiliate
     public decimal Discount { get; private set; }
     
     // Affiliate 1 : n User
-    public ICollection<User> Users { get; private set; }   
+    public ICollection<User> Users { get; private set; }
 
+    private Affiliate()
+    {
+    }
+    
     public Affiliate(int affiliateId, string? name, decimal discount)
     {
         AffiliateId = affiliateId;

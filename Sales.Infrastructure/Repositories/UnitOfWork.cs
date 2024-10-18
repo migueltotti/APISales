@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Sales.Infrastructure.Context;
 using Sales.Domain.Interfaces;
@@ -5,7 +6,7 @@ using Sales.Infrastructure.Cache;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class UnitOfWork(SalesDbContext context, IMemoryCache cache) : IUnitOfWork
+public class UnitOfWork(SalesDbContext context, IDistributedCache distributedCache) : IUnitOfWork
 {
     private IUserRepository? _userRepository;
     private ICategoryRepository? _categoryRepository;
@@ -18,7 +19,7 @@ public class UnitOfWork(SalesDbContext context, IMemoryCache cache) : IUnitOfWor
         get
         {
             return _userRepository = _userRepository ?? new CacheUserRepository(
-                new UserRepository(context), cache);
+                new UserRepository(context), distributedCache);
         }
     }
 
@@ -27,7 +28,7 @@ public class UnitOfWork(SalesDbContext context, IMemoryCache cache) : IUnitOfWor
         get
         {
             return _categoryRepository = _categoryRepository ?? new CacheCategoryRepository(
-                new CategoryRepository(context), cache);
+                new CategoryRepository(context), distributedCache);
         }
     }
     
@@ -36,7 +37,7 @@ public class UnitOfWork(SalesDbContext context, IMemoryCache cache) : IUnitOfWor
         get
         {
             return _orderRepository = _orderRepository ?? new CacheOrderRepository(
-                new OrderRepository(context), cache);
+                new OrderRepository(context), distributedCache);
         }
     }
     
@@ -45,7 +46,7 @@ public class UnitOfWork(SalesDbContext context, IMemoryCache cache) : IUnitOfWor
         get
         {
             return _productRepository = _productRepository ?? new CacheProductRepository(
-                new ProductRepository(context), cache);
+                new ProductRepository(context), distributedCache);
         }
     }
     
@@ -54,7 +55,7 @@ public class UnitOfWork(SalesDbContext context, IMemoryCache cache) : IUnitOfWor
         get
         {
             return _affiliateRepository = _affiliateRepository ?? new CacheAffiliateRepository(
-                new AffiliateRepository(context), cache);
+                new AffiliateRepository(context), distributedCache);
         }
     }
 

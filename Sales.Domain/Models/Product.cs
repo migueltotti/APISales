@@ -21,6 +21,10 @@ public sealed class Product
     // Product n : n Order
     public ICollection<Order>? Orders { get; private set; }
 
+    private Product()
+    {
+    }
+
     public Product(int productId, string? name, string? description, decimal value, TypeValue typeValue, string? imageUrl, int stockQuantity, int categoryId)
     {
         ProductId = productId;

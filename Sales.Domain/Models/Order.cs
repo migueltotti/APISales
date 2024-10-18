@@ -17,6 +17,10 @@ public sealed class Order
     // Order n : n Product
     public ICollection<Product>? Products { get; private set; }
 
+    private Order()
+    {
+    }
+    
     public Order(int orderId, decimal totalValue, DateTime orderDate, int userId, Status orderStatus = Status.Preparing)
     {
         OrderId = orderId;
