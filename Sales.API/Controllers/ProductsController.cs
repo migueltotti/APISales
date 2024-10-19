@@ -13,7 +13,7 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProductsController(IProductService _service) : ControllerBase
+public class ProductsController(IProductService _service, ILogger<ProductsController> _logger) : ControllerBase
 {
     [HttpGet]   
     public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)    
@@ -69,10 +69,18 @@ public class ProductsController(IProductService _service) : ControllerBase
         //var result = await _service.GetProductBy(p => p.ProductId == id);
         var result = await _service.GetProductById(id);
         
-        return result.isSuccess switch
+        switch(result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.GetProductById),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
     
@@ -81,13 +89,21 @@ public class ProductsController(IProductService _service) : ControllerBase
     public async Task<ActionResult<ProductDTOOutput>> Post([FromBody] ProductDTOInput productDtoInput)  
     {
         var result = await _service.CreateProduct(productDtoInput);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => new CreatedAtRouteResult("GetProduct",
-                new { id = result.value.ProductId }, result.value),
-            false => BadRequest(result.GenerateErrorResponse())
-        };
+            case true:
+                return new CreatedAtRouteResult("GetProduct",
+                    new { id = result.value.ProductId }, result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.CreateProduct),
+                    DateTime.Now
+                );
+                return BadRequest(result.GenerateErrorResponse());
+        }
     }
     
     [HttpPut("{id:int:min(1)}")]
@@ -101,6 +117,12 @@ public class ProductsController(IProductService _service) : ControllerBase
             case true:
                 return Ok($"Product with id = {result.value.ProductId} was updated successfully");
             case false:
+                _logger.LogWarning(
+                   "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                   result.error,
+                   nameof(_service.UpdateProduct),
+                   DateTime.Now
+                );
                 if (result.error.HttpStatusCode == HttpStatusCode.NotFound)
                     return NotFound(result.error.Description);
                 
@@ -114,10 +136,18 @@ public class ProductsController(IProductService _service) : ControllerBase
     {
         var result = await _service.DeleteProduct(id);
         
-        return result.isSuccess switch
+        switch(result.isSuccess)
         {
-            true => Ok($"Category with id = {result.value.ProductId} was deleted successfully"),
-            false => NotFound(result.GenerateErrorResponse())
-        };
+            case true:
+                return Ok($"Category with id = {result.value.ProductId} was deleted successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.DeleteProduct),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
     }
 }

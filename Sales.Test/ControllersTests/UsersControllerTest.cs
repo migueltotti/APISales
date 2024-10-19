@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Sales.API.Controllers;
 using Sales.Application.DTOs.TokenDTO;
@@ -25,6 +26,7 @@ public class UsersControllerTest
 {
     private readonly IUserService _mockUserService;
     private readonly UserManager<ApplicationUser> _mockUserManager;
+    private readonly ILogger<UsersController> _mockLogger;
     private readonly Fixture _fixture;
     private readonly UsersController _controller;
 
@@ -42,9 +44,10 @@ public class UsersControllerTest
             null,
             null
             );
+        _mockLogger = Substitute.For<ILogger<UsersController>>();
         _fixture = new Fixture();
         
-        _controller = new UsersController(_mockUserService, _mockUserManager)
+        _controller = new UsersController(_mockUserService, _mockUserManager, _mockLogger)
         {
             ControllerContext =
             {

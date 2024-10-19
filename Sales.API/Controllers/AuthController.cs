@@ -38,9 +38,18 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var result = await _loginValidator.ValidateAsync(model);
-        
+
         if (!result.IsValid)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "Login model invalid input" },
+                nameof(_loginValidator.ValidateAsync),
+                DateTime.Now
+            );
             return BadRequest(result.Errors);
+        }
+            
         
         var user = await _userManager.FindByEmailAsync(model.Email!);
 
@@ -80,6 +89,12 @@ public class AuthController : ControllerBase
             });
         }
         
+        _logger.LogWarning(
+            "Request failed {@Error}, {@RequestName}, {@DateTime}",
+            new { Status = "Error", Message = "Unauthorized access token" },
+            nameof(_userManager.FindByEmailAsync),
+            DateTime.Now
+        );
         return Unauthorized();
     }
 
@@ -88,15 +103,29 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
         var result = await _registerValidator.ValidateAsync(model);
-        
+
         if (!result.IsValid)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "Register model invalid input" },
+                nameof(_registerValidator.ValidateAsync),
+                DateTime.Now
+            );
             return BadRequest(result.Errors);
+        }
+            
         
         var userExists = await _userManager.FindByEmailAsync(model.Email!);
 
         if (userExists is not null)
         {
-            _logger.LogInformation(1, "User already exists.");
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "User with the same Email already exists!" },
+                nameof(_userManager.FindByEmailAsync),
+                DateTime.Now
+            );
             return StatusCode(StatusCodes.Status500InternalServerError,
                 new Response { Status = "Error", Message = $"User with the same Email already exists!" });
         }
@@ -112,6 +141,12 @@ public class AuthController : ControllerBase
 
         if (!resultUser.Succeeded)
         {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "User creation failed!" },
+                nameof(_userManager.CreateAsync),
+                DateTime.Now
+            );
             return StatusCode((int)HttpStatusCode.InternalServerError,
                 new Response { Status = "Error", Message = "User creation failed!" });
         }
@@ -124,7 +159,16 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
     {
         if (tokenModel is null)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "Token model is null" },
+                nameof(RefreshToken),
+                DateTime.Now
+            );
             return BadRequest("Invalid client request");
+        }
+            
         
         string? accessToken =  tokenModel.AccessToken
                                 ?? throw new ArgumentNullException(nameof(tokenModel));
@@ -135,7 +179,15 @@ public class AuthController : ControllerBase
         var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken!, _config);
 
         if (principal is null)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "Invalid access/refresh token" },
+                nameof(_tokenService.GetPrincipalFromExpiredToken),
+                DateTime.Now
+            );
             return BadRequest("Invalid access/refresh token");
+        }
         
         string username = principal.Identity.Name.Replace(" ", "");
         
@@ -144,6 +196,13 @@ public class AuthController : ControllerBase
         if (user is null || user.RefreshToken != refreshToken
                          || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "Invalid access/refresh token" },
+                nameof(_userManager.FindByNameAsync),
+                DateTime.Now
+            );
+            
             return BadRequest("Invalid access/refresh token");
         }
         
@@ -166,9 +225,18 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Revoke(string username)
     {
         var user = await _userManager.FindByNameAsync(username.Replace(" ", ""));
-        
-        if(user is null)
+
+        if (user is null)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                new { Status = "Error", Message = "Invalid client request" },
+                nameof(_userManager.FindByNameAsync),
+                DateTime.Now
+            );
+            
             return BadRequest("Invalid client request");
+        }
         
         user.RefreshToken = null;
         
@@ -189,19 +257,28 @@ public class AuthController : ControllerBase
 
             if (roleResult.Succeeded)
             {
-                _logger.LogInformation(1, "Role Added");
                 return StatusCode(StatusCodes.Status200OK,
                     new Response { Status = "Success", Message = $"Role {roleName} added successfully" });
             }
             else
             {
-                _logger.LogInformation(2, "Error");
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    new { Status = "Error", Message = "Issue adding the new role" },
+                    nameof(_roleManager.CreateAsync),
+                    DateTime.Now
+                );
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new Response { Status = "Error", Message = $"Issue adding the new {roleName} role" });
             }
         }
         
-        _logger.LogInformation(3, "Error");
+        _logger.LogWarning(
+            "Request failed {@Error}, {@RequestName}, {@DateTime}",
+            new { Status = "Error", Message = "Role already exists" },
+            nameof(_roleManager.RoleExistsAsync),
+            DateTime.Now
+        );
         return StatusCode(StatusCodes.Status400BadRequest,
             new Response { Status = "Error", Message = "Role already exists" });
     }
@@ -218,18 +295,28 @@ public class AuthController : ControllerBase
 
             if (result.Succeeded)
             {
-                _logger.LogInformation(1, $"User {user.Email} added to the {roleName} role");
                 return StatusCode(StatusCodes.Status200OK,
                     new Response { Status = "Success", Message = $"User {user.Email} added to the {roleName} role" });
             }
             else
             {
-                _logger.LogInformation(2, $"Error: Unable to add user {user.Email} to the {roleName} role");
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    new { Status = "Error", Message = "Error: Unable to add user to the role" },
+                    nameof(_userManager.AddToRoleAsync),
+                    DateTime.Now
+                );
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new Response { Status = "Error", Message = $"Error: Unable to add user {user.Email} to the {roleName} role" });
             }
         }
         
+        _logger.LogWarning(
+            "Request failed {@Error}, {@RequestName}, {@DateTime}",
+            new { Status = "Error", Message = "Unable to find user" },
+            nameof(_userManager.FindByEmailAsync),
+            DateTime.Now
+        );
         return BadRequest(new {error = "Unable to find user"});
     }
 }

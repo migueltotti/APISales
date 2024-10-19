@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Sales.API.Filter;
 using Sales.Application.DTOs.CategoryDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
@@ -13,7 +15,7 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CategoriesController(ICategoryService service) : Controller
+public class CategoriesController(ICategoryService service, ILogger<CategoriesController> _logger) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)
@@ -45,10 +47,18 @@ public class CategoriesController(ICategoryService service) : Controller
         //var result = await service.GetCategoryBy(c => c.CategoryId == id);
         var result = await service.GetCategoryById(id);
         
-        return result.isSuccess switch
+        switch(result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.GetCategoryById),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
     
@@ -82,11 +92,19 @@ public class CategoriesController(ICategoryService service) : Controller
     {
         var result = await service.CreateCategory(categoryDtoInput);
         
-        return result.isSuccess switch
+        switch(result.isSuccess)
         {
-            true => new CreatedAtRouteResult("GetCategory",
-                new { id = result.value.CategoryId }, result.value),
-            false => BadRequest(result.GenerateErrorResponse())
+            case true:
+                return  new CreatedAtRouteResult("GetCategory",
+                    new { id = result.value.CategoryId }, result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.CreateCategory),
+                    DateTime.Now
+                );
+                return BadRequest(result.GenerateErrorResponse());
         };
     }
 
@@ -101,6 +119,13 @@ public class CategoriesController(ICategoryService service) : Controller
             case true:
                 return Ok($"Category with id = {result.value.CategoryId} was updated successfully");
             case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.UpdateCategory),
+                    DateTime.Now
+                );
+                
                 if (result.error.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
                     return NotFound(result.GenerateErrorResponse());
                 
@@ -113,11 +138,19 @@ public class CategoriesController(ICategoryService service) : Controller
     public async Task<ActionResult<CategoryDTOOutput>> Delete(int id)
     {
         var result = await service.DeleteCategory(id);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok($"Category with id = {result.value.CategoryId} was deleted successfully"),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok($"Category with id = {result.value.CategoryId} was deleted successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.DeleteCategory),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
 }

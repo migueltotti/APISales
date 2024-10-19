@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Sales.API.Controllers;
 using Sales.Application.DTOs.ProductDTO;
@@ -21,14 +22,16 @@ public class ProductsControllerTest
 {
     private readonly ProductsController _productsController;
     private readonly IProductService _mockProductService;
+    private readonly ILogger<ProductsController> _mockLogger;
     private readonly Fixture _fixture;
 
     public ProductsControllerTest()
     {
         _mockProductService = Substitute.For<IProductService>();
+        _mockLogger = Substitute.For<ILogger<ProductsController>>();
         _fixture = new Fixture();
         
-        _productsController = new ProductsController(_mockProductService)
+        _productsController = new ProductsController(_mockProductService, _mockLogger)
         {
             ControllerContext =
             {

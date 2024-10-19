@@ -114,6 +114,8 @@ public static class DependencyInjection
         services.AddScoped<IValidator<LoginModel>, LoginValidator>();
         services.AddScoped<IValidator<RegisterModel>, RegisterValidator>();
         
+        // Add Filters
+        
         // Add DTO Mapping
         services.AddAutoMapper(typeof(MappingDTO));
         

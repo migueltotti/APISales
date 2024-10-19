@@ -11,7 +11,8 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AffiliatesController(IAffiliateService service) : Controller
+public class AffiliatesController(IAffiliateService service,
+    ILogger<AffiliatesController> _logger) : Controller
 {
     [HttpGet]
     [Authorize]
@@ -31,12 +32,20 @@ public class AffiliatesController(IAffiliateService service) : Controller
     {
         //var result = await service.GetAffiliateBy(c => c.AffiliateId == id);
         var result = await service.GetAffiliateById(id);
-
-        return result.isSuccess switch
+        
+        switch (result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
-        };
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.GetAffiliateById),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
     }
 
     [HttpPost]
@@ -45,12 +54,20 @@ public class AffiliatesController(IAffiliateService service) : Controller
     {
         var result = await service.CreateAffiliate(affiliateDtoInput);
         
-        return result.isSuccess switch
+        switch (result.isSuccess)
         {
-            true => new CreatedAtRouteResult("GetAffiliate",
-                new { id = result.value.AffiliateId }, result.value),
-            false => BadRequest(result.GenerateErrorResponse())
-        };
+            case true:
+                return new CreatedAtRouteResult("GetAffiliate",
+                    new { id = result.value.AffiliateId }, result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.CreateAffiliate),
+                    DateTime.Now
+                );
+                return BadRequest(result.GenerateErrorResponse());
+        }
     }
 
     [HttpPut("{id:int:min(1)}")]
@@ -64,6 +81,13 @@ public class AffiliatesController(IAffiliateService service) : Controller
             case true:
                 return Ok($"Affiliate with id = {result.value.AffiliateId} was updated successfully");
             case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.UpdateAffiliate),
+                    DateTime.Now
+                );
+                
                 if (result.error.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
                     return NotFound(result.GenerateErrorResponse());
                 
@@ -76,11 +100,19 @@ public class AffiliatesController(IAffiliateService service) : Controller
     public async Task<ActionResult<AffiliateDTOOutput>> Delete(int id)
     {
         var result = await service.DeleteAffiliate(id);
-
-        return result.isSuccess switch
+        
+        switch (result.isSuccess)
         {
-            true => Ok($"Affiliate with id = {result.value.AffiliateId} was deleted successfully"),
-            false => NotFound(result.GenerateErrorResponse())
-        };
+            case true:
+                return Ok($"Affiliate with id = {result.value.AffiliateId} was deleted successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(service.DeleteAffiliate),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
     }
 }

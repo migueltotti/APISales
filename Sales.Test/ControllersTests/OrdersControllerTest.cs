@@ -4,6 +4,7 @@ using AutoFixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Sales.API.Controllers;
 using Sales.Application.DTOs.OrderDTO;
@@ -21,14 +22,16 @@ public class OrdersControllerTest
 {
     private readonly IOrderService _mockOrderService;
     private readonly OrdersController _orderController;
+    private readonly ILogger<OrdersController> _mockLogger;
     private readonly Fixture _fixture;
 
     public OrdersControllerTest()
     {
         _mockOrderService = Substitute.For<IOrderService>();
+        _mockLogger = Substitute.For<ILogger<OrdersController>>();
         _fixture = new Fixture();
 
-        _orderController = new OrdersController(_mockOrderService)
+        _orderController = new OrdersController(_mockOrderService, _mockLogger)
         {
             ControllerContext =
             {

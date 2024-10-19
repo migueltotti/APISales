@@ -4,7 +4,9 @@ using AutoFixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.Exceptions;
 using Sales.API.Controllers;
 using Sales.Application.DTOs.AffiliateDTO;
 using Sales.Application.Interfaces;
@@ -19,15 +21,17 @@ public class AffiliateControllerTest
 {
     private readonly AffiliatesController _controller;
     private readonly IAffiliateService _mockAffiliateService;
+    private readonly ILogger<AffiliatesController> _mockLogger;
     private readonly Fixture _fixture;
 
     public AffiliateControllerTest()
     {
         _mockAffiliateService = Substitute.For<IAffiliateService>();
+        _mockLogger = Substitute.For<ILogger<AffiliatesController>>();
         
         _fixture = new Fixture();
         
-        _controller = new AffiliatesController(_mockAffiliateService)
+        _controller = new AffiliatesController(_mockAffiliateService, _mockLogger)
         {
             ControllerContext =
             {

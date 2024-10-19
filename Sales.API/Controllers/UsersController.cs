@@ -22,7 +22,9 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UsersController(IUserService _service, UserManager<ApplicationUser> _userManager) : ControllerBase
+public class UsersController(IUserService _service,
+    UserManager<ApplicationUser> _userManager,
+    ILogger<UsersController> _logger) : ControllerBase
 {
 
     [HttpGet("getUsers")]
@@ -56,12 +58,20 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     public async Task<ActionResult<UserDTOOutput>> GetUsersByCpf([FromQuery] UserParameters parameters)
     {
         var result = await _service.GetUserBy(u => u.Cpf == parameters.Cpf);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
-        };
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.GetUserBy),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
     }
     
     [HttpGet("role")]
@@ -83,12 +93,20 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     {
         //var result = await _service.GetUserBy(u => u.UserId == id);
         var result = await _service.GetUserById(id);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
-        };
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.GetUserById),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
     }
 
     // Users unauthorized can create a User
@@ -111,6 +129,12 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
 
             if (!resultUser.Succeeded)
             {
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_userManager.CreateAsync),
+                    DateTime.Now
+                );
                 return StatusCode((int)HttpStatusCode.InternalServerError,
                     new Response { Status = "Error", Message = "User creation failed" });
             }
@@ -119,6 +143,12 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
 
             if (!resultUserRole.Succeeded)
             {
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_userManager.AddToRoleAsync),
+                    DateTime.Now
+                );
                 return StatusCode((int)HttpStatusCode.InternalServerError,
                     new Response { Status = "Error", Message = "Assign user to role failed" });
             }
@@ -130,6 +160,12 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
                 return CreatedAtRoute("GetUser",
                     new { id = result.value.UserId }, result.value);
             case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.CreateUser),
+                    DateTime.Now
+                );
                 if (result.error.HttpStatusCode == HttpStatusCode.BadRequest)
                     return BadRequest(result.GenerateErrorResponse());
                 return StatusCode((int)HttpStatusCode.InternalServerError,
@@ -148,6 +184,12 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
             case true:
                 return Ok($"User with id = {result.value.UserId} was updated successfully");
             case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.UpdateUser),
+                    DateTime.Now
+                );
                 if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
                     return NotFound(result.GenerateErrorResponse());
                 
@@ -161,10 +203,18 @@ public class UsersController(IUserService _service, UserManager<ApplicationUser>
     {
         var result = await _service.DeleteUser(id);
         
-        return result.isSuccess switch
+        switch (result.isSuccess)
         {
-            true => Ok($"User with id = {result.value.UserId} was deleted successfully"),
-            false => NotFound(result.GenerateErrorResponse())
-        };
+            case true:
+                return Ok($"User with id = {result.value.UserId} was deleted successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.UpdateUser),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
     }
 }

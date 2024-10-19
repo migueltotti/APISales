@@ -13,7 +13,7 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrdersController(IOrderService _service) : ControllerBase
+public class OrdersController(IOrderService _service, ILogger<OrdersController> _logger) : ControllerBase
 {
     [HttpGet]
     [Authorize("AdminEmployeeOnly")]
@@ -113,11 +113,19 @@ public class OrdersController(IOrderService _service) : ControllerBase
     {
         //var result = await _service.GetOrderBy(o => o.OrderId == id);
         var result = await _service.GetOrderById(id);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.GetOrderById),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
     
@@ -126,12 +134,20 @@ public class OrdersController(IOrderService _service) : ControllerBase
     public async Task<ActionResult<OrderDTOOutput>> Post([FromBody] OrderDTOInput orderDtoInput)
     {
         var result = await _service.CreateOrder(orderDtoInput);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => new CreatedAtRouteResult("GetOrder",
-                new { id = result.value.OrderId }, result.value),
-            false => BadRequest(result.GenerateErrorResponse())
+            case true:
+                return new CreatedAtRouteResult("GetOrder",
+                    new { id = result.value.OrderId }, result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.CreateOrder),
+                    DateTime.Now
+                );
+                return BadRequest(result.GenerateErrorResponse());
         };
     }
     
@@ -146,6 +162,13 @@ public class OrdersController(IOrderService _service) : ControllerBase
             case true:
                 return Ok($"Order with id = {result.value.OrderId} has been update successfully");
             case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.UpdateOrder),
+                    DateTime.Now
+                );
+                
                 if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
                     return NotFound(result.GenerateErrorResponse());
                 
@@ -159,10 +182,18 @@ public class OrdersController(IOrderService _service) : ControllerBase
     {
         var result = await _service.DeleteOrder(id);
         
-        return result.isSuccess switch
+        switch(result.isSuccess)
         {
-            true => Ok($"Order with id = {result.value.OrderId} has been deleted successfully"),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok($"Order with id = {result.value.OrderId} has been deleted successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.DeleteOrder),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
     
@@ -172,11 +203,19 @@ public class OrdersController(IOrderService _service) : ControllerBase
     public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetProducts(int orderId)
     {
         var result = await _service.GetProductsByOrderId(orderId);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok(result.value),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.GetProductsByOrderId),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
 
@@ -202,6 +241,13 @@ public class OrdersController(IOrderService _service) : ControllerBase
             case true:
                 return Ok($"Product with id = {productId} was added successfully on Order with id = {orderId}");
             case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.AddProduct),
+                    DateTime.Now
+                );
+                
                 if (result.error.HttpStatusCode is HttpStatusCode.NotFound)
                     return NotFound(result.GenerateErrorResponse());
                 
@@ -215,11 +261,19 @@ public class OrdersController(IOrderService _service) : ControllerBase
     public async Task<ActionResult<OrderProductDTO>> RemoveProduct(int orderId, int productId)
     {
         var result = await _service.RemoveProduct(orderId, productId);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok($"Product with id = {productId} was removed from Order with id = {orderId} successfully"),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok($"Product with id = {productId} was removed from Order with id = {orderId} successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.RemoveProduct),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
     
@@ -228,11 +282,19 @@ public class OrdersController(IOrderService _service) : ControllerBase
     public async Task<ActionResult<OrderDTOOutput>> SentOrder(int orderId)
     {
         var result = await _service.SentOrder(orderId);
-
-        return result.isSuccess switch
+        
+        switch(result.isSuccess)
         {
-            true => Ok($"Order with id = {result.value.OrderId} sent successfully"),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok($"Order with id = {result.value.OrderId} sent successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.SentOrder),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
 
@@ -242,10 +304,18 @@ public class OrdersController(IOrderService _service) : ControllerBase
     {
         var result = await _service.FinishOrder(orderId);
 
-        return result.isSuccess switch
+        switch(result.isSuccess)
         {
-            true => Ok($"Order with id = {result.value.OrderId} finished successfully"),
-            false => NotFound(result.GenerateErrorResponse())
+            case true:
+                return Ok($"Order with id = {result.value.OrderId} finished successfully");
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.FinishOrder),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
         };
     }
 }

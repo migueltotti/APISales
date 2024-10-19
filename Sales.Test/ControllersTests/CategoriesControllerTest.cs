@@ -4,6 +4,7 @@ using AutoFixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Sales.API.Controllers;
 using Sales.Application.DTOs.CategoryDTO;
@@ -22,14 +23,16 @@ public class CategoriesControllerTest
 {
     private readonly CategoriesController _categoriesController;
     private readonly ICategoryService _mockCategoriesService;
+    private readonly ILogger<CategoriesController> _mockLogger;
     private readonly Fixture _fixture;
 
     public CategoriesControllerTest()
     {
         _mockCategoriesService = Substitute.For<ICategoryService>();
+        _mockLogger = Substitute.For<ILogger<CategoriesController>>();
         _fixture = new Fixture();
         
-        _categoriesController = new CategoriesController(_mockCategoriesService);
+        _categoriesController = new CategoriesController(_mockCategoriesService, _mockLogger);
         _categoriesController.ControllerContext.HttpContext = new DefaultHttpContext();
     }
 

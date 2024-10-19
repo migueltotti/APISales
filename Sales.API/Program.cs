@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NuGet.Packaging.Signing;
 using Sales.API.ExceptionHandler;
+using Sales.API.Filter;
 using Sales.CrossCutting.IoC;
 
 namespace Sales.API;
@@ -17,14 +18,16 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
 
-        // Add services to the container.
-
-        builder.Services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-            });
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add<LoggingRequestsFilter>();
+        })
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
 
         builder.Services.AddCors( /*options =>
         {
@@ -151,7 +154,6 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
-        
         
         // Tratamento de execao global usando Middleware, biblioteca IExceptionHandler e ProblemDetails
         // Em conformidade com a RFC 7231 section 6.6.2
