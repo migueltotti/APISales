@@ -10,6 +10,7 @@ using NuGet.Packaging.Signing;
 using Sales.API.ExceptionHandler;
 using Sales.API.Filter;
 using Sales.CrossCutting.IoC;
+using Serilog;
 
 namespace Sales.API;
 
@@ -135,6 +136,9 @@ public class Program
                 }
             });
         });
+        
+        builder.Host.UseSerilog((context, configuration) => 
+            configuration.ReadFrom.Configuration(context.Configuration));
 
         var app = builder.Build();
 
@@ -144,6 +148,8 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+        app.UseSerilogRequestLogging();
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
