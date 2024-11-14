@@ -110,12 +110,13 @@ public class ProductsController(IProductService _service, ILogger<ProductsContro
     [Authorize("AdminOnly")]
     public async Task<ActionResult<ProductDTOOutput>> Put(int id, [FromBody] ProductDTOInput productDtoInput)
     {
+        _logger.LogInformation("Entrando no metodo do servico");
         var result = await _service.UpdateProduct(productDtoInput, id);
 
         switch (result.isSuccess)
         {
             case true:
-                return Ok($"Product with id = {result.value.ProductId} was updated successfully");
+                return Ok(new { message = $"Product with id = {result.value.ProductId} was updated successfully" });
             case false:
                 _logger.LogWarning(
                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -139,7 +140,7 @@ public class ProductsController(IProductService _service, ILogger<ProductsContro
         switch(result.isSuccess)
         {
             case true:
-                return Ok($"Category with id = {result.value.ProductId} was deleted successfully");
+                return Ok( new { message = $"Category with id = {result.value.ProductId} was deleted successfully" });
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",

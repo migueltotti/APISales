@@ -50,6 +50,31 @@ public class OrderService : IOrderService
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
+    public async Task<IPagedList<OrderProductsDTO>> GetAllOrdersWithProductsByUserId(int userId, QueryStringParameters parameters)
+    {
+        var ordersProducts = await _uof.OrderRepository.GetOrdersWithProductsByUserId(userId);
+
+        var productsDTO = new Dictionary<int, IEnumerable<ProductDTOOutput>>();
+
+        foreach (var op in ordersProducts)
+        {
+            if (productsDTO.TryAdd(op.OrderId, _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products)))
+            {
+                productsDTO[op.OrderId] = _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products);
+            }
+        }
+
+        var ordersProductsDTO = new List<OrderProductsDTO>();
+        
+        ordersProductsDTO.AddRange(ordersProducts.Select(op => 
+                new OrderProductsDTO(
+                    op.OrderId, op.TotalValue, op.OrderDate, op.OrderStatus, op.UserId, productsDTO[op.OrderId])
+                )
+        );
+
+        return ordersProductsDTO.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters)
     {
         var orders = await GetAllOrders();
@@ -259,23 +284,23 @@ public class OrderService : IOrderService
         return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
     }
 
-    public async Task<Result<OrderProductDTO>> AddProduct(int orderId, int productId, decimal amount)
+    public async Task<Result<OrderProductsDTO>> AddProduct(int orderId, int productId, decimal amount)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
         
         if(order is null)
-            return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
+            return Result<OrderProductsDTO>.Failure(OrderErrors.NotFound);
 
         if (order.OrderStatus is Status.Finished or Status.Sent)
-            return Result<OrderProductDTO>.Failure(OrderErrors.OrderFinishedOrSent);
+            return Result<OrderProductsDTO>.Failure(OrderErrors.OrderFinishedOrSent);
         
         var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
         
         if(product is null)
-            return Result<OrderProductDTO>.Failure(ProductErrors.NotFound);
+            return Result<OrderProductsDTO>.Failure(ProductErrors.NotFound);
 
         if (product.StockQuantity <= 0)
-            return Result<OrderProductDTO>.Failure(ProductErrors.StockUnavailable);
+            return Result<OrderProductsDTO>.Failure(ProductErrors.StockUnavailable);
 
         if (product.TypeValue is TypeValue.Uni)
             amount = Math.Truncate(amount);
@@ -284,7 +309,7 @@ public class OrderService : IOrderService
 
         if (!(rowsAffected > 0))
         {
-            return Result<OrderProductDTO>.Failure(OrderErrors.NoRowsAffected);
+            return Result<OrderProductsDTO>.Failure(OrderErrors.NoRowsAffected);
         }
         
         // Increase Order TotalValue
@@ -294,7 +319,7 @@ public class OrderService : IOrderService
         await _uof.CommitChanges();
         order.Products.Add(product);
 
-        return Result<OrderProductDTO>.Success(_mapper.Map<OrderProductDTO>(order));
+        return Result<OrderProductsDTO>.Success(_mapper.Map<OrderProductsDTO>(order));
     }
 
     public async Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId)
@@ -313,12 +338,12 @@ public class OrderService : IOrderService
     }
 
     // Refactor
-    public async Task<Result<OrderProductDTO>> RemoveProduct(int orderId, int productId)
+    public async Task<Result<OrderProductsDTO>> RemoveProduct(int orderId, int productId)
     {
         var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
         
         if(order is null)
-            return Result<OrderProductDTO>.Failure(OrderErrors.NotFound);
+            return Result<OrderProductsDTO>.Failure(OrderErrors.NotFound);
         
         // Get the value and the amount of the product that`s gonna be removed.
         var productValueAmount = await _uof.OrderRepository.GetProductValueAndAmount(orderId, productId);
@@ -326,7 +351,7 @@ public class OrderService : IOrderService
         var rowsAffected = await _uof.OrderRepository.RemoveProduct(order.OrderId, productId);
 
         if (!(rowsAffected > 0))
-            return Result<OrderProductDTO>.Failure(OrderErrors.ProductNotFound);
+            return Result<OrderProductsDTO>.Failure(OrderErrors.ProductNotFound);
         
         // Decrease Order TotalValue
         //var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
@@ -339,7 +364,7 @@ public class OrderService : IOrderService
         
         await _uof.CommitChanges();
         
-        return Result<OrderProductDTO>.Success(_mapper.Map<OrderProductDTO>(order));
+        return Result<OrderProductsDTO>.Success(_mapper.Map<OrderProductsDTO>(order));
     }
 
     public async Task<OrderReportDTO> GetOrderReport(DateTime startDate, DateTime endDate)

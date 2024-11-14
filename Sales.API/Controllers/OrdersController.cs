@@ -106,6 +106,19 @@ public class OrdersController(IOrderService _service, ILogger<OrdersController> 
         return Ok(ordersPaged.ToList());
     }
     
+    [HttpGet("Products/{userId:int:min(1)}")]
+    //[Authorize("AllowAnyUser")]
+    public async Task<ActionResult<IEnumerable<OrderProductsDTO>>> GetOrdersWithProductsByUserId(int userId, [FromQuery] QueryStringParameters parameters)
+    {
+        var ordersProductsPaged = await _service.GetAllOrdersWithProductsByUserId(userId, parameters);
+        
+        var metadata = ordersProductsPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersProductsPaged.ToList());
+    }
+    
     
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
     [Authorize("AllowAnyUser")]
@@ -258,7 +271,7 @@ public class OrdersController(IOrderService _service, ILogger<OrdersController> 
     [HttpDelete]
     [Route("{orderId:int:min(1)}/RemoveProduct/{productId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<OrderProductDTO>> RemoveProduct(int orderId, int productId)
+    public async Task<ActionResult<OrderProductsDTO>> RemoveProduct(int orderId, int productId)
     {
         var result = await _service.RemoveProduct(orderId, productId);
         

@@ -514,8 +514,8 @@ public class OrdersControllerTest
         var orderId = _fixture.Create<int>();
         var productId = _fixture.Create<int>();
         var amount = _fixture.Create<decimal>();
-        var order = _fixture.Create<OrderProductDTO>();
-        var orderResult = Result<OrderProductDTO>.Success(order);
+        var order = _fixture.Create<OrderProductsDTO>();
+        var orderResult = Result<OrderProductsDTO>.Success(order);
         
         _mockOrderService.AddProduct(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>())
             .Returns(orderResult);
@@ -542,7 +542,7 @@ public class OrdersControllerTest
         var productId = _fixture.Create<int>();
         var amount = _fixture.Create<decimal>();
         var error = new Error("NotFoundError", "NotFoundError", HttpStatusCode.NotFound);
-        var orderResult = Result<OrderProductDTO>.Failure(error);
+        var orderResult = Result<OrderProductsDTO>.Failure(error);
         
         _mockOrderService.AddProduct(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>())
             .Returns(orderResult);
@@ -569,7 +569,7 @@ public class OrdersControllerTest
         var productId = _fixture.Create<int>();
         var amount = _fixture.Create<decimal>();
         var error = new Error("BadRequestError", "BadRequestError", HttpStatusCode.BadRequest);
-        var orderResult = Result<OrderProductDTO>.Failure(error);
+        var orderResult = Result<OrderProductsDTO>.Failure(error);
         
         _mockOrderService.AddProduct(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>())
             .Returns(orderResult);
@@ -594,8 +594,8 @@ public class OrdersControllerTest
         // Arrange
         var productId = _fixture.Create<int>();
         var orderId = _fixture.Create<int>();
-        var order = _fixture.Create<OrderProductDTO>();
-        var orderResult = Result<OrderProductDTO>.Success(order);
+        var order = _fixture.Create<OrderProductsDTO>();
+        var orderResult = Result<OrderProductsDTO>.Success(order);
 
         _mockOrderService.RemoveProduct(Arg.Any<int>(), Arg.Any<int>()).Returns(orderResult);
         
@@ -605,7 +605,7 @@ public class OrdersControllerTest
         
         // Assert
         result.Result.Should().NotBeNull();
-        result.Should().BeOfType<ActionResult<OrderProductDTO>>();
+        result.Should().BeOfType<ActionResult<OrderProductsDTO>>();
         result.Result.Should().BeOfType<OkObjectResult>()
             .Which.StatusCode.Should().Be(200);
         obj.Value.Should().BeEquivalentTo($"Product with id = {productId} was removed from Order with id = {orderId} successfully");
@@ -620,7 +620,7 @@ public class OrdersControllerTest
         var productId = _fixture.Create<int>();
         var orderId = _fixture.Create<int>();
         var error = _fixture.Create<Error>();
-        var orderResult = Result<OrderProductDTO>.Failure(error);
+        var orderResult = Result<OrderProductsDTO>.Failure(error);
 
         _mockOrderService.RemoveProduct(Arg.Any<int>(), Arg.Any<int>()).Returns(orderResult);
         
@@ -630,7 +630,7 @@ public class OrdersControllerTest
         
         // Assert
         result.Result.Should().NotBeNull();
-        result.Should().BeOfType<ActionResult<OrderProductDTO>>();
+        result.Should().BeOfType<ActionResult<OrderProductsDTO>>();
         result.Result.Should().BeOfType<NotFoundObjectResult>()
             .Which.StatusCode.Should().Be(404);
         obj.Value.Should().BeEquivalentTo(orderResult.GenerateErrorResponse());

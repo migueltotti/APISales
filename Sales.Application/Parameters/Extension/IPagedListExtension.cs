@@ -10,6 +10,7 @@ public static class IPagedListExtension
         {
             source.Count,
             source.PageSize,
+            source.PageNumber,
             source.PageCount,
             source.TotalItemCount,
             source.HasNextPage,

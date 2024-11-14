@@ -54,25 +54,27 @@ public class Result<TValue> //: Result
     public static Result<TValue> Failure(Error error) => new Result<TValue>(false, error);
     public static Result<TValue> Failure(Error error, List<ValidationFailure> validationFailures) => new Result<TValue>(false, error, validationFailures);
     
-    public string GenerateErrorResponse()
+    public Object GenerateErrorResponse()
     {
-        StringBuilder returnError = new StringBuilder();
+        StringBuilder stringError = new StringBuilder();
 
-        returnError.AppendLine(error.Description);
+        stringError.AppendLine(error.Description);
 
         if (validationFailures.Any())
         {
             foreach (var failures in validationFailures)
             {
-                returnError.AppendLine($"{failures.PropertyName} : {{");
-                returnError.AppendLine($"    {failures.ErrorMessage}");
+                stringError.AppendLine($"{failures.PropertyName} : {{");
+                stringError.AppendLine($"    {failures.ErrorMessage}");
                 if(!failures.Equals(validationFailures.Last()))
-                    returnError.AppendLine("},");
+                    stringError.AppendLine("},");
                 else
-                    returnError.AppendLine("}");
+                    stringError.AppendLine("}");
             }
         }
+        
+        var errorResponse = new { message = stringError.ToString() };
 
-        return returnError.ToString();
+        return errorResponse;
     }
 }

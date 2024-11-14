@@ -12,6 +12,11 @@ public class UserRepository(SalesDbContext context) : Repository<User>(context),
         return await GetAsync(u => u.UserId == id);
     }
 
+    public Task<User?> GetByEmailAsync(string email)
+    {
+        return _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    }
+
     public async Task<IEnumerable<User>> GetUsersOrders()
     {
         var employeesOrdersList = await _context.Users

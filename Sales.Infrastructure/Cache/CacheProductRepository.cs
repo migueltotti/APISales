@@ -59,6 +59,22 @@ public class CacheProductRepository : IProductRepository
         return product;
     }
 
+    public async Task UpdateCacheAsync(Product updatedProduct)
+    {
+        var key = $"product-{updatedProduct.ProductId}";
+        
+        var cachedProduct = await _distributedCache.GetStringAsync(key);
+
+        if (!string.IsNullOrEmpty(cachedProduct))
+        {
+            await _distributedCache.RemoveAsync(key);
+            
+            await _distributedCache.SetStringAsync(
+                key,
+                JsonSerializer.Serialize(updatedProduct));
+        }
+    }
+
     public async Task<Product?> GetAsync(Expression<Func<Product, bool>> expression)
     {
         return await _decorator.GetAsync(expression);

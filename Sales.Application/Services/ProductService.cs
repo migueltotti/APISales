@@ -138,6 +138,9 @@ public class ProductService : IProductService
 
         var productUpdated = _uof.ProductRepository.Update(productForUpdate);
         await _uof.CommitChanges();
+        
+        // update cache product
+        await _uof.ProductRepository.UpdateCacheAsync(productUpdated);
 
         var productDtoUpdated = _mapper.Map<ProductDTOOutput>(productUpdated);
 

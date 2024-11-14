@@ -7,6 +7,7 @@ public interface IOrderRepository : IRepository<Order>
 {
     Task<Order?> GetByIdAsync(int id); 
     Task<IEnumerable<Order>> GetOrdersByProduct(string productName);  
+    Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId); 
     Task<IEnumerable<Product>> GetProductsByDate(DateTime minDate, DateTime maxDate);  
     Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId);
     Task<Order> GetOrderProductsById(int orderId);

@@ -16,6 +16,25 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         return GetAsync(o => o.OrderId == id);
     }
 
+    public async Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId)
+    {
+        /*var ordersProducts = _context.Orders.FromSqlInterpolated(
+            $"""
+             SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId, o.OrderStatus,
+                    p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId  
+             FROM salesdb.`order` o 
+             LEFT JOIN salesdb.orderproduct op ON o.OrderId = op.OrdersOrderId 
+             LEFT JOIN salesdb.product p ON p.ProductId = op.ProductsProductId
+             WHERE o.userId = {userId}
+             ORDER BY o.OrderId;
+             """);*/
+        
+        var ordersProducts = _context.Orders.Where(o => o.UserId == userId)
+                        .Include(o => o.Products);
+
+        return await ordersProducts.ToListAsync();
+    }
+
     public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)
     {
         var orders = _context.Orders.FromSqlInterpolated(

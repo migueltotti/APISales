@@ -108,6 +108,26 @@ public class UsersController(IUserService _service,
                 return NotFound(result.GenerateErrorResponse());
         }
     }
+    
+    [HttpGet("email/{email}")]
+    public async Task<ActionResult<UserDTOOutput>> GetUserByEmail(string email)
+    {
+        var result = await _service.GetUserByEmail(email);
+        
+        switch(result.isSuccess)
+        {
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.GetUserById),
+                    DateTime.Now
+                );
+                return NotFound(result.GenerateErrorResponse());
+        }
+    }
 
     // Users unauthorized can create a User
     

@@ -718,12 +718,12 @@ public class OrderServiceTest
             "image.jpg",
             1,
             1);
-        var orderProductDto = _fixture.Create<OrderProductDTO>();
+        var orderProductDto = _fixture.Create<OrderProductsDTO>();
         
         _mockUof.OrderRepository.GetAsync(Arg.Any<Expression<Func<Order, bool>>>()).Returns(order);
         _mockUof.ProductRepository.GetAsync(Arg.Any<Expression<Func<Product, bool>>>()).Returns(product);
         _mockUof.OrderRepository.AddProduct(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>()).Returns(1);
-        _mockMapper.Map<OrderProductDTO>(Arg.Any<Order>()).Returns(orderProductDto);
+        _mockMapper.Map<OrderProductsDTO>(Arg.Any<Order>()).Returns(orderProductDto);
         
         // Act
         var result = await _orderService.AddProduct(orderId, product.ProductId, amount);
@@ -735,7 +735,7 @@ public class OrderServiceTest
         await _mockUof.OrderRepository.Received(1).GetAsync(Arg.Any<Expression<Func<Order, bool>>>());
         await _mockUof.ProductRepository.Received(1).GetAsync(Arg.Any<Expression<Func<Product, bool>>>());
         await _mockUof.OrderRepository.Received(1).AddProduct(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>());
-        _mockMapper.Received(1).Map<OrderProductDTO>(Arg.Any<Order>());
+        _mockMapper.Received(1).Map<OrderProductsDTO>(Arg.Any<Order>());
     }
     
     [Fact]
@@ -943,12 +943,12 @@ public class OrderServiceTest
         var productId = _fixture.Create<int>();
         var order = _fixture.Create<Order>();
         var productValueAmount = _fixture.CreateMany<ProductInfo>(3);
-        var orderProductDto = _fixture.Create<OrderProductDTO>();
+        var orderProductDto = _fixture.Create<OrderProductsDTO>();
         
         _mockUof.OrderRepository.GetAsync(Arg.Any<Expression<Func<Order, bool>>>()).Returns(order);
         _mockUof.OrderRepository.GetProductValueAndAmount(Arg.Any<int>(), Arg.Any<int>()).Returns(productValueAmount);
         _mockUof.OrderRepository.RemoveProduct(Arg.Any<int>(), Arg.Any<int>()).Returns(1);
-        _mockMapper.Map<OrderProductDTO>(Arg.Any<Order>()).Returns(orderProductDto);
+        _mockMapper.Map<OrderProductsDTO>(Arg.Any<Order>()).Returns(orderProductDto);
         
         // Act
         var result = await _orderService.RemoveProduct(orderId, productId);
@@ -960,7 +960,7 @@ public class OrderServiceTest
         await _mockUof.OrderRepository.Received(1).GetAsync(Arg.Any<Expression<Func<Order, bool>>>());
         await _mockUof.OrderRepository.Received(1).GetProductValueAndAmount(Arg.Any<int>(), Arg.Any<int>());
         await _mockUof.OrderRepository.Received(1).RemoveProduct(Arg.Any<int>(), Arg.Any<int>());
-        _mockMapper.Received(1).Map<OrderProductDTO>(Arg.Any<Order>());
+        _mockMapper.Received(1).Map<OrderProductsDTO>(Arg.Any<Order>());
     }
     
     [Fact]

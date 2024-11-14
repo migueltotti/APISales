@@ -14,4 +14,9 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         return await GetAsync(p => p.ProductId == id);
     }
+
+    public Task UpdateCacheAsync(Product updatedProduct)
+    {
+        throw new NotImplementedException();
+    }
 }

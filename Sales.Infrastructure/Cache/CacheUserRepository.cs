@@ -80,6 +80,41 @@ public class CacheUserRepository : IUserRepository
         return user;
     }
 
+    public async Task<User?> GetByEmailAsync(string email)
+    {
+        var key = $"user-{email}";
+
+        var cachedUser = await _distributedCache.GetStringAsync(key);
+
+        User? user;
+        if (string.IsNullOrEmpty(cachedUser))
+        {
+            user = await _decorated.GetByEmailAsync(email);
+
+            if (user is null)
+            {
+                return user;
+            }
+            
+            await _distributedCache.SetStringAsync(
+                key,
+                JsonSerializer.Serialize(user));
+            
+            return user;
+        }
+        
+        user = JsonConvert.DeserializeObject<User>(
+            cachedUser,
+            new JsonSerializerSettings
+            {
+                ConstructorHandling = 
+                    ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ContractResolver = new PrivateResolver()
+            });
+        
+        return user;
+    }
+
     public async Task<IEnumerable<User>> GetUsersOrders()
     {
         return await _decorated.GetUsersOrders();

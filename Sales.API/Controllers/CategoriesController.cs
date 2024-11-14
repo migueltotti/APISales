@@ -16,7 +16,7 @@ namespace Sales.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 public class CategoriesController(ICategoryService service, ILogger<CategoriesController> _logger) : Controller
-{
+{    
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)
     {

@@ -85,6 +85,11 @@ public class CacheOrderRepository : IOrderRepository
         return await _decorator.GetOrdersByProduct(productName);
     }
 
+    public Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId)
+    {
+        return _decorator.GetOrdersWithProductsByUserId(userId);
+    }
+
     public async Task<IEnumerable<Product>> GetProductsByDate(DateTime minDate, DateTime maxDate)
     {
         return await _decorator.GetProductsByDate(minDate, maxDate);

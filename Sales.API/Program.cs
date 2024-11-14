@@ -30,7 +30,7 @@ public class Program
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         });
 
-        builder.Services.AddCors( /*options =>
+        builder.Services.AddCors( options =>
         {
             options.AddPolicy("CorsEx",
                 police =>
@@ -38,7 +38,11 @@ public class Program
                     police.WithOrigins("https://apirequest.io")
                         .WithMethods("GET");
                 });
-        }*/);
+            options.AddPolicy("EnableCors", police =>
+            {
+                police.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("X-Pagination").Build();
+            });
+        });
 
         builder.Services.AddRateLimiter(options =>
         {
@@ -49,9 +53,9 @@ public class Program
                                                          httpcontext.Request.Headers.Host.ToString(),
                     partition => new TokenBucketRateLimiterOptions
                     {
-                        TokenLimit = 3,
+                        TokenLimit = 10,
                         ReplenishmentPeriod = TimeSpan.FromSeconds(5),
-                        TokensPerPeriod = 2,
+                        TokensPerPeriod = 8,
                         AutoReplenishment = true,
                         QueueLimit = 0,
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
@@ -156,7 +160,7 @@ public class Program
         app.UseRouting();
 
         app.UseRateLimiter();
-        app.UseCors("CorsEx");
+        app.UseCors("EnableCors");
 
         app.UseAuthentication();
         app.UseAuthorization();

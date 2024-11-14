@@ -114,6 +114,20 @@ public class UserService : IUserService
 
         return Result<UserDTOOutput>.Success(userDto);
     }
+    
+    public async Task<Result<UserDTOOutput>> GetUserByEmail(string email)
+    {
+        var user = await _uof.UserRepository.GetByEmailAsync(email);
+
+        if (user is null)
+        {
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        }
+        
+        var userDto = _mapper.Map<UserDTOOutput>(user);
+
+        return Result<UserDTOOutput>.Success(userDto);
+    }
 
     public async Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression)
     {
