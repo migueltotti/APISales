@@ -110,6 +110,11 @@ public class CacheOrderRepository : IOrderRepository
         return await _decorator.AddProduct(orderId, productId, amount);
     }
 
+    public Task<int> AddProductRange(int orderId, List<ProductChecked> products)
+    {
+        return _decorator.AddProductRange(orderId, products);
+    }
+
     public async Task<IEnumerable<Product>> GetProducts(int orderId)
     {
         return await _decorator.GetProducts(orderId);

@@ -7,7 +7,7 @@ public class Result<TValue> //: Result
 {
     public readonly bool isSuccess;
     public readonly Error error;
-    public readonly TValue? value;
+    public readonly TValue value;
     
     public readonly List<ValidationFailure> validationFailures = new List<ValidationFailure>();
 

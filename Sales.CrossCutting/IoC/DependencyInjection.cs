@@ -74,6 +74,8 @@ public static class DependencyInjection
         services.AddScoped<AffiliateRepository>();
         services.AddScoped<IAffiliateRepository, CacheAffiliateRepository>();
         
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+        
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
@@ -83,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAffiliateService, AffiliateService>();
+        services.AddScoped<IShoppingCartService, ShoppingCartService>();
         services.AddScoped<ITokenService, TokenService>();
         
         // Add Strategy Pattern

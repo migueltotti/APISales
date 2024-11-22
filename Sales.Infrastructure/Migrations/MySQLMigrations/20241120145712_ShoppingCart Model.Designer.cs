@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales.Infrastructure.Context;
 
@@ -11,9 +12,11 @@ using Sales.Infrastructure.Context;
 namespace Sales.Infrastructure.Migrations.MySQLMigrations
 {
     [DbContext(typeof(SalesDbContext))]
-    partial class SalesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241120145712_ShoppingCart Model")]
+    partial class ShoppingCartModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -341,10 +344,6 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
 
                     b.Property<int>("ShoppingCartId")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(10, 3)
-                        .HasColumnType("decimal(10,3)");
 
                     b.Property<bool>("Checked")
                         .ValueGeneratedOnAdd()

@@ -25,6 +25,7 @@ namespace Sales.Test.ControllersTests;
 public class UsersControllerTest
 {
     private readonly IUserService _mockUserService;
+    private readonly IShoppingCartService _mockShoppingCartService;
     private readonly UserManager<ApplicationUser> _mockUserManager;
     private readonly ILogger<UsersController> _mockLogger;
     private readonly Fixture _fixture;
@@ -33,6 +34,7 @@ public class UsersControllerTest
     public UsersControllerTest()
     {
         _mockUserService = Substitute.For<IUserService>();
+        _mockShoppingCartService = Substitute.For<IShoppingCartService>();
         _mockUserManager = Substitute.For<UserManager<ApplicationUser>>(
             Substitute.For<IUserStore<ApplicationUser>>(),
             null,
@@ -47,7 +49,7 @@ public class UsersControllerTest
         _mockLogger = Substitute.For<ILogger<UsersController>>();
         _fixture = new Fixture();
         
-        _controller = new UsersController(_mockUserService, _mockUserManager, _mockLogger)
+        _controller = new UsersController(_mockUserService, _mockShoppingCartService, _mockUserManager, _mockLogger)
         {
             ControllerContext =
             {

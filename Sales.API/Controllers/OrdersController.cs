@@ -13,7 +13,7 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrdersController(IOrderService _service, ILogger<OrdersController> _logger) : ControllerBase
+public class OrdersController(IOrderService _service, IShoppingCartService _shoppingCartService, ILogger<OrdersController> _logger) : ControllerBase
 {
     [HttpGet]
     [Authorize("AdminEmployeeOnly")]
@@ -287,6 +287,30 @@ public class OrdersController(IOrderService _service, ILogger<OrdersController> 
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
+        };
+    }
+    
+    [HttpPost("CreateAndSend/{userId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
+    public async Task<ActionResult<OrderDTOOutput>> CreateAndSendOrder(int userId)
+    {
+        var result = await _service.CreateAndSendOrder(userId);
+        
+        switch(result.isSuccess)
+        {
+            case true:
+                return Ok(result.value);
+            case false:
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    result.error,
+                    nameof(_service.SentOrder),
+                    DateTime.Now
+                );
+                if(result.error.HttpStatusCode is HttpStatusCode.NotFound)
+                    return NotFound(result.GenerateErrorResponse());
+                
+                return BadRequest(result.GenerateErrorResponse());
         };
     }
     

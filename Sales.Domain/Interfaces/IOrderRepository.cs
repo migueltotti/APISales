@@ -12,6 +12,7 @@ public interface IOrderRepository : IRepository<Order>
     Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId);
     Task<Order> GetOrderProductsById(int orderId);
     Task<int> AddProduct(int orderId, int productId, decimal amount);
+    Task<int> AddProductRange(int orderId, List<ProductChecked> products);
     Task<IEnumerable<Product>> GetProducts(int orderId);
     Task<IEnumerable<ProductInfo>> GetProductValueAndAmount(int orderId, int productId);
     Task<int> RemoveProduct(int orderId, int productId);

@@ -7,6 +7,7 @@ public interface IUnitOfWork
     public IOrderRepository OrderRepository { get; }
     public IProductRepository ProductRepository { get; }
     public IAffiliateRepository AffiliateRepository { get; }
+    public IShoppingCartRepository ShoppingCartRepository { get; }
 
     Task CommitChanges();
 }

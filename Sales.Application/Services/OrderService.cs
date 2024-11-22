@@ -8,9 +8,11 @@ using Microsoft.IdentityModel.Tokens;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Mapping.Extentions;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
+using Sales.Application.Strategy.FilterImplementation.OrderStrategy;
 using Sales.Application.Strategy.FilterImplementation.ProductStrategy;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -24,13 +26,15 @@ namespace Sales.Application.Services;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _uof;
+    private readonly IShoppingCartService _shoppingCartService;
     private readonly IValidator<OrderDTOInput> _validator;
     private readonly IMapper _mapper;
     private readonly IOrderFilterFactory _orderFilterFactory;
 
-    public OrderService(IUnitOfWork uof, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory)
+    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory)
     {
         _uof = uof;
+        _shoppingCartService = shoppingCartService;
         _validator = validator;
         _mapper = mapper;
         _orderFilterFactory = orderFilterFactory;
@@ -219,6 +223,66 @@ public class OrderService : IOrderService
         var orderDtoDeleted = _mapper.Map<OrderDTOOutput>(orderDeleted);
 
         return Result<OrderDTOOutput>.Success(orderDtoDeleted);
+    }
+
+    public async Task<Result<OrderDTOOutput>> CreateAndSendOrder(int userId)
+    {
+        // Get shoppingCart from database
+        var shoppingCart = await _shoppingCartService.GetShoppingCartWithProductsCheckedAsync(userId);
+        
+        if(!shoppingCart.isSuccess)
+            return Result<OrderDTOOutput>.Failure(shoppingCart.error);
+        
+        var orderDtoInput = new OrderDTOInput(
+            OrderId: 0,
+            TotalValue: (decimal) shoppingCart.value.TotalValue,
+            OrderDate: DateTime.Now, 
+            UserId: shoppingCart.value.UserId
+        );
+        
+        // Create order with values of shopping cart (TotalValue, UserId)
+        var createdOrderResult = await CreateOrder(orderDtoInput);
+        
+        if(!createdOrderResult.isSuccess)
+            return Result<OrderDTOOutput>.Failure(createdOrderResult.error);
+        
+        var shoppingCartProductInfo = shoppingCart.value.ToShoppingCartProduct();
+        
+        // Add all checked products in order created
+        var rowsAffected = await _uof.OrderRepository
+            .AddProductRange(
+                createdOrderResult.value.OrderId,
+                shoppingCartProductInfo.Products
+            );
+        
+        if(rowsAffected == 0)
+            return Result<OrderDTOOutput>.Failure(OrderErrors.AddRangeError);
+        
+        // Remove products from ShoppingCart that were Checked
+        var removeProductsRowsAffected = await _uof.ShoppingCartRepository
+            .RemoveCheckedItemsFromShoppingCartAsync(shoppingCartProductInfo.ShoppingCart.ShoppingCartId);
+
+        if(removeProductsRowsAffected == 0)
+            return Result<OrderDTOOutput>.Failure(ShoppingCartError.RemoveCheckedItemsError);
+        
+        // Update TotalValue and ProductsCount from ShoppingCart
+        shoppingCartProductInfo.ShoppingCart.
+            DecreaseTotalValue((double)createdOrderResult.value.TotalValue);
+        shoppingCartProductInfo.ShoppingCart
+            .DecreaseProductCount(shoppingCartProductInfo.Products.Count);
+        
+        var shoppingCartUpdated = _uof.ShoppingCartRepository.Update(shoppingCartProductInfo.ShoppingCart);
+
+        if (shoppingCartUpdated is null)
+            return Result<OrderDTOOutput>.Failure(ShoppingCartError.UpdateTotalValueAndProductCountItemsError);
+        
+        // Sent Order
+        var sendOrderResult = await SentOrder(createdOrderResult.value.OrderId);
+        
+        if(!sendOrderResult.isSuccess)
+            return sendOrderResult;
+        
+        return Result<OrderDTOOutput>.Success(sendOrderResult.value);
     }
 
     public async Task<Result<OrderDTOOutput>> SentOrder(int orderId)

@@ -13,6 +13,7 @@ public class UnitOfWork(SalesDbContext context, IDistributedCache distributedCac
     private IOrderRepository? _orderRepository;
     private IProductRepository? _productRepository;
     private IAffiliateRepository? _affiliateRepository;
+    private IShoppingCartRepository? _shoppingCartRepository;
 
     public IUserRepository UserRepository
     {
@@ -56,6 +57,14 @@ public class UnitOfWork(SalesDbContext context, IDistributedCache distributedCac
         {
             return _affiliateRepository = _affiliateRepository ?? new CacheAffiliateRepository(
                 new AffiliateRepository(context), distributedCache);
+        }
+    }
+    
+    public IShoppingCartRepository ShoppingCartRepository
+    {
+        get
+        {
+            return _shoppingCartRepository = _shoppingCartRepository ?? new ShoppingCartRepository(context);
         }
     }
 

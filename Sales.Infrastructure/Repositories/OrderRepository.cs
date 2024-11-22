@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Sales.Infrastructure.Context;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -62,6 +63,19 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<int> AddProduct(int orderId, int productId, decimal amount)   
     {
         var rowsAffected = await _context.Database.ExecuteSqlAsync($"INSERT INTO OrderProduct (OrdersOrderId, ProductsProductId, ProductAmount) VALUES ({orderId}, {productId}, {amount})");
+
+        return rowsAffected;
+    }
+    
+    public async Task<int> AddProductRange(int orderId, List<ProductChecked> products)
+    {
+        var addProductQuery = string.Join(", ", products.Select(p => 
+            $"({orderId}, {p.Product.ProductId}, {p.Amount})"));
+        
+        var sqlQuery =
+            $"INSERT INTO OrderProduct (OrdersOrderId, ProductsProductId, ProductAmount) VALUES {addProductQuery}";
+        
+        var rowsAffected = await _context.Database.ExecuteSqlRawAsync(sqlQuery);
 
         return rowsAffected;
     }

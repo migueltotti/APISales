@@ -23,6 +23,7 @@ namespace Sales.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 public class UsersController(IUserService _service,
+    IShoppingCartService _shoppingCartService,
     UserManager<ApplicationUser> _userManager,
     ILogger<UsersController> _logger) : ControllerBase
 {
@@ -135,9 +136,12 @@ public class UsersController(IUserService _service,
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
     {
         var result = await _service.CreateUser(userDtoInput);
-
+        
         if (result.isSuccess)
         {
+            var shoppingCartCreated = await _shoppingCartService
+                .CreateShoppingCartAsync(result.value!.UserId);
+            
             ApplicationUser user = new()
             {
                 Email = userDtoInput.Email,
@@ -217,11 +221,13 @@ public class UsersController(IUserService _service,
         }
     }
 
-    [HttpDelete("{id:int:min(1)}")]
+    [HttpDelete("{userId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<UserDTOOutput>> Delete(int id)
+    public async Task<ActionResult<UserDTOOutput>> Delete(int userId)
     {
-        var result = await _service.DeleteUser(id);
+        var shoppingCartDeleted = await _shoppingCartService.DeleteShoppingCartAsync(userId);
+        
+        var result = await _service.DeleteUser(userId);
         
         switch (result.isSuccess)
         {
