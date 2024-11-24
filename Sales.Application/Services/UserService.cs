@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
@@ -174,31 +175,33 @@ public class UserService : IUserService
         return Result<UserDTOOutput>.Success(userDtoCreated);
     }
 
-    public async Task<Result<UserDTOOutput>> UpdateUser(UserDTOInput userDtoInput, int id)
+    public async Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserDTOInput userDtoInput, int id)
     {
         if (userDtoInput is null)
         {
-            return Result<UserDTOOutput>.Failure(UserErrors.DataIsNull);
+            return Result<(UserDTOOutput, Dictionary<string, string>)>.Failure(UserErrors.DataIsNull);
         }
 
         if (userDtoInput.UserId != id)
         {
-            return Result<UserDTOOutput>.Failure(UserErrors.IdMismatch);
+            return Result<(UserDTOOutput, Dictionary<string, string>)>.Failure(UserErrors.IdMismatch);
         }
         
         var user = await _uof.UserRepository.GetAsync(x => x.UserId == id);
 
         if (user is null)
         {
-            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+            return Result<(UserDTOOutput, Dictionary<string, string>)>.Failure(UserErrors.NotFound);
         }
         
         var validation = await _validator.ValidateAsync(userDtoInput);
 
         if (!validation.IsValid)
         {
-            return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
+            return Result<(UserDTOOutput, Dictionary<string, string>)>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
         }
+
+        var updatedFields = IdentifyUpdatedFields(userDtoInput, user);
         
         var userForUpdate = _mapper.Map<User>(userDtoInput);
 
@@ -207,7 +210,7 @@ public class UserService : IUserService
 
         var userDtoUpdated = _mapper.Map<UserDTOOutput>(userUpdate);
         
-        return Result<UserDTOOutput>.Success(userDtoUpdated);
+        return Result<(UserDTOOutput, Dictionary<string, string>)>.Success((userDtoUpdated, updatedFields));
     }
 
     public async Task<Result<UserDTOOutput>> DeleteUser(int? id)
@@ -225,5 +228,24 @@ public class UserService : IUserService
         var userDtoDeleted = _mapper.Map<UserDTOOutput>(userDeleted);
 
         return Result<UserDTOOutput>.Success(userDtoDeleted);
+    }
+
+    private Dictionary<string, string> IdentifyUpdatedFields(UserDTOInput userDtoInput, User user)
+    {
+        var updatedFields = new Dictionary<string, string>();
+        
+        if(userDtoInput.Name != user.Name)
+            updatedFields.Add("Name", user.Name!);
+        
+        if(userDtoInput.Email != user.Email)
+            updatedFields.Add("Email", user.Email!);
+        
+        if(userDtoInput.Password != user.Password)
+            updatedFields.Add("Password", user.Password!);
+        
+        if(userDtoInput.Role != user.Role)
+            updatedFields.Add("Role", user.Role.ToString());
+
+        return updatedFields;
     }
 }

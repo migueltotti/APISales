@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.IdentityModel.Tokens;
 using Sales.Application.DTOs.TokenDTO;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
@@ -142,11 +143,23 @@ public class UsersController(IUserService _service,
             var shoppingCartCreated = await _shoppingCartService
                 .CreateShoppingCartAsync(result.value!.UserId);
             
+            if (!shoppingCartCreated.isSuccess)
+            {
+                _logger.LogWarning(
+                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                    shoppingCartCreated.error,
+                    nameof(_shoppingCartService.CreateShoppingCartAsync),
+                    DateTime.Now
+                );
+                return StatusCode((int)HttpStatusCode.InternalServerError,
+                    new Response { Status = "Error", Message = "ShoppingCart creation failed" });
+            }
+            
             ApplicationUser user = new()
             {
                 Email = userDtoInput.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = userDtoInput.Name.Replace(" ", "")
+                UserName = userDtoInput.GenerateUserName()
             };
 
             var resultUser = await _userManager.CreateAsync(user, userDtoInput.Password);
@@ -155,7 +168,7 @@ public class UsersController(IUserService _service,
             {
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
-                    result.error,
+                    resultUser.Errors,
                     nameof(_userManager.CreateAsync),
                     DateTime.Now
                 );
@@ -203,44 +216,94 @@ public class UsersController(IUserService _service,
     {
         var result = await _service.UpdateUser(userDtoInput, id);
 
-        switch (result.isSuccess)
+        if (!result.isSuccess)
         {
-            case true:
-                return Ok($"User with id = {result.value.UserId} was updated successfully");
-            case false:
-                _logger.LogWarning(
-                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
-                    result.error,
-                    nameof(_service.UpdateUser),
-                    DateTime.Now
-                );
-                if(result.error.HttpStatusCode == HttpStatusCode.NotFound)
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                result.error,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            switch (result.error.HttpStatusCode)
+            {
+                case HttpStatusCode.NotFound:
                     return NotFound(result.GenerateErrorResponse());
-                
-                return BadRequest(result.GenerateErrorResponse());
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(result.GenerateErrorResponse());
+            }
         }
+        
+        // UserDataDbContext User Update logic.
+        var userForUpdate = await GenerateUpdatedUser(userDtoInput, result.value.Item2);
+        
+        if(userForUpdate is not null) 
+            await _userManager.UpdateAsync(userForUpdate);
+        
+        return Ok(result.value.Item1);
     }
 
     [HttpDelete("{userId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
     public async Task<ActionResult<UserDTOOutput>> Delete(int userId)
-    {
+    {        
         var shoppingCartDeleted = await _shoppingCartService.DeleteShoppingCartAsync(userId);
         
-        var result = await _service.DeleteUser(userId);
+        var deleteUserResult = await _service.DeleteUser(userId);
         
-        switch (result.isSuccess)
+        if (!deleteUserResult.isSuccess)
         {
-            case true:
-                return Ok($"User with id = {result.value.UserId} was deleted successfully");
-            case false:
-                _logger.LogWarning(
-                    "Request failed {@Error}, {@RequestName}, {@DateTime}",
-                    result.error,
-                    nameof(_service.UpdateUser),
-                    DateTime.Now
-                );
-                return NotFound(result.GenerateErrorResponse());
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                deleteUserResult.error,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            return NotFound(deleteUserResult.GenerateErrorResponse());
         }
+        
+        // UserDataDbContext User Update logic implemented inside Action Method Delete in UsersController.
+
+        var getUserResult = await _userManager.FindByEmailAsync(deleteUserResult.value.Email);
+        var deleteUserAuthenticationResult = await _userManager.DeleteAsync(getUserResult!);
+        
+        return Ok($"User with id = {deleteUserResult.value.UserId} was deleted successfully");
     }
+
+    private async Task<ApplicationUser?> GenerateUpdatedUser(UserDTOInput userDtoInput, Dictionary<string, string> updatedFields)
+    {
+        ApplicationUser? userForUpdate;
+        
+        if (updatedFields.IsNullOrEmpty())
+            return null;
+
+        if (updatedFields.TryGetValue("Email", out var email))
+        {
+            userForUpdate = await _userManager
+                .FindByEmailAsync(updatedFields["Email"]);
+            
+            userForUpdate.Email = userDtoInput.Email;
+        }
+        else
+        {
+            userForUpdate = await _userManager
+                .FindByEmailAsync(userDtoInput.Email);
+        }
+        
+        if (updatedFields.ContainsKey("Name"))
+            userForUpdate.UserName = userDtoInput.GenerateUserName();
+            
+
+        if (updatedFields.ContainsKey("Password"))
+        {
+            // update password logic 
+        }
+
+        if (updatedFields.ContainsKey("Role"))
+        {
+            // update role logic 
+        }
+            
+        return userForUpdate;
+    } 
 }

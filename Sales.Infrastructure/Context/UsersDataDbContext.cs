@@ -15,5 +15,4 @@ public class UsersDataDbContext : IdentityDbContext<ApplicationUser>
     }
     
     //dotnet ef migrations add "IdetityTables-initialmigration" --context UsersDataDbContext --output-dir Migrations/PostGresMigrations -s ..\Sales.API\Sales.API.csproj
-
 }

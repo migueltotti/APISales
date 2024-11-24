@@ -114,7 +114,6 @@ public class AuthController : ControllerBase
             );
             return BadRequest(result.Errors);
         }
-            
         
         var userExists = await _userManager.FindByEmailAsync(model.Email!);
 
@@ -134,7 +133,7 @@ public class AuthController : ControllerBase
         {
             Email = model.Email,
             SecurityStamp = Guid.NewGuid().ToString(),
-            UserName = model.Username.Replace(" ", "")
+            UserName = model.GenerateUserName()
         };
 
         var resultUser = await _userManager.CreateAsync(user, model.Password);

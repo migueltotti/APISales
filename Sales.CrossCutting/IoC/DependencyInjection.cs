@@ -49,6 +49,12 @@ public static class DependencyInjection
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<UsersDataDbContext>()
             .AddDefaultTokenProviders();
+        
+        // Adding configuration for supporting unique emails on IdentityTables
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.User.RequireUniqueEmail = true;
+        });
 
         // Configure Redis
         services.AddStackExchangeRedisCache(redisOptions =>

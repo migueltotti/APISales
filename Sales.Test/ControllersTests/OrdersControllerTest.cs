@@ -21,6 +21,7 @@ namespace Sales.Test.ControllersTests;
 public class OrdersControllerTest
 {
     private readonly IOrderService _mockOrderService;
+    private readonly IShoppingCartService _mockShoppingCartService;
     private readonly OrdersController _orderController;
     private readonly ILogger<OrdersController> _mockLogger;
     private readonly Fixture _fixture;
@@ -28,10 +29,11 @@ public class OrdersControllerTest
     public OrdersControllerTest()
     {
         _mockOrderService = Substitute.For<IOrderService>();
+        _mockShoppingCartService = Substitute.For<IShoppingCartService>();
         _mockLogger = Substitute.For<ILogger<OrdersController>>();
         _fixture = new Fixture();
 
-        _orderController = new OrdersController(_mockOrderService, _mockLogger)
+        _orderController = new OrdersController(_mockOrderService, _mockShoppingCartService, _mockLogger)
         {
             ControllerContext =
             {

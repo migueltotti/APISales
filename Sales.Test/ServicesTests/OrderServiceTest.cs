@@ -26,6 +26,7 @@ namespace Sales.Test.ServicesTests;
 public class OrderServiceTest
 {
     private readonly IOrderService _orderService;
+    private readonly IShoppingCartService _mockShoppingCartService;
     private readonly IUnitOfWork _mockUof;
     private readonly IValidator<OrderDTOInput> _mockValidator;
     private readonly IMapper _mockMapper;
@@ -35,6 +36,7 @@ public class OrderServiceTest
     public OrderServiceTest()
     {
         _mockUof = Substitute.For<IUnitOfWork>();
+        _mockShoppingCartService = Substitute.For<IShoppingCartService>();
         _mockValidator = Substitute.For<IValidator<OrderDTOInput>>();
         _mockMapper = Substitute.For<IMapper>();
         _mockOrderFilterFactory = Substitute.For<IOrderFilterFactory>();
@@ -42,6 +44,7 @@ public class OrderServiceTest
 
         _orderService = new OrderService(
             _mockUof,
+            _mockShoppingCartService,
             _mockValidator,
             _mockMapper,
             _mockOrderFilterFactory
