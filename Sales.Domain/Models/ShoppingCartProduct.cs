@@ -28,4 +28,12 @@ public class ShoppingCartProduct
     public void CheckProduct() => Checked = true;
     
     public void UnCheckProduct() => Checked = false;
+    
+    public void UpdateAmount(decimal amount)
+    { 
+        if(amount < 0)
+            throw new ArgumentException("The decrease amount cannot be less than the product amount");
+        
+        Amount = amount;
+    }
 }

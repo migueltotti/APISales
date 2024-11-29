@@ -13,4 +13,5 @@ public interface IShoppingCartRepository : IRepository<ShoppingCart>
     Task<int> ClearShoppingCartAsync(int userId);
     Task<int> CheckItemFromShoppingCartAsync(ShoppingCartProduct shoppingCartProduct);
     Task<int> UncheckItemFromShoppingCartAsync(ShoppingCartProduct shoppingCartProduct);
+    Task<int> UpdateProductAmountAsync(ShoppingCartProduct shoppingCartProduct);
 }

@@ -69,7 +69,10 @@ public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRep
              """
         ).ToListAsync();
 
-        return GenerateShoppingCartWithProducts(shoppingCart);
+        if(shoppingCart.Count > 0)
+            return GenerateShoppingCartWithProducts(shoppingCart);
+        
+        return null;
     }
 
     public async Task<ShoppingCartProduct?> GetProductOfShoppingCartAsync(int shoppingCartId, int productId)
@@ -116,7 +119,7 @@ public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRep
                  WHERE `scp`.`ShoppingCartId` = (
              	    SELECT `sc`.`ShoppingCartId`
              	    FROM `ShoppingCart` AS `sc`
-             	    WHERE `sc`.`UserId` = 2
+             	    WHERE `sc`.`UserId` = {userId}
                  );
              """    
         );
@@ -151,7 +154,21 @@ public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRep
 
         return rowsAffected;
     }
-    
+
+    public async Task<int> UpdateProductAmountAsync(ShoppingCartProduct shoppingCartProduct)
+    {
+        var rowsAffected = await _context.Database.ExecuteSqlAsync(
+            $"""
+             UPDATE shoppingcartproducts s
+             SET amount = {shoppingCartProduct.Amount}
+             WHERE s.shoppingCartId = {shoppingCartProduct.ShoppingCartId}
+               AND s.productId = {shoppingCartProduct.ProductId};
+             """
+        );
+
+        return rowsAffected;
+    }
+
     /////////////////////////////////// PRIVATE METHODS ///////////////////////////////////
 
     

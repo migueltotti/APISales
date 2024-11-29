@@ -16,4 +16,5 @@ public interface IShoppingCartService
     Task<Result<bool>> ClearShoppingCartAsync(int userId);
     Task<Result<bool>> CheckProductFromShoppingCartAsync(int userId, int productId);
     Task<Result<bool>> UncheckProductFromShoppingCartAsync(int userId, int productId);
+    Task<Result<bool>> UpdateProductAmount(int userId, int productId, decimal amount);
 }

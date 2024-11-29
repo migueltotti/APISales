@@ -58,7 +58,14 @@ public class ShoppingCartService : IShoppingCartService
         var shoppingCartProductsChecked = await _uof.ShoppingCartRepository.GetShoppingCartWithItemsCheckedAsync(userId);
 
         if (shoppingCartProductsChecked is null)
-            return Result<ShoppingCartDTOOutput>.Failure(ShoppingCartError.NotFound);
+            return Result<ShoppingCartDTOOutput>.Success(
+                new ShoppingCartDTOOutput(
+                        shoppingCartExists.ShoppingCartId,
+                        shoppingCartExists.TotalValue,
+                        shoppingCartExists.ProductsCount,
+                        shoppingCartExists.UserId,
+                        []
+                ));
 
         var shoppingCartDto = shoppingCartProductsChecked.ToShoppingCartProductDto();
         
@@ -148,9 +155,6 @@ public class ShoppingCartService : IShoppingCartService
             prodResult.value.ProductId,
             amount
         );
-        
-        // TODO: increase total value from shopping cart
-        // based on product amount and product value
 
         shoppingCartResult.IncreaseProductCount();
         shoppingCartResult.IncreaseTotalValue(
@@ -361,6 +365,60 @@ public class ShoppingCartService : IShoppingCartService
         if (shoppingCartDecreasedTotalValue is null)
             return Result<bool>.Failure(ShoppingCartError.UpdateTotalValueError);
 
+        return Result<bool>.Success(true);
+    }
+
+    public async Task<Result<bool>> UpdateProductAmount(int userId, int productId, decimal amount)
+    {
+        // verify user
+        var userResult = await _userService.GetUserById(userId);
+
+        if (!userResult.isSuccess)
+            return Result<bool>.Failure(userResult.error);
+        
+        // get shoppingCart info
+        var shoppingCartResult = await _uof.ShoppingCartRepository
+            .GetAsync(sh => sh.UserId == userResult.value!.UserId);
+        
+        if (shoppingCartResult is null)
+            return Result<bool>.Failure(ShoppingCartError.NotFound);
+
+        // verify product
+        var prodResult = await _productService.GetProductById(productId);
+        
+        if (!prodResult.isSuccess)
+            return Result<bool>.Failure(prodResult.error);
+        
+        var shoppingCartProduct = await _uof.ShoppingCartRepository
+            .GetProductOfShoppingCartAsync(shoppingCartResult.ShoppingCartId, productId);
+        
+        if(shoppingCartProduct is null)
+            return Result<bool>.Failure(ShoppingCartError.ProductNotFound);
+        
+        // TODO: Update shoppingCart total value based on product amount that is going to persist
+        // Compare the old amount with the new and increase or decrease the total value.
+        
+        var oldProductPrice = prodResult.value.Value * shoppingCartProduct.Amount;
+
+        shoppingCartResult.DecreaseTotalValue((double)oldProductPrice);
+        
+        // Add new product value based on the new amount
+        shoppingCartResult.IncreaseTotalValue((double)prodResult.value.Value, (double)amount);
+        
+        // Update shoppingCart total value and shoppingCartProduct amount
+        shoppingCartProduct.UpdateAmount(amount);
+        
+        var result = _uof.ShoppingCartRepository.Update(shoppingCartResult);
+        if (result is null)
+            return Result<bool>.Failure(ShoppingCartError.NotFound);
+        
+        var rowsAffected = await _uof.ShoppingCartRepository.UpdateProductAmountAsync(shoppingCartProduct);
+        
+        await _uof.CommitChanges();
+        
+        if(rowsAffected == 0)
+            return Result<bool>.Failure(ShoppingCartError.UpdateProductAmountError);
+        
         return Result<bool>.Success(true);
     }
 }

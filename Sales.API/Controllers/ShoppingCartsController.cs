@@ -14,7 +14,7 @@ namespace Sales.API.Controllers;
 public class ShoppingCartsController(IShoppingCartService _shoppingCartService) : ControllerBase
 {
     [HttpGet("{userId:int:min(1)}")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> GetShoppingCartByUserId(int userId)
     {
         var result = await _shoppingCartService.GetShoppingCartWithProductsAsync(userId);
@@ -27,7 +27,7 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     }
     
     [HttpGet("{userId:int:min(1)}/ProductsChecked")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> GetShoppingCartWithProductsCheckedByUserId(int userId)
     {
         var result = await _shoppingCartService.GetShoppingCartWithProductsCheckedAsync(userId);
@@ -40,7 +40,7 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     }
     
     [HttpPost("{userId:int:min(1)}/AddProduct/{productId:int:min(1)}")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> AddProductToShoppingCart(int userId, int productId, [FromQuery] decimal amount)
     {
         var result = await _shoppingCartService.AddProductToShoppingCartAsync(userId, productId, amount);
@@ -57,7 +57,7 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     }
     
     [HttpDelete("{userId:int:min(1)}/RemoveProduct/{productId:int:min(1)}")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> RemoveProductFromShoppingCart(int userId, int productId)
     {
         var result = await _shoppingCartService.RemoveProductFromShoppingCartAsync(userId, productId);
@@ -74,7 +74,7 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     }
     
     [HttpDelete("{userId:int:min(1)}/ClearCart")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> ClearShoppingCart(int userId)
     {
         var result = await _shoppingCartService.ClearShoppingCartAsync(userId);
@@ -91,7 +91,7 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     }
     
     [HttpPost("{userId:int:min(1)}/CheckProduct/{productId:int:min(1)}")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> CheckProductFromShoppingCart(int userId, int productId)
     {
         var result = await _shoppingCartService.CheckProductFromShoppingCartAsync(userId, productId);
@@ -108,10 +108,27 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     }
     
     [HttpPost("{userId:int:min(1)}/UncheckProduct/{productId:int:min(1)}")]
-    //[Authorize("AllowAnyUser")]
+    [Authorize("AllowAnyUser")]
     public async Task<ActionResult<ShoppingCartDTOOutput>> UncheckProductFromShoppingCart(int userId, int productId)
     {
         var result = await _shoppingCartService.UncheckProductFromShoppingCartAsync(userId, productId);
+
+        if (!result.isSuccess)
+        {
+            if(result.error.HttpStatusCode is HttpStatusCode.NotFound)
+                return NotFound(result.GenerateErrorResponse());
+
+            return BadRequest(result.GenerateErrorResponse());
+        }
+        
+        return await GetShoppingCartByUserId(userId);
+    }
+    
+    [HttpPut("{userId:int:min(1)}/UpdateProductAmount/{productId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
+    public async Task<ActionResult<ShoppingCartDTOOutput>> UpdateProductAmount(int userId, int productId, [FromQuery] decimal amount)
+    {
+        var result = await _shoppingCartService.UpdateProductAmount(userId, productId, amount);
 
         if (!result.isSuccess)
         {

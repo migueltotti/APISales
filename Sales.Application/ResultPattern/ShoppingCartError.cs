@@ -59,6 +59,11 @@ public class ShoppingCartError
         Description: "An error occured while trying to update total value from the shopping cart. Try again later.", 
         HttpStatusCode.BadRequest);
     
+    public static readonly Error UpdateProductAmountError = new Error(
+        Code: "ShoppingCartUpdateProductAmountError", 
+        Description: "An error occured while trying to update product amount from the shopping cart. Try again later.", 
+        HttpStatusCode.BadRequest);
+    
     public static readonly Error ClearAllItemsError = new Error(
         Code: "ShoppingCartClearAllItemsError", 
         Description: "An error occured while trying to clear the shopping cart. Try again later.", 
