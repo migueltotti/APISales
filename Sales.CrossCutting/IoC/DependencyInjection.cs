@@ -35,6 +35,7 @@ public static class DependencyInjection
     {
         var mySqlConnectionString = configuration.GetConnectionString("DefaultMySqlConnection") ?? throw new NullReferenceException("MySQL connection string is null");
         var postGreSqlConnectionString = configuration.GetConnectionString("DefaultPostGresConnection") ?? throw new NullReferenceException("PostGreSQL connection string is null");
+        var testConnectionString = configuration.GetConnectionString("TestDbMySqlConnection") ?? throw new NullReferenceException("Test connection string is null");
         
         // Add DataBase connection
         services.AddDbContext<SalesDbContext>(options => 
@@ -44,6 +45,11 @@ public static class DependencyInjection
         // Add Database UsersData - PostGres connection
         services.AddEntityFrameworkNpgsql().AddDbContext<UsersDataDbContext>(options =>
             options.UseNpgsql(postGreSqlConnectionString));
+        
+        // Test DataBase
+        services.AddDbContext<TestDbContext>(options => 
+            options.UseMySql(testConnectionString,
+                new MySqlServerVersion(new Version(8, 0, 38))));
         
         // Identity tables configuration
         services.AddIdentity<ApplicationUser, IdentityRole>()

@@ -17,9 +17,6 @@ public sealed class Product
     // Product n : 1 Category
     public int CategoryId { get; private set; }
     public Category? Category { get; private set; }
-
-    // Product n : n Order
-    public ICollection<Order>? Orders { get; private set; }
     
     // Product n : n ShoppingCart
     public ICollection<ShoppingCart>? ShoppingCart { get; private set; }

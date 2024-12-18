@@ -62,10 +62,10 @@ public class OrderService : IOrderService
 
         foreach (var op in ordersProducts)
         {
-            if (productsDTO.TryAdd(op.OrderId, _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products)))
-            {
-                productsDTO[op.OrderId] = _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products);
-            }
+            // if (productsDTO.TryAdd(op.OrderId, _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products)))
+            // {
+            //     productsDTO[op.OrderId] = _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products);
+            // }
         }
 
         var ordersProductsDTO = new List<OrderProductsDTO>();
@@ -314,10 +314,10 @@ public class OrderService : IOrderService
         }
         
         order.SentOrder();
-        foreach (var p in order.Products) 
-        {
-            p.DecreaseStockQuantity();
-        }
+        // foreach (var p in order.Products) 
+        // {
+        //     p.DecreaseStockQuantity();
+        // }
         
         _uof.OrderRepository.Update(order);
         await _uof.CommitChanges();
@@ -381,7 +381,7 @@ public class OrderService : IOrderService
         _uof.OrderRepository.Update(order);
         
         await _uof.CommitChanges();
-        order.Products.Add(product);
+        //order.Products.Add(product);
 
         return Result<OrderProductsDTO>.Success(_mapper.Map<OrderProductsDTO>(order));
     }

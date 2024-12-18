@@ -29,9 +29,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
              WHERE o.userId = {userId}
              ORDER BY o.OrderId;
              """);*/
-        
-        var ordersProducts = _context.Orders.Where(o => o.UserId == userId)
-                        .Include(o => o.Products);
+
+        var ordersProducts = _context.Orders.Where(o => o.UserId == userId);
+        //                 .Include(o => o.Products);
 
         return await ordersProducts.ToListAsync();
     }
@@ -82,9 +82,11 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public async Task<Order> GetOrderProductsById(int orderId)
     {
-        return await _context.Orders
-            .Include(o => o.Products)
-            .FirstOrDefaultAsync(o => o.OrderId == orderId);
+        // return await _context.Orders
+        //     .Include(o => o.Products)
+        //     .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+        return await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);;
     }
 
     public async Task<IEnumerable<Product>> GetProducts(int orderId)
