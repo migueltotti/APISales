@@ -8,7 +8,7 @@ namespace Sales.Infrastructure.Repositories;
 
 public class OrderRepository : Repository<Order>, IOrderRepository
 {
-    public OrderRepository(SalesDbContext context) : base(context)
+    public OrderRepository(TestDbContext context) : base(context)
     {
     }
 
@@ -19,35 +19,38 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public async Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId)
     {
-        /*var ordersProducts = _context.Orders.FromSqlInterpolated(
-            $"""
-             SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId, o.OrderStatus,
-                    p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId  
-             FROM salesdb.`order` o 
-             LEFT JOIN salesdb.orderproduct op ON o.OrderId = op.OrdersOrderId 
-             LEFT JOIN salesdb.product p ON p.ProductId = op.ProductsProductId
-             WHERE o.userId = {userId}
-             ORDER BY o.OrderId;
-             """);*/
+        var ordersProducts = await _context.Orders
+            .Include(o => o.LineItems)
+            .Where(o => o.UserId == userId)
+            .ToListAsync();
 
-        var ordersProducts = _context.Orders.Where(o => o.UserId == userId);
-        //                 .Include(o => o.Products);
-
-        return await ordersProducts.ToListAsync();
+        return ordersProducts;
     }
 
     public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)
     {
         var orders = _context.Orders.FromSqlInterpolated(
-            $"SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId, o.OrderStatus FROM salesdb.Order o JOIN salesdb.OrderProduct op On op.OrdersOrderId = o.OrderId JOIN salesdb.Product p ON op.ProductsProductId = p.ProductId WHERE p.Name LIKE (concat('%', {productName}, '%'))");
-        
+            $""""
+             SELECT o.* 
+             FROM `order` o
+             JOIN lineitem li ON li.OrderId = o.OrderId 
+             JOIN product p ON p.ProductId = li.ProductId
+             WHERE p.Name LIKE (concat('%', {productName}, '%'));
+             """"
+        );
         return await orders.ToListAsync();
     }
 
     public async Task<IEnumerable<Product>> GetProductsByDate(DateTime minDate, DateTime maxDate)
     {
         var products = _context.Products.FromSqlInterpolated(
-            $"SELECT p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId FROM salesdb.Order o JOIN salesdb.OrderProduct op On op.OrdersOrderId = o.OrderId JOIN salesdb.Product p ON op.ProductsProductId = p.ProductId WHERE o.OrderDate >= {minDate} AND  o.OrderDate <= {maxDate}");
+            $"""
+                 SELECT p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId
+                 FROM `order` o
+                 JOIN lineitem li On li.OrderId = o.OrderId
+                 JOIN product p ON li.ProductId = p.ProductId
+                 WHERE o.OrderDate >= {minDate} AND  o.OrderDate <= {maxDate}
+              """);
         
         return await products.ToListAsync();
     }
@@ -55,7 +58,12 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId)
     {
         var orders = _context.Orders.FromSqlInterpolated(
-            $"SELECT o.OrderId, o.TotalValue, o.OrderDate, o.UserId, o.OrderStatus FROM salesdb.Order o JOIN salesdb.user u ON u.UserId = o.UserId where u.AffiliateId = {affiliateId}");
+            $$"""
+               SELECT o.*
+               FROM `order` o
+               JOIN `user` u On u.UserId = o.UserId
+               WHERE u.AffiliateId = {affiliateId}
+            """);
 
         return await orders.ToListAsync();
     }
@@ -67,7 +75,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         return rowsAffected;
     }
     
-    public async Task<int> AddProductRange(int orderId, List<ProductChecked> products)
+    public async Task<int> AddProductRange(int orderId, List<LineItem> products)
     {
         var addProductQuery = string.Join(", ", products.Select(p => 
             $"({orderId}, {p.Product.ProductId}, {p.Amount})"));
@@ -80,29 +88,31 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         return rowsAffected;
     }
 
-    public async Task<Order> GetOrderProductsById(int orderId)
+    public async Task<Order?> GetOrderWithProductsByOrderId(int orderId)
     {
-        // return await _context.Orders
-        //     .Include(o => o.Products)
-        //     .FirstOrDefaultAsync(o => o.OrderId == orderId);
-
-        return await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);;
+        return await _context.Orders
+            .Include(o => o.LineItems)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId);
     }
 
     public async Task<IEnumerable<Product>> GetProducts(int orderId)
     {
         var products = _context.Products.FromSqlInterpolated(
-            $"SELECT p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId FROM OrderProduct op JOIN Product p ON op.ProductsProductId = p.ProductId Where OrdersOrderid = {orderId}");
+            $"""
+             SELECT p.* 
+             FROM product p
+             JOIN lineitem li ON li.ProductId = p.ProductId
+             JOIN `order` o ON o.OrderId = li.OrderId
+             WHERE o.OrderId = {orderId}
+             """);
         
         return await products.ToListAsync();
     }
     
-    public async Task<IEnumerable<ProductInfo>> GetProductValueAndAmount(int orderId, int productId)
+    public async Task<LineItem?> GetLineItemByOrderIdAndProductId(int orderId, int productId)
     {
-        var productAmount = _context.Database.SqlQuery<ProductInfo>(
-                $"SELECT p.value, op.ProductAmount FROM salesdb.orderproduct op JOIN salesdb.product p ON p.ProductId = op.ProductsProductId WHERE OrdersOrderId = {orderId} AND ProductsProductId = {productId};");
-        
-        return await productAmount.ToListAsync();
+        var lineItem = await _context.LineItems.FirstOrDefaultAsync(li => li.ProductId == productId && li.OrderId == orderId);
+        return lineItem;
     }
 
     public Task<int> RemoveProduct(int orderId, int productId)

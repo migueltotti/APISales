@@ -14,6 +14,12 @@ public class OrderErrors
     public static readonly Error NotFound = new Error("OrderNotFound", "Past Id does not match any order.", HttpStatusCode.NotFound);
     public static readonly Error ProductsNotFound = new Error("OrderProductsNotFound", "There`r no Products cadastred to this Order.", HttpStatusCode.NotFound);
     public static readonly Error ProductNotFound = new Error("OrderProductNotFound", "Past Id does not match any Product cadastred in Order.", HttpStatusCode.NotFound);
+    
+    public static readonly Error ProductListEmpty = new Error(
+        "OrderProductListEmpty", 
+        "Order must have at least one product cadastred.", 
+        HttpStatusCode.BadRequest);
+    
     public static readonly Error ProductsStockUnavailable = new Error("ProductsStockFail", "These products are no longer available in the system.", HttpStatusCode.NotFound);
     public static readonly Error IdMismatch = new Error("OrderIdMismatch", "Past Id does not match order id.", HttpStatusCode.BadRequest);
     

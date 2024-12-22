@@ -54,29 +54,13 @@ public class OrderService : IOrderService
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
-    public async Task<IPagedList<OrderProductsDTO>> GetAllOrdersWithProductsByUserId(int userId, QueryStringParameters parameters)
+    public async Task<IPagedList<OrderDTOOutput>> GetAllOrdersWithProductsByUserId(int userId, QueryStringParameters parameters)
     {
         var ordersProducts = await _uof.OrderRepository.GetOrdersWithProductsByUserId(userId);
 
-        var productsDTO = new Dictionary<int, IEnumerable<ProductDTOOutput>>();
-
-        foreach (var op in ordersProducts)
-        {
-            // if (productsDTO.TryAdd(op.OrderId, _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products)))
-            // {
-            //     productsDTO[op.OrderId] = _mapper.Map<IEnumerable<ProductDTOOutput>>(op.Products);
-            // }
-        }
-
-        var ordersProductsDTO = new List<OrderProductsDTO>();
+        var orderProductsDto = _mapper.Map<IEnumerable<OrderDTOOutput>>(ordersProducts);
         
-        ordersProductsDTO.AddRange(ordersProducts.Select(op => 
-                new OrderProductsDTO(
-                    op.OrderId, op.TotalValue, op.OrderDate, op.OrderStatus, op.UserId, productsDTO[op.OrderId])
-                )
-        );
-
-        return ordersProductsDTO.ToPagedList(parameters.PageNumber, parameters.PageSize);
+        return orderProductsDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters)
@@ -90,11 +74,13 @@ public class OrderService : IOrderService
 
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters)
     {
-        var orders = await GetAllOrders();
-        
+        var orders = await _uof.OrderRepository.GetOrdersWithProductsByUserId(userId);
+            
         orders = orders.Where(o => o.UserId == userId).OrderBy(o => o.OrderDate);
         
-        return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
+        var ordersDto = _mapper.Map<IEnumerable<OrderDTOOutput>>(orders);
+        
+        return ordersDto.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<Result<OrderDTOOutput>> GetOrderById(int id)
@@ -225,23 +211,32 @@ public class OrderService : IOrderService
         return Result<OrderDTOOutput>.Success(orderDtoDeleted);
     }
 
-    public async Task<Result<OrderDTOOutput>> CreateAndSendOrder(int userId)
+    public async Task<Result<OrderDTOOutput>> CreateAndSendOrder(int userId, string? note = null)
     {
+        var user = await _uof.UserRepository.GetByIdAsync(userId);
+
+        if (user is null)
+        {
+            return Result<OrderDTOOutput>.Failure(UserErrors.NotFound);
+        }
+        
         // Get shoppingCart from database
         var shoppingCart = await _shoppingCartService.GetShoppingCartWithProductsCheckedAsync(userId);
         
         if(!shoppingCart.isSuccess)
             return Result<OrderDTOOutput>.Failure(shoppingCart.error);
         
-        var orderDtoInput = new OrderDTOInput(
-            OrderId: 0,
-            TotalValue: (decimal) shoppingCart.value.TotalValue,
-            OrderDate: DateTime.Now, 
-            UserId: shoppingCart.value.UserId
+        var orderToCreate = new OrderDTOInput(
+            0,
+            (decimal) shoppingCart.value.TotalValue,
+            DateTime.Now, 
+            user.Name,
+            note,
+            user.UserId
         );
         
         // Create order with values of shopping cart (TotalValue, UserId)
-        var createdOrderResult = await CreateOrder(orderDtoInput);
+        var createdOrderResult = await CreateOrder(orderToCreate);
         
         if(!createdOrderResult.isSuccess)
             return Result<OrderDTOOutput>.Failure(createdOrderResult.error);
@@ -249,13 +244,21 @@ public class OrderService : IOrderService
         var shoppingCartProductInfo = shoppingCart.value.ToShoppingCartProduct();
         
         // Add all checked products in order created
-        var rowsAffected = await _uof.OrderRepository
-            .AddProductRange(
-                createdOrderResult.value.OrderId,
-                shoppingCartProductInfo.Products
-            );
+        var order = _mapper.Map<Order>(createdOrderResult);
+
+        foreach (var product in shoppingCartProductInfo.Products)
+        {
+            order.LineItems.Add(new LineItem(
+                order.OrderId,
+                product.Product.ProductId,
+                product.Amount.Value,
+                product.Product.Value
+                ));
+        }
+
+        var productsAddedToOrder = _uof.OrderRepository.Update(order);
         
-        if(rowsAffected == 0)
+        if(productsAddedToOrder is null)
             return Result<OrderDTOOutput>.Failure(OrderErrors.AddRangeError);
         
         // Remove products from ShoppingCart that were Checked
@@ -287,12 +290,15 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderDTOOutput>> SentOrder(int orderId)
     {
-        var order = await _uof.OrderRepository.GetOrderProductsById(orderId);
+        var order = await _uof.OrderRepository.GetOrderWithProductsByOrderId(orderId);
 
         if (order is null)
         {
             return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
         }
+        
+        if(order.LineItems.IsNullOrEmpty())
+            return Result<OrderDTOOutput>.Failure(OrderErrors.ProductListEmpty);
 
         if (order.OrderStatus is Status.Sent)
             return Result<OrderDTOOutput>.Failure(OrderErrors.OrderFinishedOrSent);
@@ -314,10 +320,10 @@ public class OrderService : IOrderService
         }
         
         order.SentOrder();
-        // foreach (var p in order.Products) 
-        // {
-        //     p.DecreaseStockQuantity();
-        // }
+        foreach (var li in order.LineItems) 
+        {
+            li.Product.DecreaseStockQuantity();
+        }
         
         _uof.OrderRepository.Update(order);
         await _uof.CommitChanges();
@@ -327,7 +333,7 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderDTOOutput>> FinishOrder(int orderId)
     {
-        var order = await _uof.OrderRepository.GetOrderProductsById(orderId);
+        var order = await _uof.OrderRepository.GetOrderWithProductsByOrderId(orderId);
 
         if (order is null)
         {
@@ -350,7 +356,7 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderProductsDTO>> AddProduct(int orderId, int productId, decimal amount)
     {
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+        var order = await _uof.OrderRepository.GetOrderWithProductsByOrderId(orderId);
         
         if(order is null)
             return Result<OrderProductsDTO>.Failure(OrderErrors.NotFound);
@@ -369,12 +375,7 @@ public class OrderService : IOrderService
         if (product.TypeValue is TypeValue.Uni)
             amount = Math.Truncate(amount);
         
-        var rowsAffected = await _uof.OrderRepository.AddProduct(order.OrderId, product.ProductId, amount);
-
-        if (!(rowsAffected > 0))
-        {
-            return Result<OrderProductsDTO>.Failure(OrderErrors.NoRowsAffected);
-        }
+        order.LineItems.Add(new LineItem(order.OrderId, product.ProductId, amount, product.Value));
         
         // Increase Order TotalValue
         order.IncreaseValue(product.Value * amount);
@@ -404,26 +405,21 @@ public class OrderService : IOrderService
     // Refactor
     public async Task<Result<OrderProductsDTO>> RemoveProduct(int orderId, int productId)
     {
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == orderId);
+        var order = await _uof.OrderRepository.GetOrderWithProductsByOrderId(orderId);
         
         if(order is null)
             return Result<OrderProductsDTO>.Failure(OrderErrors.NotFound);
         
         // Get the value and the amount of the product that`s gonna be removed.
-        var productValueAmount = await _uof.OrderRepository.GetProductValueAndAmount(orderId, productId);
+        var lineItem = await _uof.OrderRepository.GetLineItemByOrderIdAndProductId(orderId, productId);
         
-        var rowsAffected = await _uof.OrderRepository.RemoveProduct(order.OrderId, productId);
-
-        if (!(rowsAffected > 0))
+        if(lineItem is null)
             return Result<OrderProductsDTO>.Failure(OrderErrors.ProductNotFound);
         
-        // Decrease Order TotalValue
-        //var product = await _uof.ProductRepository.GetAsync(p => p.ProductId == productId);
+        order.LineItems.Remove(lineItem);
 
-        var productValue = productValueAmount.First().Value;
-        var productAmount = productValueAmount.First().ProductAmount;
-        
-        order.DecreaseValue(productValue * productAmount);
+        // Decrease Order TotalValue
+        order.DecreaseValue(lineItem.Price * lineItem.Amount);
         _uof.OrderRepository.Update(order);
         
         await _uof.CommitChanges();

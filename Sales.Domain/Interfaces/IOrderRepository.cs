@@ -10,10 +10,10 @@ public interface IOrderRepository : IRepository<Order>
     Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId); 
     Task<IEnumerable<Product>> GetProductsByDate(DateTime minDate, DateTime maxDate);  
     Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId);
-    Task<Order> GetOrderProductsById(int orderId);
+    Task<Order?> GetOrderWithProductsByOrderId(int orderId);
     Task<int> AddProduct(int orderId, int productId, decimal amount);
-    Task<int> AddProductRange(int orderId, List<ProductChecked> products);
+    Task<int> AddProductRange(int orderId, List<LineItem> products);
     Task<IEnumerable<Product>> GetProducts(int orderId);
-    Task<IEnumerable<ProductInfo>> GetProductValueAndAmount(int orderId, int productId);
+    Task<LineItem?> GetLineItemByOrderIdAndProductId(int orderId, int productId);
     Task<int> RemoveProduct(int orderId, int productId);
 }

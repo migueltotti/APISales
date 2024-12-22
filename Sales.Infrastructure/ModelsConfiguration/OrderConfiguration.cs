@@ -19,15 +19,17 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.OrderDate).HasColumnType("datetime")
             .IsRequired();
         builder.Property(o => o.OrderStatus).HasConversion<int>();
+        builder.Property(o => o.Holder).HasMaxLength(50);
         builder.Property(o => o.Note).HasMaxLength(300);
 
         builder.HasData(
-            new Order(1, 10.00m, new DateTime(2024, 09, 19, 15, 50, 45), "", 1, Status.Finished),
-            new Order(2, 20.00m, new DateTime(2024, 09, 20, 15, 50, 45), "Sem tomate", 2, Status.Sent),
-            new Order(3, 30.00m, new DateTime(2024, 09, 19, 15, 51, 39), "", 1),
-            new Order(4, 40.00m, new DateTime(2024, 09, 19, 15, 53, 36), "Cortado em tiras", 2, Status.Finished),
-            new Order(5, 0.00m, new DateTime(2024, 09, 20, 17, 47, 58), "", 2),
-            new Order(6, 83.49m, new DateTime(2024, 09, 30, 8, 33, 16), "Duplo", 2, Status.Finished)
+            new Order(1, 10.00m, new DateTime(2024, 09, 19, 15, 50, 45),"", "", 1, Status.Finished),
+            new Order(2, 20.00m, new DateTime(2024, 09, 20, 15, 50, 45), "","Sem tomate", 2, Status.Sent),
+            new Order(3, 30.00m, new DateTime(2024, 09, 19, 15, 51, 39), "","", 1),
+            new Order(4, 40.00m, new DateTime(2024, 09, 19, 15, 53, 36), "","Cortado em tiras", 2, Status.Finished),
+            new Order(5, 0.00m, new DateTime(2024, 09, 20, 17, 47, 58), "","", 2),
+            new Order(6, 83.49m, new DateTime(2024, 09, 30, 8, 33, 16), "","Duplo", 2, Status.Finished),
+            new Order(7, 83.49m, new DateTime(2024, 09, 30, 8, 33, 16), "Miguel Totti",null, null, Status.Finished)
             );
     }
 }

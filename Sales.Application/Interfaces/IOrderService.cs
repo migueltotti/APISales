@@ -13,7 +13,7 @@ public interface IOrderService
 {
     Task<IEnumerable<OrderDTOOutput>> GetAllOrders();
     Task<IPagedList<OrderDTOOutput>> GetAllOrders(QueryStringParameters parameters);
-    Task<IPagedList<OrderProductsDTO>> GetAllOrdersWithProductsByUserId(int userId, QueryStringParameters parameters);
+    Task<IPagedList<OrderDTOOutput>> GetAllOrdersWithProductsByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters);
@@ -23,7 +23,7 @@ public interface IOrderService
     Task<Result<OrderDTOOutput>> CreateOrder(OrderDTOInput order);
     Task<Result<OrderDTOOutput>> UpdateOrder(OrderDTOInput order, int id);
     Task<Result<OrderDTOOutput>> DeleteOrder(int? id);
-    Task<Result<OrderDTOOutput>> CreateAndSendOrder(int userId);
+    Task<Result<OrderDTOOutput>> CreateAndSendOrder(int userId, string? note = null);
     Task<Result<OrderDTOOutput>> SentOrder(int orderId);
     Task<Result<OrderDTOOutput>> FinishOrder(int orderId);
     Task<Result<OrderProductsDTO>> AddProduct(int orderId, int  productId, decimal amount);
