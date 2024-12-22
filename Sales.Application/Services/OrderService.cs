@@ -168,7 +168,7 @@ public class OrderService : IOrderService
             return Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
         }
         
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
+        var order = await _uof.OrderRepository.GetByIdAsync(id);
 
         if (order is null)
         {
@@ -221,6 +221,7 @@ public class OrderService : IOrderService
             0,
             (decimal) shoppingCart.value.TotalValue,
             DateTime.Now, 
+            Status.Preparing,
             user.Name,
             note,
             user.UserId
