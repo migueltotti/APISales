@@ -12,5 +12,7 @@ public class OrderValidator : AbstractValidator<OrderDTOInput>
             .PrecisionScale(10, 2, true);
         RuleFor(o => o.OrderDate).NotEmpty();
         RuleFor(o => o.UserId).NotEmpty();
+        RuleFor(o => o.holder).MaximumLength(50);
+        RuleFor(o => o.note).MaximumLength(300);
     }
 }

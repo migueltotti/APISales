@@ -13,7 +13,6 @@ public interface IOrderService
 {
     Task<IEnumerable<OrderDTOOutput>> GetAllOrders();
     Task<IPagedList<OrderDTOOutput>> GetAllOrders(QueryStringParameters parameters);
-    Task<IPagedList<OrderDTOOutput>> GetAllOrdersWithProductsByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters);
@@ -24,10 +23,10 @@ public interface IOrderService
     Task<Result<OrderDTOOutput>> UpdateOrder(OrderDTOInput order, int id);
     Task<Result<OrderDTOOutput>> DeleteOrder(int? id);
     Task<Result<OrderDTOOutput>> CreateAndSendOrder(int userId, string? note = null);
-    Task<Result<OrderDTOOutput>> SentOrder(int orderId);
+    Task<Result<OrderDTOOutput>> SentOrder(int orderId, string? note = null);
     Task<Result<OrderDTOOutput>> FinishOrder(int orderId);
-    Task<Result<OrderProductsDTO>> AddProduct(int orderId, int  productId, decimal amount);
+    Task<Result<OrderDTOOutput>> AddProduct(int orderId, int  productId, decimal amount);
     Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId);
-    Task<Result<OrderProductsDTO>> RemoveProduct(int orderId, int productId);
+    Task<Result<OrderDTOOutput>> RemoveProduct(int orderId, int productId);
     Task<OrderReportDTO> GetOrderReport(DateTime startDate, DateTime endDate);    
 }

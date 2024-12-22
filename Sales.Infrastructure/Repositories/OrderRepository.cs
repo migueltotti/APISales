@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.VisualBasic;
 using Sales.Infrastructure.Context;
 using Sales.Domain.Interfaces;
@@ -20,10 +21,11 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId)
     {
         var ordersProducts = await _context.Orders
-            .Include(o => o.LineItems)
             .Where(o => o.UserId == userId)
+            .Include(o => o.LineItems)
+            .ThenInclude(li => li.Product)
             .ToListAsync();
-
+        
         return ordersProducts;
     }
 
@@ -58,7 +60,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId)
     {
         var orders = _context.Orders.FromSqlInterpolated(
-            $$"""
+            $"""
                SELECT o.*
                FROM `order` o
                JOIN `user` u On u.UserId = o.UserId
@@ -112,6 +114,16 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<LineItem?> GetLineItemByOrderIdAndProductId(int orderId, int productId)
     {
         var lineItem = await _context.LineItems.FirstOrDefaultAsync(li => li.ProductId == productId && li.OrderId == orderId);
+        return lineItem;
+    }
+    
+    public async Task<IEnumerable<LineItem>?> GetLineItemsByOrderIdAndUserId(List<int> orderIds, int userId)
+    {
+        var lineItem = await _context.LineItems
+            .Include(li => li.Product)
+            .Where(li => li.Order.UserId == userId)
+            .ToListAsync();
+        
         return lineItem;
     }
 

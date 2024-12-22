@@ -1,3 +1,4 @@
+using Sales.Application.DTOs.LineItemDTO;
 using Sales.Domain.Models;
 using Sales.Domain.Models.Enums;
 
@@ -11,5 +12,5 @@ public record OrderDTOOutput(
     int UserId,
     string? Holder,
     string? Note,
-    List<LineItem>? LineItems
+    List<LineItemDTOOutput>? LineItems
 );

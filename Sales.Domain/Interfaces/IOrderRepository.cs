@@ -12,8 +12,8 @@ public interface IOrderRepository : IRepository<Order>
     Task<IEnumerable<Order>> GetOrdersByAffiliateId(int affiliateId);
     Task<Order?> GetOrderWithProductsByOrderId(int orderId);
     Task<int> AddProduct(int orderId, int productId, decimal amount);
-    Task<int> AddProductRange(int orderId, List<LineItem> products);
     Task<IEnumerable<Product>> GetProducts(int orderId);
     Task<LineItem?> GetLineItemByOrderIdAndProductId(int orderId, int productId);
+    Task<IEnumerable<LineItem>?> GetLineItemsByOrderIdAndUserId(List<int> orderIds, int userId);
     Task<int> RemoveProduct(int orderId, int productId);
 }

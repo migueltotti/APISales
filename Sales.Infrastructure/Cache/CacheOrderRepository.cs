@@ -100,9 +100,9 @@ public class CacheOrderRepository : IOrderRepository
         return await _decorator.GetOrdersByAffiliateId(affiliateId);
     }
 
-    public async Task<Order> GetOrderProductsById(int orderId)
+    public Task<Order?> GetOrderWithProductsByOrderId(int orderId)
     {
-        return await _decorator.GetOrderProductsById(orderId);
+        return _decorator.GetOrderWithProductsByOrderId(orderId);
     }
 
     public async Task<int> AddProduct(int orderId, int productId, decimal amount)
@@ -110,19 +110,19 @@ public class CacheOrderRepository : IOrderRepository
         return await _decorator.AddProduct(orderId, productId, amount);
     }
 
-    public Task<int> AddProductRange(int orderId, List<ProductChecked> products)
-    {
-        return _decorator.AddProductRange(orderId, products);
-    }
-
     public async Task<IEnumerable<Product>> GetProducts(int orderId)
     {
         return await _decorator.GetProducts(orderId);
     }
 
-    public async Task<IEnumerable<ProductInfo>> GetProductValueAndAmount(int orderId, int productId)
+    public Task<LineItem?> GetLineItemByOrderIdAndProductId(int orderId, int productId)
     {
-        return await _decorator.GetProductValueAndAmount(orderId, productId);
+        return _decorator.GetLineItemByOrderIdAndProductId(orderId, productId);
+    }
+
+    public Task<IEnumerable<LineItem>?> GetLineItemsByOrderIdAndUserId(List<int> orderIds, int userId)
+    {
+        return _decorator.GetLineItemsByOrderIdAndUserId(orderIds, userId);
     }
 
     public async Task<int> RemoveProduct(int orderId, int productId)

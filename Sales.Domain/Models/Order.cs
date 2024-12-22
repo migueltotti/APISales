@@ -64,23 +64,13 @@ public sealed class Order
         this.OrderStatus = Status.Finished;
     }
 
-    public void ChangeHolder(string newHolder)
+    public void ChangeHolder(string? newHolder)
     {
-        if (string.IsNullOrEmpty(newHolder))
-        {
-            throw new ArgumentNullException(nameof(newHolder));
-        }
-        
         Holder = newHolder;
     }
     
-    public void ChangeNote(string newNote)
+    public void ChangeNote(string? newNote)
     {
-        if (string.IsNullOrEmpty(newNote))
-        {
-            throw new ArgumentNullException(nameof(newNote));
-        }
-        
-        Holder = newNote;
+        Note = newNote;
     }
 }

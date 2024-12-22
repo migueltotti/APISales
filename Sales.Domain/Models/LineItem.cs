@@ -29,4 +29,9 @@ public class LineItem
         Amount = amount;
         Price = price;
     }
+
+    public void AddProduct(Product product)
+    {
+        Product = product;
+    }
 }
