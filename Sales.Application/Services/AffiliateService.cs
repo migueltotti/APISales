@@ -18,15 +18,16 @@ public class AffiliateService : IAffiliateService
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<AffiliateDTOInput> _validator;
+    private readonly ICacheService _cacheService;
 
-    public AffiliateService(IMapper mapper, IUnitOfWork unitOfWork, IValidator<AffiliateDTOInput> validator)
+    public AffiliateService(IMapper mapper, IUnitOfWork unitOfWork, IValidator<AffiliateDTOInput> validator, ICacheService cacheService)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
         _validator = validator;
+        _cacheService = cacheService;
     }
-
-
+    
     public async Task<IEnumerable<AffiliateDTOOutput>> GetAllAffiliate()
     {
         var affiliates = await _unitOfWork.AffiliateRepository.GetAllAsync();
@@ -104,7 +105,11 @@ public class AffiliateService : IAffiliateService
         var affiliateEntity = _mapper.Map<Affiliate>(affiliate);
         
         var affiliateUpdated = _unitOfWork.AffiliateRepository.Update(affiliateEntity);
-        _unitOfWork.CommitChanges();
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"affiliate-{id}"); 
+        
+        await _unitOfWork.CommitChanges();
         
         return Result<AffiliateDTOOutput>.Success(_mapper.Map<AffiliateDTOOutput>(affiliateUpdated));
     }
@@ -118,7 +123,11 @@ public class AffiliateService : IAffiliateService
         
         
         var affiliateDeleted = _unitOfWork.AffiliateRepository.Delete(affiliate);
-        _unitOfWork.CommitChanges();
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"affiliate-{id}");
+        
+        await _unitOfWork.CommitChanges();
 
         return Result<AffiliateDTOOutput>.Success(_mapper.Map<AffiliateDTOOutput>(affiliateDeleted));
     }

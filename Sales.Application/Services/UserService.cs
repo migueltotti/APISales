@@ -21,13 +21,15 @@ public class UserService : IUserService
     private readonly IValidator<UserDTOInput> _validator;
     private readonly IMapper _mapper;
     private readonly IUserFilterFactory _userFilterFactory;
+    private readonly ICacheService _cacheService;
 
-    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory)
+    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory, ICacheService cacheService)
     {
         _uof = uof;
         _validator = validator;
         _mapper = mapper;
         _userFilterFactory = userFilterFactory;
+        _cacheService = cacheService;
     }
 
     public async Task<IEnumerable<UserDTOOutput>> GetAllUsers()
@@ -206,6 +208,10 @@ public class UserService : IUserService
         var userForUpdate = _mapper.Map<User>(userDtoInput);
 
         var userUpdate = _uof.UserRepository.Update(userForUpdate);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"user-{id}");
+        
         await _uof.CommitChanges();
 
         var userDtoUpdated = _mapper.Map<UserDTOOutput>(userUpdate);
@@ -223,6 +229,10 @@ public class UserService : IUserService
         }
 
         var userDeleted = _uof.UserRepository.Delete(user);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"user-{id}");
+        
         await _uof.CommitChanges();
 
         var userDtoDeleted = _mapper.Map<UserDTOOutput>(userDeleted);

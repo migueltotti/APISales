@@ -60,10 +60,16 @@ public class CacheOrderRepository : IOrderRepository
             {
                 return order;
             }
-            
+
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = CacheExpirationTime.OneDay
+            };
+
             await _distributedCache.SetStringAsync(
                 key,
-                JsonSerializer.Serialize(order));
+                JsonSerializer.Serialize(order),
+                cacheOptions);
             
             return order;
         }

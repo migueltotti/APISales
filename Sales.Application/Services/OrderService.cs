@@ -30,14 +30,16 @@ public class OrderService : IOrderService
     private readonly IValidator<OrderDTOInput> _validator;
     private readonly IMapper _mapper;
     private readonly IOrderFilterFactory _orderFilterFactory;
+    private readonly ICacheService _cacheService;
 
-    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory)
+    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory, ICacheService cacheService)
     {
         _uof = uof;
         _shoppingCartService = shoppingCartService;
         _validator = validator;
         _mapper = mapper;
         _orderFilterFactory = orderFilterFactory;
+        _cacheService = cacheService;
     }
 
     public async Task<IEnumerable<OrderDTOOutput>> GetAllOrders()
@@ -178,6 +180,10 @@ public class OrderService : IOrderService
         var orderForUpdate = _mapper.Map<Order>(orderDtoInput);
 
         var orderUpdated = _uof.OrderRepository.Update(orderForUpdate);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{id}"); 
+        
         await _uof.CommitChanges();
 
         var orderDtoUpdated = _mapper.Map<OrderDTOOutput>(orderUpdated);
@@ -195,6 +201,10 @@ public class OrderService : IOrderService
         }
 
         var orderDeleted = _uof.OrderRepository.Delete(order);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{id}"); 
+        
         await _uof.CommitChanges();
 
         var orderDtoDeleted = _mapper.Map<OrderDTOOutput>(orderDeleted);
@@ -274,6 +284,9 @@ public class OrderService : IOrderService
         // Sent Order
         var sendOrderResult = await SentOrder(createdOrderResult.value.OrderId, note);
         
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{order.OrderId}"); 
+        
         if(!sendOrderResult.isSuccess)
             return sendOrderResult;
         
@@ -319,6 +332,10 @@ public class OrderService : IOrderService
         }
         
         _uof.OrderRepository.Update(order);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{order.OrderId}"); 
+        
         await _uof.CommitChanges();
         
         return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
@@ -342,6 +359,10 @@ public class OrderService : IOrderService
         order.FinishOrder();
         
         _uof.OrderRepository.Update(order);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{order.OrderId}"); 
+        
         await _uof.CommitChanges();
         
         return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
@@ -373,6 +394,9 @@ public class OrderService : IOrderService
         // Increase Order TotalValue
         order.IncreaseValue(product.Value * amount);
         _uof.OrderRepository.Update(order);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{order.OrderId}"); 
         
         await _uof.CommitChanges();
         //order.Products.Add(product);
@@ -414,6 +438,9 @@ public class OrderService : IOrderService
         // Decrease Order TotalValue
         order.DecreaseValue(lineItem.Price * lineItem.Amount);
         _uof.OrderRepository.Update(order);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"order-{order.OrderId}"); 
         
         await _uof.CommitChanges();
         

@@ -99,6 +99,7 @@ public static class DependencyInjection
         services.AddScoped<IAffiliateService, AffiliateService>();
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICacheService, CacheService>();
         
         // Add Strategy Pattern
         services.AddScoped<ICategoryFilterStrategy, CategoryNameFilter>();

@@ -21,13 +21,15 @@ public class CategoryService : ICategoryService
     private readonly IValidator<CategoryDTOInput> _validator;
     private readonly IMapper _mapper;
     private readonly ICategoryFilterFactory _categoryFilterFactory;
+    private readonly ICacheService _cacheService;
 
-    public CategoryService(IUnitOfWork unitOfWork, IValidator<CategoryDTOInput> validator, IMapper mapper, ICategoryFilterFactory categoryFilterFactory)
+    public CategoryService(IUnitOfWork uof, IValidator<CategoryDTOInput> validator, IMapper mapper, ICategoryFilterFactory categoryFilterFactory, ICacheService cacheService)
     {
-        _uof = unitOfWork;
+        _uof = uof;
         _validator = validator;
         _mapper = mapper;
         _categoryFilterFactory = categoryFilterFactory;
+        _cacheService = cacheService;
     }
 
     public async Task<IEnumerable<CategoryDTOOutput>> GetAllCategories()
@@ -171,6 +173,10 @@ public class CategoryService : ICategoryService
         var categoryForUpdate = _mapper.Map<Category>(categoryDtoInput);
 
         var categoryUpdated = _uof.CategoryRepository.Update(categoryForUpdate);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"category-{id}"); 
+        
         await _uof.CommitChanges();
         
         var categoryUpdatedDto = _mapper.Map<CategoryDTOOutput>(categoryUpdated);
@@ -188,6 +194,10 @@ public class CategoryService : ICategoryService
         }
         
         var categoryDeleted = _uof.CategoryRepository.Delete(category);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"category-{category.CategoryId}"); 
+        
         await _uof.CommitChanges();
 
         var categoryDtoDeleted = _mapper.Map<CategoryDTOOutput>(categoryDeleted);
