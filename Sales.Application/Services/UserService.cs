@@ -219,6 +219,31 @@ public class UserService : IUserService
         return Result<(UserDTOOutput, Dictionary<string, string>)>.Success((userDtoUpdated, updatedFields));
     }
 
+    public async Task<Result<UserDTOOutput>> UpdateUserPassword(int userId, string oldPassword, string newPassword)
+    { 
+        var user = await _uof.UserRepository.GetByIdAsync(userId);
+        
+        if(user is null)
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        
+        if(!user.Password.Equals(oldPassword))
+            return Result<UserDTOOutput>.Failure(UserErrors.PasswordMismatch);
+        
+        if (user.Password.Equals(newPassword) || oldPassword.Equals(newPassword))
+            return Result<UserDTOOutput>.Failure(UserErrors.PasswordsEqualError);
+
+        var password = user.Password;
+        //
+        //user.Password = newPassword;
+        return null;
+        // TODO: 
+    }
+
+    public Task<Result<UserDTOOutput>> UpdateUserRole(int userId, string role)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<Result<UserDTOOutput>> DeleteUser(int? id)
     {
         var user = await _uof.UserRepository.GetAsync(e => e.UserId == id);

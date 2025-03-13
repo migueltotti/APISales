@@ -10,5 +10,5 @@ public class OrderParameters : QueryStringParameters
     
     public string? ProductName { get; set; }
 
-    public string? Status { get; set; }
+    public string? Status { get; set; } = Domain.Models.Enums.Status.Preparing.ToString();
 }

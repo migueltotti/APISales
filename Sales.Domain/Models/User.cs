@@ -50,4 +50,19 @@ public sealed class User
         Role = role;
         AffiliateId = affiliateId;
     }
+
+    public void UpdatePassword(string newPassword)
+    {
+        if (string.IsNullOrEmpty(newPassword))
+        {
+            throw new ArgumentNullException(nameof(newPassword));
+        }
+
+        if (!newPassword.Equals(newPassword.Trim()))
+        {
+            throw new ArgumentNullException(nameof(newPassword));
+        }
+
+        Password = newPassword;
+    }
 }

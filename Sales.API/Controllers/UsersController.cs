@@ -112,6 +112,7 @@ public class UsersController(IUserService _service,
     }
     
     [HttpGet("email/{email}")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<UserDTOOutput>> GetUserByEmail(string email)
     {
         var result = await _service.GetUserByEmail(email);
@@ -265,7 +266,7 @@ public class UsersController(IUserService _service,
         // UserDataDbContext User Update logic implemented inside Action Method Delete in UsersController.
 
         var getUserResult = await _userManager.FindByEmailAsync(deleteUserResult.value.Email);
-        var deleteUserAuthenticationResult = await _userManager.DeleteAsync(getUserResult!);
+        var deleteUserAuthenticationResult = await _userManager.DeleteAsync(getUserResult);
         
         return Ok($"User with id = {deleteUserResult.value.UserId} was deleted successfully");
     }

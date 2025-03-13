@@ -28,6 +28,19 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         return Ok(ordersPaged.ToList());
     }
     
+    [HttpGet("Products/DateTimeNow")]
+    [Authorize("AdminEmployeeOnly")]
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetAllWithProductsByDateTimeNow([FromQuery] OrderParameters parameters)
+    {
+        var ordersPaged = await _service.GetAllOrdersWithProductsByDateTimeNow(parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
+    }
+    
     [HttpGet("userId/{userId:int:min(1)}")]
     [Authorize(Policy = "AllowAnyUser")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByUserId(int userId, [FromQuery] OrderParameters parameters)
@@ -147,7 +160,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return BadRequest(result.GenerateErrorResponse());
-        };
+        }
     }
     
     [HttpPut("{id:int:min(1)}")]

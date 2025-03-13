@@ -5,6 +5,7 @@ using AutoMapper;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.IdentityModel.Tokens;
+using Sales.Application.DTOs.LineItemDTO;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.Interfaces;
@@ -54,6 +55,18 @@ public class OrderService : IOrderService
         var orders = (await GetAllOrders()).OrderBy(o => o.OrderDate);
         
         return orders.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+    
+    public async Task<IPagedList<OrderDTOOutput>> GetAllOrdersWithProductsByDateTimeNow(OrderParameters parameters)
+    {
+        Status.TryParse(parameters.Status, out Status status);
+        
+        var ordersWithProducts = await 
+            _uof.OrderRepository.GetAllOrdersWithProductsByTodayDate(status);
+        
+        var ordersWithProductsMap = _mapper.Map<IEnumerable<OrderDTOOutput>>(ordersWithProducts);
+        
+        return ordersWithProductsMap.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters)
@@ -141,11 +154,50 @@ public class OrderService : IOrderService
             return Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
         }
 
-        var order = _mapper.Map<Order>(orderDtoInput);
+        Order order;
+        if (orderDtoInput.Products.Count != 0)
+        {
+            var totalValue = orderDtoInput.Products.Sum(p => p.Price * p.Amount);
+            
+            order = new Order(
+                totalValue,
+                orderDtoInput.OrderDate,
+                orderDtoInput.Holder,
+                orderDtoInput.Note,
+                orderDtoInput.UserId
+            );
+        }
+        else
+        {
+            order = new Order(
+                orderDtoInput.TotalValue,
+                orderDtoInput.OrderDate,
+                orderDtoInput.Holder,
+                orderDtoInput.Note,
+                orderDtoInput.UserId
+            );
+        }
 
         var orderCreated = _uof.OrderRepository.Create(order);
         await _uof.CommitChanges();
-
+        
+        // Add Products if not empty
+        if (orderDtoInput.Products.Count != 0)
+        {
+            var lineItems = orderDtoInput.Products
+                .Select(li => new LineItem(
+                    orderCreated.OrderId,
+                    li.ProductId,
+                    li.Amount,
+                    li.Price
+                )).ToList();
+            
+            orderCreated.AddProducts(lineItems);
+            
+            orderCreated = _uof.OrderRepository.Update(orderCreated);
+            await _uof.CommitChanges();
+        }
+        
         var orderDtoCreated = _mapper.Map<OrderDTOOutput>(orderCreated);
 
         return Result<OrderDTOOutput>.Success(orderDtoCreated);
@@ -234,20 +286,22 @@ public class OrderService : IOrderService
             Status.Preparing,
             user.Name,
             note,
+            [],
             user.UserId
         );
         
-        // Create order with values of shopping cart (TotalValue, UserId)
-        var createdOrderResult = await CreateOrder(orderToCreate);
-        
-        if(!createdOrderResult.isSuccess)
-            return Result<OrderDTOOutput>.Failure(createdOrderResult.error);
-        
-        var shoppingCartProductInfo = shoppingCart.value.ToShoppingCartProduct();
+        var validation = await _validator.ValidateAsync(orderToCreate);
+
+        if (!validation.IsValid)
+        {
+            return Result<OrderDTOOutput>.Failure(OrderErrors.IncorrectFormatData, validation.Errors);
+        }
+
+        var order = _mapper.Map<Order>(orderToCreate);
         
         // Add all checked products in order created
-        var order = _mapper.Map<Order>(createdOrderResult);
-
+        var shoppingCartProductInfo = shoppingCart.value.ToShoppingCartProduct();
+        
         foreach (var product in shoppingCartProductInfo.Products)
         {
             order.LineItems.Add(new LineItem(
@@ -255,12 +309,14 @@ public class OrderService : IOrderService
                 product.Product.ProductId,
                 product.Amount.Value,
                 product.Product.Value
-                ));
-        }
+            ));
+        } 
 
-        var productsAddedToOrder = _uof.OrderRepository.Update(order);
+        var orderCreated = _uof.OrderRepository.Create(order);
         
-        if(productsAddedToOrder is null)
+        await _uof.CommitChanges();
+        
+        if(orderCreated is null)
             return Result<OrderDTOOutput>.Failure(OrderErrors.AddRangeError);
         
         // Remove products from ShoppingCart that were Checked
@@ -272,7 +328,7 @@ public class OrderService : IOrderService
         
         // Update TotalValue and ProductsCount from ShoppingCart
         shoppingCartProductInfo.ShoppingCart.
-            DecreaseTotalValue((double)createdOrderResult.value.TotalValue);
+            DecreaseTotalValue((double)orderCreated.TotalValue);
         shoppingCartProductInfo.ShoppingCart
             .DecreaseProductCount(shoppingCartProductInfo.Products.Count);
         
@@ -280,9 +336,11 @@ public class OrderService : IOrderService
 
         if (shoppingCartUpdated is null)
             return Result<OrderDTOOutput>.Failure(ShoppingCartError.UpdateTotalValueAndProductCountItemsError);
+
+        await _uof.CommitChanges();
         
         // Sent Order
-        var sendOrderResult = await SentOrder(createdOrderResult.value.OrderId, note);
+        var sendOrderResult = await SentOrder(orderCreated.OrderId, note);
         
         // remove old data from cache
         await _cacheService.RemoveAsync($"order-{order.OrderId}"); 

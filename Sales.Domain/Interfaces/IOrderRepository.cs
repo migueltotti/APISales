@@ -1,11 +1,13 @@
 using System.Collections;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 
 namespace Sales.Domain.Interfaces;
 
 public interface IOrderRepository : IRepository<Order>
 {
-    Task<Order?> GetByIdAsync(int id); 
+    Task<Order?> GetByIdAsync(int id);
+    Task<IEnumerable<Order>> GetAllOrdersWithProductsByTodayDate(Status orderStatus);
     Task<IEnumerable<Order>> GetOrdersByProduct(string productName);  
     Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId); 
     Task<IEnumerable<Product>> GetProductsByDate(DateTime minDate, DateTime maxDate);  

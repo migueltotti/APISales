@@ -4,6 +4,7 @@ using Microsoft.VisualBasic;
 using Sales.Infrastructure.Context;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 
 namespace Sales.Infrastructure.Repositories;
 
@@ -16,6 +17,17 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public Task<Order?> GetByIdAsync(int id)
     {
         return GetAsync(o => o.OrderId == id);
+    }
+    
+    public async Task<IEnumerable<Order>> GetAllOrdersWithProductsByTodayDate(Status orderStatus)
+    {
+        var ordersProductsByDateNow = await _context.Orders
+            .Where(o => o.OrderDate.Day == DateTime.Now.Day && o.OrderStatus == orderStatus)
+            .Include(o => o.LineItems)
+            .ThenInclude(li => li.Product)
+            .ToListAsync();
+        
+        return ordersProductsByDateNow;
     }
 
     public async Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId)

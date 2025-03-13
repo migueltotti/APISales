@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 using Sales.Infrastructure.Repositories;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -84,6 +85,11 @@ public class CacheOrderRepository : IOrderRepository
             });
         
         return order;
+    }
+
+    public Task<IEnumerable<Order>> GetAllOrdersWithProductsByTodayDate(Status orderStatus)
+    {
+        return _decorator.GetAllOrdersWithProductsByTodayDate(orderStatus);
     }
 
     public async Task<IEnumerable<Order>> GetOrdersByProduct(string productName)

@@ -73,4 +73,13 @@ public sealed class Order
     {
         Note = newNote;
     }
+
+    
+    public void AddProducts(List<LineItem> products)
+    {
+        foreach (var prod in products)
+        {
+            LineItems.Add(prod);
+        }
+    }
 }

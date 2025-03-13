@@ -13,6 +13,7 @@ public interface IOrderService
 {
     Task<IEnumerable<OrderDTOOutput>> GetAllOrders();
     Task<IPagedList<OrderDTOOutput>> GetAllOrders(QueryStringParameters parameters);
+    Task<IPagedList<OrderDTOOutput>> GetAllOrdersWithProductsByDateTimeNow(OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters);
