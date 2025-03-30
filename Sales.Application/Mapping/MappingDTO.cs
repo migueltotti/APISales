@@ -6,6 +6,7 @@ using Sales.Application.DTOs.UserDTO;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.DTOs.ShoppingCartDTO;
+using Sales.Application.DTOs.WorkDayDTO;
 using Sales.Domain.Models;
 
 namespace Sales.Application.Mapping;
@@ -30,6 +31,9 @@ public class MappingDTO : Profile
         
         CreateMap<Affiliate, AffiliateDTOOutput>().ReverseMap();
         CreateMap<Affiliate, AffiliateDTOInput>().ReverseMap();
+        
+        CreateMap<WorkDay, WorkDayDTOOutput>().ReverseMap();
+        CreateMap<WorkDay, WorkDayDTOInput>().ReverseMap();
         
         //CreateMap<ProductShoppingCart, ProductShoppingCartDTOOutput>().ReverseMap();
         //CreateMap<ShoppingCart, ShoppingCartDTOOutput>().ReverseMap();

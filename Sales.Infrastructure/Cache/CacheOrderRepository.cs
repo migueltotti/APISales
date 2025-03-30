@@ -87,6 +87,16 @@ public class CacheOrderRepository : IOrderRepository
         return order;
     }
 
+    public Task<IEnumerable<Order>> GetAllOrdersWithProductsByLastMonths(int monthCount)
+    {
+        return _decorator.GetAllOrdersWithProductsByLastMonths(monthCount);
+    }
+
+    public Task<IEnumerable<Order>> GetAllOrdersWithProductsByDate(DateTime date)
+    {
+        return _decorator.GetAllOrdersWithProductsByDate(date);
+    }
+
     public Task<IEnumerable<Order>> GetAllOrdersWithProductsByTodayDate(Status orderStatus)
     {
         return _decorator.GetAllOrdersWithProductsByTodayDate(orderStatus);

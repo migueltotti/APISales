@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales.Infrastructure.Context;
 
@@ -11,9 +12,11 @@ using Sales.Infrastructure.Context;
 namespace Sales.Infrastructure.Migrations.TesteMigrations
 {
     [DbContext(typeof(TestDbContext))]
-    partial class TestDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250329220339_add WorkDay entity")]
+    partial class addWorkDayentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -581,7 +584,7 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                         .HasMaxLength(80)
                         .HasColumnType("varchar(80)");
 
-                    b.Property<DateTime?>("FinishDayTime")
+                    b.Property<DateTime>("FinishDayTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("NumberOfCanceledOrders")

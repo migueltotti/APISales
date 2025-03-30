@@ -7,6 +7,8 @@ namespace Sales.Domain.Interfaces;
 public interface IOrderRepository : IRepository<Order>
 {
     Task<Order?> GetByIdAsync(int id);
+    Task<IEnumerable<Order>> GetAllOrdersWithProductsByLastMonths(int monthCount);
+    Task<IEnumerable<Order>> GetAllOrdersWithProductsByDate(DateTime date);
     Task<IEnumerable<Order>> GetAllOrdersWithProductsByTodayDate(Status orderStatus);
     Task<IEnumerable<Order>> GetOrdersByProduct(string productName);  
     Task<IEnumerable<Order>> GetOrdersWithProductsByUserId(int userId); 

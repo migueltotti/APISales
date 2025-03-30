@@ -13,7 +13,9 @@ public interface IOrderService
 {
     Task<IEnumerable<OrderDTOOutput>> GetAllOrders();
     Task<IPagedList<OrderDTOOutput>> GetAllOrders(QueryStringParameters parameters);
+    Task<Result<List<NumberOfProductDTO>>> Get5BestSellingProductsByNumberOfMonths(ProductParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetAllOrdersWithProductsByDateTimeNow(OrderParameters parameters);
+    Task<Result<IPagedList<OrderWeekReportDTO>>> GetNumberOfOrdersFromTodayToLastSundays(OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByUserId(int userId, QueryStringParameters parameters);
     Task<IPagedList<OrderDTOOutput>> GetOrdersByProduct(OrderParameters parameters);
@@ -29,5 +31,5 @@ public interface IOrderService
     Task<Result<OrderDTOOutput>> AddProduct(int orderId, int  productId, decimal amount);
     Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId);
     Task<Result<OrderDTOOutput>> RemoveProduct(int orderId, int productId);
-    Task<OrderReportDTO> GetOrderReport(DateTime startDate, DateTime endDate);    
+    Task<Result<OrderReportDTO>> GetOrderReport(DateTime? date);    
 }

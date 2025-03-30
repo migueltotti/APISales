@@ -12,6 +12,7 @@ public class TestDbContext : DbContext
     public DbSet<Product> Products { get; set; }
     public DbSet<LineItem> LineItems { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<WorkDay> WorkDays { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<ShoppingCartProduct> ShoppingCartProducts { get; set; }

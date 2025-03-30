@@ -32,8 +32,9 @@ public class OrderService : IOrderService
     private readonly IMapper _mapper;
     private readonly IOrderFilterFactory _orderFilterFactory;
     private readonly ICacheService _cacheService;
+    private readonly IWorkDayService _workDayService;
 
-    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory, ICacheService cacheService)
+    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory, ICacheService cacheService, IWorkDayService workDayService)
     {
         _uof = uof;
         _shoppingCartService = shoppingCartService;
@@ -41,6 +42,7 @@ public class OrderService : IOrderService
         _mapper = mapper;
         _orderFilterFactory = orderFilterFactory;
         _cacheService = cacheService;
+        _workDayService = workDayService;
     }
 
     public async Task<IEnumerable<OrderDTOOutput>> GetAllOrders()
@@ -67,6 +69,67 @@ public class OrderService : IOrderService
         var ordersWithProductsMap = _mapper.Map<IEnumerable<OrderDTOOutput>>(ordersWithProducts);
         
         return ordersWithProductsMap.ToPagedList(parameters.PageNumber, parameters.PageSize);
+    }
+
+    public async Task<Result<IPagedList<OrderWeekReportDTO>>> GetNumberOfOrdersFromTodayToLastSundays(OrderParameters parameters)
+    {
+        if (parameters.Since is null)
+            return Result<IPagedList<OrderWeekReportDTO>>.Failure(OrderErrors.SinceNullParameter);
+        
+        var orders = await GetAllOrders();
+        var lastSunday = GetLastSundayFromToday();
+        var lastSundaysList = new List<DateTime>();
+        for (int i = 0; i < parameters.Since.Value; i++)
+        {
+            lastSundaysList.Add(lastSunday.AddDays(-(i*7)));
+        }
+        
+        var ordersFilteredFromNowToLastWeeks = orders.
+            Where(o => lastSundaysList.Contains(o.OrderDate));
+
+        var orderWeekReport = new Dictionary<DateOnly, int>();
+            
+        foreach (var order in ordersFilteredFromNowToLastWeeks)
+        {
+            if (orderWeekReport.ContainsKey(DateOnly.FromDateTime(order.OrderDate)))
+                orderWeekReport[DateOnly.FromDateTime(order.OrderDate)]++;
+            else
+                orderWeekReport.Add(DateOnly.FromDateTime(order.OrderDate), 1);
+        }
+
+        List<OrderWeekReportDTO> orderWeekReportList = [];
+        orderWeekReportList.AddRange(orderWeekReport.
+            Select(o => new OrderWeekReportDTO(o.Key, o.Value)));
+
+        return Result<IPagedList<OrderWeekReportDTO>>.Success(orderWeekReportList.ToPagedList(parameters.PageNumber, parameters.PageSize));
+    }
+    
+    public async Task<Result<List<NumberOfProductDTO>>> Get5BestSellingProductsByNumberOfMonths(ProductParameters parameters)
+    {
+        if (parameters.Months_Count.Equals(0) || parameters.Months_Count is null)
+            return Result<List<NumberOfProductDTO>>.Failure(ProductErrors.MonthsCountNullParameter);
+
+        var ordersFilteredByMonthsCount = await _uof.OrderRepository
+            .GetAllOrdersWithProductsByLastMonths(parameters.Months_Count.Value);
+
+        var numberOfProducts = new Dictionary<string, int>();
+
+        foreach (var order in ordersFilteredByMonthsCount)
+        {
+            foreach (var item in order.LineItems)
+            {
+                if(!numberOfProducts.TryAdd(item.Product.Name, 1))
+                    numberOfProducts[item.Product.Name]++;
+            }
+        }
+
+        var bestSellingProducts = numberOfProducts.ToList()
+            .OrderBy(p => p.Value)
+            .Take(5)
+            .Select(prod => new NumberOfProductDTO(prod.Key, prod.Value))
+            .ToList();
+
+        return Result<List<NumberOfProductDTO>>.Success(bestSellingProducts);
     }
 
     public async Task<IPagedList<OrderDTOOutput>> GetOrdersWithFilter(string filter, OrderParameters parameters)
@@ -179,6 +242,10 @@ public class OrderService : IOrderService
         }
 
         var orderCreated = _uof.OrderRepository.Create(order);
+        
+        // Update WorkDay data if still in progress
+        await _workDayService.RegisterOrderToWorkDay();
+        
         await _uof.CommitChanges();
         
         // Add Products if not empty
@@ -245,13 +312,28 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderDTOOutput>> DeleteOrder(int? id)
     {
-        var order = await _uof.OrderRepository.GetAsync(o => o.OrderId == id);
+        if(id is null)
+            return Result<OrderDTOOutput>.Failure(OrderErrors.DataIsNull);
+        
+        var order = await _uof.OrderRepository.GetOrderWithProductsByOrderId(id.Value);
         
         if (order is null)
-        {
             return Result<OrderDTOOutput>.Failure(OrderErrors.NotFound);
-        }
+        
+        // Update WorkDay data if still in progress
+        // Verify if WorkDay is in progress and update StockQuantity of Products that we`re used in deleted order
+        var workDayResult = await _workDayService.CancelOrderToWorkDay();
 
+        if (workDayResult.isSuccess)
+        {
+            foreach (var orderLineItem in order.LineItems)
+            {
+                var prod = orderLineItem.Product;
+                prod.IncreaseStockQuantity(orderLineItem.Amount);
+                _uof.ProductRepository.Update(prod);
+            }
+        }
+        
         var orderDeleted = _uof.OrderRepository.Delete(order);
         
         // remove old data from cache
@@ -383,7 +465,9 @@ public class OrderService : IOrderService
         }
         
         order.SentOrder();
-        order.ChangeNote(note);
+        if(note is not null)
+            order.ChangeNote(note);
+        
         foreach (var li in order.LineItems) 
         {
             li.Product.DecreaseStockQuantity();
@@ -505,22 +589,19 @@ public class OrderService : IOrderService
         return Result<OrderDTOOutput>.Success(_mapper.Map<OrderDTOOutput>(order));
     }
 
-    public async Task<OrderReportDTO> GetOrderReport(DateTime startDate, DateTime endDate)
+    public async Task<Result<OrderReportDTO>> GetOrderReport(DateTime? date)
     {
-        var orders = await GetAllOrders();
+        if (date is null)
+            return Result<OrderReportDTO>.Failure(OrderErrors.DateNullParameter);
         
-        var ordersByDate = orders.Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate);
+        var orders = await _uof.OrderRepository.GetAllOrdersWithProductsByDate(date.Value);
 
-        var products = await _uof.OrderRepository.GetProductsByDate(startDate, endDate);
-
-        return new OrderReportDTO()
-        {
-            OrdersCount = ordersByDate.Count(),
-            OrdersTotalValue = ordersByDate.Sum(o => o.TotalValue),
-            OrdersTotalProducts = products.Count(),
-            OrderMinDate = startDate,
-            OrderMaxDate = endDate
-        };
+        return Result<OrderReportDTO>.Success(new OrderReportDTO(
+            Date: date.Value,
+            OrdersCount: orders.Count(),
+            TotalValue: orders.Sum(o => o.TotalValue),
+            Orders: _mapper.Map<List<OrderDTOOutput>>(orders)
+        ));
     }
     
     public async Task<List<Product>> VerifyProductsExist(int orderId)
@@ -528,5 +609,21 @@ public class OrderService : IOrderService
         var products = await _uof.OrderRepository.GetProducts(orderId);
         
         return products.Where(p => p.StockQuantity == 0).ToList();
+    }
+
+    private DateTime GetLastSundayFromToday()
+    {
+        DateTime lastSunday = DateTime.Today.DayOfWeek switch
+        {
+            DayOfWeek.Sunday => DateTime.Today.Date,
+            DayOfWeek.Monday => DateTime.Today.AddDays(-1).Date,
+            DayOfWeek.Tuesday => DateTime.Today.AddDays(-2).Date,
+            DayOfWeek.Wednesday => DateTime.Today.AddDays(-3).Date,
+            DayOfWeek.Thursday => DateTime.Today.AddDays(-4).Date,
+            DayOfWeek.Friday => DateTime.Today.AddDays(-5).Date,
+            DayOfWeek.Saturday => DateTime.Today.AddDays(-6).Date
+        };
+
+        return lastSunday;
     }
 }

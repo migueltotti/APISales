@@ -52,4 +52,9 @@ public sealed class Product
     {
         StockQuantity--;
     }
+
+    public void IncreaseStockQuantity(decimal quantity = 1)
+    {
+        StockQuantity += (int)quantity;
+    }
 }

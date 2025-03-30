@@ -85,7 +85,7 @@ public class AuthController : ControllerBase
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 RefreshToken = refreshToken,
-                Expiration = token.ValidTo
+                Expiration = token.ValidTo.ToLocalTime()
             });
         }
         

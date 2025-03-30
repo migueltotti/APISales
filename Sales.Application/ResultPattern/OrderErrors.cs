@@ -27,4 +27,14 @@ public class OrderErrors
         "OrderAddRangeError", 
         "Error occured while adding a range of products to Order.", 
         HttpStatusCode.InternalServerError);
+    
+    public static readonly Error SinceNullParameter = new Error(
+        "OrderSinceNullParameter", 
+        "Parameter of type since must not be null.", 
+        HttpStatusCode.BadRequest);
+    
+    public static readonly Error DateNullParameter = new Error(
+        "OrderDateNullParameter", 
+        "Parameter of type date must not be null.", 
+        HttpStatusCode.BadRequest);
 }

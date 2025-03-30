@@ -8,4 +8,6 @@ public class ProductParameters : QueryStringParameters
     public string? PriceCriteria { get; set; } // greater ; equal ; less
     
     public string? TypeValue { get; set; } // un - unity ; kg - kilo
+    
+    public int? Months_Count { get; set; }
 }

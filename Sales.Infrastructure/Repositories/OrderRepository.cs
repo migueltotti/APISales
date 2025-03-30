@@ -18,7 +18,31 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         return GetAsync(o => o.OrderId == id);
     }
-    
+
+    public async Task<IEnumerable<Order>> GetAllOrdersWithProductsByLastMonths(int monthCount)
+    {
+        var ordersProductsByLastMonths = await _context.Orders
+            .Where(o => o.OrderDate >= DateTime.Now.AddMonths(-monthCount))
+            .Include(o => o.LineItems)
+            .ThenInclude(li => li.Product)
+            .ToListAsync();
+        
+        return ordersProductsByLastMonths;
+    }
+
+    public async Task<IEnumerable<Order>> GetAllOrdersWithProductsByDate(DateTime date)
+    {
+        var formatedDate = DateOnly.FromDateTime(date);
+        
+        var ordersProductsByDateNow = await _context.Orders
+            .Where(o => DateOnly.FromDateTime(o.OrderDate).Equals(formatedDate))
+            .Include(o => o.LineItems)
+            .ThenInclude(li => li.Product)
+            .ToListAsync();
+        
+        return ordersProductsByDateNow;
+    }
+
     public async Task<IEnumerable<Order>> GetAllOrdersWithProductsByTodayDate(Status orderStatus)
     {
         var ordersProductsByDateNow = await _context.Orders
@@ -105,7 +129,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<Order?> GetOrderWithProductsByOrderId(int orderId)
     {
         return await _context.Orders
+            .AsNoTracking()
             .Include(o => o.LineItems)
+            .ThenInclude(li => li.Product)
             .FirstOrDefaultAsync(o => o.OrderId == orderId);
     }
 
@@ -118,7 +144,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
              JOIN lineitem li ON li.ProductId = p.ProductId
              JOIN `order` o ON o.OrderId = li.OrderId
              WHERE o.OrderId = {orderId}
-             """);
+             """).AsNoTracking();
         
         return await products.ToListAsync();
     }

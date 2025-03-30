@@ -10,6 +10,7 @@ using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
 using Sales.Application.DTOs.TokenDTO;
 using Sales.Application.DTOs.UserDTO;
+using Sales.Application.DTOs.WorkDayDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Mapping;
 using Sales.Application.Services;
@@ -86,6 +87,9 @@ public static class DependencyInjection
         services.AddScoped<AffiliateRepository>();
         services.AddScoped<IAffiliateRepository, CacheAffiliateRepository>();
         
+        services.AddScoped<WorkDayRepository>();
+        services.AddScoped<IWorkDayRepository, CacheWorkDayRepository>();
+        
         services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -98,6 +102,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAffiliateService, AffiliateService>();
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
+        services.AddScoped<IWorkDayService, WorkDayService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICacheService, CacheService>();
         
@@ -126,6 +131,7 @@ public static class DependencyInjection
         services.AddScoped<IValidator<ProductDTOInput>, ProductValidator>();
         services.AddScoped<IValidator<UserDTOInput>, UserValidator>();
         services.AddScoped<IValidator<OrderDTOInput>, OrderValidator>();
+        services.AddScoped<IValidator<WorkDayDTOInput>, WorkDayValidator>();
         services.AddScoped<IValidator<AffiliateDTOInput>, AffiliateValidator>();
         services.AddScoped<IValidator<LoginModel>, LoginValidator>();
         services.AddScoped<IValidator<RegisterModel>, RegisterValidator>();

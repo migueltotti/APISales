@@ -8,6 +8,7 @@ public interface IUnitOfWork
     public IProductRepository ProductRepository { get; }
     public IAffiliateRepository AffiliateRepository { get; }
     public IShoppingCartRepository ShoppingCartRepository { get; }
+    public IWorkDayRepository WorkDayRepository { get; }
 
     Task CommitChanges();
 }

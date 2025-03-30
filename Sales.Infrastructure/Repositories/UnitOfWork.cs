@@ -14,6 +14,7 @@ public class UnitOfWork(TestDbContext context, IDistributedCache distributedCach
     private IProductRepository? _productRepository;
     private IAffiliateRepository? _affiliateRepository;
     private IShoppingCartRepository? _shoppingCartRepository;
+    private IWorkDayRepository? _workDayRepository;
 
     public IUserRepository UserRepository
     {
@@ -65,6 +66,14 @@ public class UnitOfWork(TestDbContext context, IDistributedCache distributedCach
         get
         {
             return _shoppingCartRepository = _shoppingCartRepository ?? new ShoppingCartRepository(context);
+        }
+    }
+
+    public IWorkDayRepository WorkDayRepository
+    {
+        get
+        {
+            return _workDayRepository = _workDayRepository ?? new WorkDayRepository(context);
         }
     }
 

@@ -8,7 +8,6 @@ using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
-using Sales.Domain.Models.Enums;
 using X.PagedList;
 using X.PagedList.Extensions;
 
@@ -22,7 +21,12 @@ public class ProductService : IProductService
     private readonly IProductFilterFactory _productFilterFactory;
     private readonly ICacheService _cacheService;
 
-    public ProductService(IUnitOfWork uof, IValidator<ProductDTOInput> validator, IMapper mapper, IProductFilterFactory productFilterFactory, ICacheService cacheService)
+    public ProductService(
+        IUnitOfWork uof,
+        IValidator<ProductDTOInput> validator,
+        IMapper mapper,
+        IProductFilterFactory productFilterFactory,
+        ICacheService cacheService)
     {
         _uof = uof;
         _validator = validator;

@@ -18,6 +18,9 @@ public sealed class User
     // User 1 : n Order
     public ICollection<Order>? Orders { get; private set; }
     
+    // User 1 : n WorkDay 
+    public ICollection<WorkDay>? WorkDays { get; private set; }
+    
     // User n : 1 Affiliate
     public int AffiliateId { get; private set; }    
     public Affiliate? Affiliate { get; private set; }
