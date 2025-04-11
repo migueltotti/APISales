@@ -18,6 +18,6 @@ public class CustomValidators
 
     public static bool CpfFormat(string? cpf)
     {
-        return Regex.IsMatch(cpf, "^([0-9]{3}\\.[0-9]{3}\\.[0-9]{3}\\-[0-9]{2}|\\[0-9]{11})$");
+        return Regex.IsMatch(cpf, @"^(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})$");
     }
 }

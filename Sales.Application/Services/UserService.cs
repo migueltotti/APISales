@@ -19,17 +19,19 @@ public class UserService : IUserService
 {
     private readonly IUnitOfWork _uof;
     private readonly IValidator<UserDTOInput> _validator;
+    private readonly IValidator<UserUpdateDTO> _updateValidator;
     private readonly IMapper _mapper;
     private readonly IUserFilterFactory _userFilterFactory;
     private readonly ICacheService _cacheService;
 
-    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory, ICacheService cacheService)
+    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory, ICacheService cacheService, IValidator<UserUpdateDTO> updateValidator)
     {
         _uof = uof;
         _validator = validator;
         _mapper = mapper;
         _userFilterFactory = userFilterFactory;
         _cacheService = cacheService;
+        _updateValidator = updateValidator;
     }
 
     public async Task<IEnumerable<UserDTOOutput>> GetAllUsers()
@@ -177,7 +179,7 @@ public class UserService : IUserService
         return Result<UserDTOOutput>.Success(userDtoCreated);
     }
 
-    public async Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserDTOInput userDtoInput, int id)
+    public async Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserUpdateDTO userDtoInput, int id)
     {
         if (userDtoInput is null)
         {
@@ -196,7 +198,7 @@ public class UserService : IUserService
             return Result<(UserDTOOutput, Dictionary<string, string>)>.Failure(UserErrors.NotFound);
         }
         
-        var validation = await _validator.ValidateAsync(userDtoInput);
+        var validation = await _updateValidator.ValidateAsync(userDtoInput);
 
         if (!validation.IsValid)
         {
@@ -205,7 +207,18 @@ public class UserService : IUserService
 
         var updatedFields = IdentifyUpdatedFields(userDtoInput, user);
         
-        var userForUpdate = _mapper.Map<User>(userDtoInput);
+        //var userForUpdate = _mapper.Map<User>(userDtoInput);
+        var userForUpdate = new User(
+            user.UserId,
+            userDtoInput.Name,
+            userDtoInput.Email,
+            user.Password,
+            userDtoInput.Cpf,
+            user.Points,
+            userDtoInput.DateBirth,
+            userDtoInput.Role,
+            userDtoInput.AffiliateId
+        );
 
         var userUpdate = _uof.UserRepository.Update(userForUpdate);
         
@@ -265,7 +278,7 @@ public class UserService : IUserService
         return Result<UserDTOOutput>.Success(userDtoDeleted);
     }
 
-    private Dictionary<string, string> IdentifyUpdatedFields(UserDTOInput userDtoInput, User user)
+    private Dictionary<string, string> IdentifyUpdatedFields(UserUpdateDTO userDtoInput, User user)
     {
         var updatedFields = new Dictionary<string, string>();
         
@@ -274,9 +287,6 @@ public class UserService : IUserService
         
         if(userDtoInput.Email != user.Email)
             updatedFields.Add("Email", user.Email!);
-        
-        if(userDtoInput.Password != user.Password)
-            updatedFields.Add("Password", user.Password!);
         
         if(userDtoInput.Role != user.Role)
             updatedFields.Add("Role", user.Role.ToString());

@@ -5,6 +5,7 @@ using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
 using Sales.Domain.Models;
+using Sales.Domain.Models.Enums;
 using X.PagedList;
 
 namespace Sales.Application.Interfaces;
@@ -32,4 +33,5 @@ public interface IOrderService
     Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId);
     Task<Result<OrderDTOOutput>> RemoveProduct(int orderId, int productId);
     Task<Result<OrderReportDTO>> GetOrderReport(DateTime? date);    
+    Task<Result<object>> GenerateOrderReport(DateTime? date, ReportType reportType);   
 }

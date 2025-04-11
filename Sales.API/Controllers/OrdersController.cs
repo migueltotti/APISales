@@ -8,6 +8,7 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Domain.Models.Enums;
 
 namespace Sales.API.Controllers;
 
@@ -252,6 +253,20 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
     public async Task<ActionResult<OrderReportDTO>> GetOrderReport([FromQuery] DateTime date)
     {
         var orderReport = await _service.GetOrderReport(date);
+        
+        return orderReport.isSuccess switch
+        {
+            true => Ok(orderReport.value),
+            false => BadRequest(orderReport.GenerateErrorResponse())
+        };
+    }
+    
+    [HttpPost]
+    [Route("GenerateReport/{date:datetime}")]
+    [Authorize("AdminEmployeeOnly")]
+    public async Task<ActionResult<OrderReportDTO>> GenerateOrderReport(DateTime date, [FromQuery] ReportType reportType)
+    {
+        var orderReport = await _service.GenerateOrderReport(date, reportType);
         
         return orderReport.isSuccess switch
         {

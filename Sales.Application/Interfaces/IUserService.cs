@@ -21,7 +21,7 @@ public interface IUserService
     Task<Result<UserDTOOutput>> GetUserByEmail(string email);
     Task<Result<UserDTOOutput>> GetUserBy(Expression<Func<User, bool>> expression);
     Task<Result<UserDTOOutput>> CreateUser(UserDTOInput user);
-    Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserDTOInput user, int id);
+    Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserUpdateDTO user, int id);
     Task<Result<UserDTOOutput>> UpdateUserPassword(int userId, string oldPassword, string newPassword);
     Task<Result<UserDTOOutput>> UpdateUserRole(int userId, string role);
     Task<Result<UserDTOOutput>> DeleteUser(int? id);

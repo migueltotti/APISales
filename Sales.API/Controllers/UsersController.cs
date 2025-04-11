@@ -213,7 +213,7 @@ public class UsersController(IUserService _service,
     
     [HttpPut("{id:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<UserDTOOutput>> Put(UserDTOInput userDtoInput, int id)
+    public async Task<ActionResult<UserDTOOutput>> Put(UserUpdateDTO userDtoInput, int id)
     {
         var result = await _service.UpdateUser(userDtoInput, id);
 
@@ -271,7 +271,7 @@ public class UsersController(IUserService _service,
         return Ok($"User with id = {deleteUserResult.value.UserId} was deleted successfully");
     }
 
-    private async Task<ApplicationUser?> GenerateUpdatedUser(UserDTOInput userDtoInput, Dictionary<string, string> updatedFields)
+    private async Task<ApplicationUser?> GenerateUpdatedUser(UserUpdateDTO userDtoInput, Dictionary<string, string> updatedFields)
     {
         ApplicationUser? userForUpdate;
         
@@ -293,17 +293,6 @@ public class UsersController(IUserService _service,
         
         if (updatedFields.ContainsKey("Name"))
             userForUpdate.UserName = userDtoInput.GenerateUserName();
-            
-
-        if (updatedFields.ContainsKey("Password"))
-        {
-            // update password logic 
-        }
-
-        if (updatedFields.ContainsKey("Role"))
-        {
-            // update role logic 
-        }
             
         return userForUpdate;
     } 

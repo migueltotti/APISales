@@ -8,8 +8,11 @@ using Microsoft.IdentityModel.Tokens;
 using Sales.Application.DTOs.LineItemDTO;
 using Sales.Application.DTOs.OrderDTO;
 using Sales.Application.DTOs.ProductDTO;
+using Sales.Application.DTOs.UserDTO;
+using Sales.Application.DTOs.WorkDayDTO;
 using Sales.Application.Interfaces;
 using Sales.Application.Mapping.Extentions;
+using Sales.Application.MassTransit.GenerateReport;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
@@ -33,8 +36,10 @@ public class OrderService : IOrderService
     private readonly IOrderFilterFactory _orderFilterFactory;
     private readonly ICacheService _cacheService;
     private readonly IWorkDayService _workDayService;
+    private readonly ISendBusMessage _sendBusMessage;
+    
 
-    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory, ICacheService cacheService, IWorkDayService workDayService)
+    public OrderService(IUnitOfWork uof, IShoppingCartService shoppingCartService, IValidator<OrderDTOInput> validator, IMapper mapper, IOrderFilterFactory orderFilterFactory, ICacheService cacheService, IWorkDayService workDayService, ISendBusMessage sendBusMessage)
     {
         _uof = uof;
         _shoppingCartService = shoppingCartService;
@@ -43,6 +48,7 @@ public class OrderService : IOrderService
         _orderFilterFactory = orderFilterFactory;
         _cacheService = cacheService;
         _workDayService = workDayService;
+        _sendBusMessage = sendBusMessage;
     }
 
     public async Task<IEnumerable<OrderDTOOutput>> GetAllOrders()
@@ -85,7 +91,7 @@ public class OrderService : IOrderService
         }
         
         var ordersFilteredFromNowToLastWeeks = orders.
-            Where(o => lastSundaysList.Contains(o.OrderDate));
+            Where(o => lastSundaysList.Contains(o.OrderDate.Date));
 
         var orderWeekReport = new Dictionary<DateOnly, int>();
             
@@ -602,6 +608,61 @@ public class OrderService : IOrderService
             TotalValue: orders.Sum(o => o.TotalValue),
             Orders: _mapper.Map<List<OrderDTOOutput>>(orders)
         ));
+    }
+    
+    public async Task<Result<object>> GenerateOrderReport(DateTime? date, ReportType reportType)
+    {
+        if (date is null)
+            return Result<object>.Failure(OrderErrors.DateNullParameter);
+        
+        // get orderReport
+        var orderReport = await GetOrderReport(date);
+        
+        if(!orderReport.isSuccess)
+            return Result<object>.Failure(orderReport.error);
+        
+        // get workDay if reportType is POS
+        Result<WorkDayDTOOutput> workDayReport;
+        if (reportType.ToString().Contains("POS"))
+        {
+            //workDayReport = await _workDayService.GetWorkDayByDateAsync(date.Value);
+            workDayReport = Result<WorkDayDTOOutput>.Success(new WorkDayDTOOutput(
+                0, 
+                0, 
+                "",
+                new UserDTOOutput(0, "", "", "", 0, DateTime.Now, 0, Role.Customer),
+                DateTime.Now, DateTime.Now.AddMinutes(10),
+                0,
+                0
+            ));
+            
+            if(!workDayReport.isSuccess)
+                return Result<object>.Failure(workDayReport.error);
+        }
+        else
+        {
+            workDayReport = Result<WorkDayDTOOutput>.Success(new WorkDayDTOOutput(
+                0, 
+                0, 
+                "",
+                new UserDTOOutput(0, "", "", "", 0, DateTime.Now, 0, Role.Customer),
+                DateTime.Now, DateTime.Now.AddMinutes(10),
+                0,
+                0
+            ));
+        }
+
+        await _sendBusMessage.SendAsync(new GeneratePOSReportEvent(
+                Guid.NewGuid(),
+                orderReport.value,
+                workDayReport.value,
+                reportType
+            )
+        );
+
+        return Result<object>.Success(
+            new { message = "Report created successfully!" }   
+        );
     }
     
     public async Task<List<Product>> VerifyProductsExist(int orderId)
