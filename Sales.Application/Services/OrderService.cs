@@ -625,16 +625,16 @@ public class OrderService : IOrderService
         Result<WorkDayDTOOutput> workDayReport;
         if (reportType.ToString().Contains("POS"))
         {
-            //workDayReport = await _workDayService.GetWorkDayByDateAsync(date.Value);
-            workDayReport = Result<WorkDayDTOOutput>.Success(new WorkDayDTOOutput(
-                0, 
-                0, 
-                "",
-                new UserDTOOutput(0, "", "", "", 0, DateTime.Now, 0, Role.Customer),
-                DateTime.Now, DateTime.Now.AddMinutes(10),
-                0,
-                0
-            ));
+            workDayReport = await _workDayService.GetWorkDayByDateAsync(date.Value);
+            // workDayReport = Result<WorkDayDTOOutput>.Success(new WorkDayDTOOutput(
+            //     0, 
+            //     0, 
+            //     "",
+            //     new UserDTOOutput(0, "", "", "", 0, DateTime.Now, 0, Role.Customer),
+            //     DateTime.Now, DateTime.Now.AddMinutes(10),
+            //     0,
+            //     0
+            // ));
             
             if(!workDayReport.isSuccess)
                 return Result<object>.Failure(workDayReport.error);

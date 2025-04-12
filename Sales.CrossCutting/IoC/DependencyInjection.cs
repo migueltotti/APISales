@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using FluentValidation;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,7 @@ using Sales.Application.Strategy.FilterImplementation.CategoryStrategy;
 using Sales.Application.Strategy.FilterImplementation.OrderStrategy;
 using Sales.Application.Strategy.FilterImplementation.ProductStrategy;
 using Sales.Application.Strategy.FilterImplementation.UserStrategy;
+using Sales.Application.Strategy.GenerateReport;
 using Sales.Application.Validations;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
@@ -79,6 +81,10 @@ public static class DependencyInjection
         // Add RabbitMq to MassTransit
         services.AddRabbitMQ(configuration);
         
+        // Add FluentEmail
+        services.AddFluentEmail(configuration["EmailSettings:FromEmail"], configuration["EmailSettings:FromName"])
+            .AddSmtpSender(configuration["EmailSettings:Host"], configuration.GetValue<int>("EmailSettings:Port"));
+        
         // Add Repositories
         services.AddScoped<UserRepository>();
         services.AddScoped<IUserRepository, CacheUserRepository>();
@@ -114,6 +120,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkDayService, WorkDayService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICacheService, CacheService>();
+        services.AddScoped<ISendEmailService, SendEmailService>();
         
         // Add Strategy Pattern
         services.AddScoped<ICategoryFilterStrategy, CategoryNameFilter>();

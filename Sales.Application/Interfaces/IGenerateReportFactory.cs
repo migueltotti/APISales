@@ -1,3 +1,4 @@
+using Sales.Application.Strategy.GenerateReport;
 using Sales.Domain.Models.Enums;
 
 namespace Sales.Application.Interfaces;

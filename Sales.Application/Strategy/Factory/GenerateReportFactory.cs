@@ -1,4 +1,5 @@
 using Sales.Application.Interfaces;
+using Sales.Application.Strategy.GenerateReport;
 using Sales.Domain.Models.Enums;
 
 namespace Sales.Application.Strategy.Factory;
