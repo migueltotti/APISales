@@ -73,7 +73,7 @@ public class Program
         // IMPORTANT!!!
         // AddInfrastructure() must come before AddAuthentication
         // `cause the service AddIdentity<>()... has to be set before the AddAuthentication
-        var secretKey = builder.Configuration["JWT:SecretKey"]
+        var secretKey = builder.Configuration["SECRET_KEY"]
                         ?? throw new ArgumentNullException("Invalid SecretKey!");
 
         builder.Services.AddAuthentication(options =>

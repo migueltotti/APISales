@@ -20,8 +20,7 @@ public class TokenService : ITokenService
     
     public JwtSecurityToken GenerateAccessToken(IEnumerable<Claim> claims, IConfiguration _config)
     {
-        var key = _config.GetSection("JWT").GetValue<string>("SecretKey")
-            ?? throw new InvalidOperationException("Invalid secret key!");
+        var key = _config["SECRET_KEY"] ?? throw new InvalidOperationException("Invalid secret key!");
         
         var privateKey = Encoding.UTF8.GetBytes(key);
         
@@ -58,8 +57,7 @@ public class TokenService : ITokenService
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token, IConfiguration _config)
     {
-        var secretKey = _config.GetSection("JWT").GetValue<string>("SecretKey") 
-                        ?? throw new InvalidOperationException("Invalid secret key!");
+        var secretKey = _config["SECRET_KEY"] ?? throw new InvalidOperationException("Invalid secret key!");
 
         var tokenValidationParameters = new TokenValidationParameters
         {
