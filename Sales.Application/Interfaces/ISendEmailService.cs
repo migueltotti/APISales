@@ -4,5 +4,5 @@ namespace Sales.Application.Interfaces;
 
 public interface ISendEmailService
 {
-    Task SendEmailAsync(string email, string subject, string body, Attachment attachment);
+    Task SendEmailAsync(string destination, string subject, string body, string tag, Attachment attachment);
 }

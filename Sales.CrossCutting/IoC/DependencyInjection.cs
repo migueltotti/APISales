@@ -81,9 +81,8 @@ public static class DependencyInjection
         // Add RabbitMq to MassTransit
         services.AddRabbitMQ(configuration);
         
-        // Add FluentEmail
-        services.AddFluentEmail(configuration["EmailSettings:FromEmail"], configuration["EmailSettings:FromName"])
-            .AddSmtpSender(configuration["EmailSettings:Host"], configuration.GetValue<int>("EmailSettings:Port"));
+        // Add FluentEmail.SMTP
+        services.RegisterFluentEmailSender(configuration);
         
         // Add Repositories
         services.AddScoped<UserRepository>();

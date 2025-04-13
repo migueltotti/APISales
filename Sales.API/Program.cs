@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,9 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        // Load env_variables values from .env file
+        DotEnv.Load();
+        
         var builder = WebApplication.CreateBuilder(args);
         
 

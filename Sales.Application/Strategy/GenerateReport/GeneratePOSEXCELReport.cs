@@ -24,8 +24,6 @@ public class GeneratePOSEXCELReport : IGenerateReport
 
     public async Task<MemoryStream> GenerateReportAsync(OrderReportDTO orderReport, WorkDayDTOOutput workDay, CancellationToken cancellationToken = default)
     {
-        // Validate WorkDayId (cannot be Zero)
-        
         _logger.LogInformation("\n******* GENERATING POS EXCEL REPORT ********\n");
 
         var memoryStream = new MemoryStream();

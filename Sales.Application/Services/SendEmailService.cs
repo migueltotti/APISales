@@ -1,5 +1,6 @@
 using FluentEmail.Core;
 using FluentEmail.Core.Models;
+using FluentEmail.SendGrid;
 using Microsoft.Extensions.Logging;
 using Sales.Application.Interfaces;
 
@@ -17,18 +18,38 @@ public class SendEmailService : ISendEmailService
     }
 
     public async Task SendEmailAsync(
-        string email, 
+        string destination, 
         string subject, 
-        string body, 
+        string body,
+        string tag,
         Attachment attachment)
     {
-        await _fluentEmail
-            .To(email)
+        var response = await _fluentEmail
+            .To(destination)
             .Subject(subject)
             .Body(body)
+            .Tag(tag)
             .Attach(attachment)
             .SendAsync();
+
+        if(response.Successful)
+            _logger.LogInformation("Email sent successfully");
+        else
+            _logger.LogError("Error trying to sent email");
         
-        _logger.LogInformation("\n****** Email sent to {Email} ******\n", email);
+        /*var fluentEmail = _fluentEmail
+            .To(destination)
+            .Subject(subject)
+            .Body(body)
+            .Tag("report")
+            .Attach(attachment);
+        
+        var sendGridSender = new SendGridSender("");
+        var response = await sendGridSender.SendAsync(fluentEmail);
+        
+        if(response.Successful)
+            _logger.LogInformation("\n****** Email sent to {Email} ******\n", destination);
+        else 
+            _logger.LogError("\n****** Error trying to sent email to destination: {Email} ******\n", destination);*/
     }
 }

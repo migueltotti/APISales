@@ -27,7 +27,6 @@ public class GeneratePOSReportConsumer : IConsumer<GeneratePOSReportEvent>
         using (var reportMemoryStream =
                await strategy.GenerateReportAsync(context.Message.OrderReport, context.Message.WorkDayReport))
         {
-            // Send report by Email
             var fileNameDate = context.Message.OrderReport.Date.ToString("ddMMyyyy");
             var reportDate = context.Message.OrderReport.Date.ToString("dd/MM/yyyy");
 
@@ -35,10 +34,12 @@ public class GeneratePOSReportConsumer : IConsumer<GeneratePOSReportEvent>
             reportMemoryStream.Position = 0;
         
             // TODO:
+            // Send report by Email
             await _emailService.SendEmailAsync(
-                "migueltotti2005@gmail.com", // get user requested report email
+                "m.totti@aluno.ifsp.edu.br", // get user requested report email
                 $"Relatório do Dia {reportDate}",
-                $"Segue o relatório solicitado pelo usuario: {"qalquer nome"} no formato: {context.Message.ReportType.ToString()}", // get user requested report name
+                $"Segue o relatório solicitado pelo usuario: {"qalquer nome"} \nFormato: {context.Message.ReportType.ToString()}", // get user requested report name
+                    "relatorios",
                 new Attachment 
                 {
                     Data = reportMemoryStream,
