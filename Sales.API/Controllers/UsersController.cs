@@ -14,6 +14,7 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Domain.Models.Enums;
@@ -242,6 +243,67 @@ public class UsersController(IUserService _service,
             await _userManager.UpdateAsync(userForUpdate);
         
         return Ok(result.value.Item1);
+    }
+    
+    [HttpPut("ChangePassword/{userId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
+    public async Task<ActionResult<UserDTOOutput>> ChangePassword(int userId, [FromBody] ChangePasswordDTO changePasswordDto)
+    {
+        if(!changePasswordDto.userId.Equals(userId))
+            return BadRequest(new { message = "User id mismatch" });
+        
+        var result = await _service.UpdateUserPassword(userId, changePasswordDto.oldPassword, changePasswordDto.newPassword);
+
+        if (!result.isSuccess)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                result.error,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            switch (result.error.HttpStatusCode)
+            {
+                case HttpStatusCode.NotFound:
+                    return NotFound(result.GenerateErrorResponse());
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(result.GenerateErrorResponse());
+            }
+        }
+        
+        // UserDataDbContext User Update logic.
+        var userForUpdatePassword = await _userManager.FindByEmailAsync(result.value.Email);
+
+        if (userForUpdatePassword is null)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                UserErrors.NotFound,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            return BadRequest(Result<UserDTOOutput>.Failure(UserErrors.NotFound).GenerateErrorResponse());
+        }
+            
+        
+        var updatePasswordResult = await _userManager.ChangePasswordAsync(userForUpdatePassword, changePasswordDto.oldPassword, changePasswordDto.newPassword);
+
+        if (!updatePasswordResult.Succeeded)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                updatePasswordResult.Errors,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            return BadRequest(Result<UserDTOOutput>.Failure(UserErrors.PasswordChangeError).GenerateErrorResponse());
+        } 
+            
+        
+        return Ok(result.value);
     }
 
     [HttpDelete("{userId:int:min(1)}")]

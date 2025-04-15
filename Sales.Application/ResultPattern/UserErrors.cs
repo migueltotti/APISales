@@ -43,4 +43,9 @@ public class UserErrors
         "NewPasswordEqualsOldPassword", 
         "New Password must be different from the Old Password!", 
         HttpStatusCode.BadRequest);
+    
+    public static readonly Error PasswordChangeError = new Error(
+        "PasswordChangError", 
+        "An error occured while trying to change password!", 
+        HttpStatusCode.InternalServerError);
 }

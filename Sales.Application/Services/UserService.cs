@@ -245,11 +245,9 @@ public class UserService : IUserService
         if (user.Password.Equals(newPassword) || oldPassword.Equals(newPassword))
             return Result<UserDTOOutput>.Failure(UserErrors.PasswordsEqualError);
 
-        var password = user.Password;
-        //
-        //user.Password = newPassword;
-        return null;
-        // TODO: 
+        user.UpdatePassword(newPassword);
+        
+        return Result<UserDTOOutput>.Success(_mapper.Map<UserDTOOutput>(user));
     }
 
     public Task<Result<UserDTOOutput>> UpdateUserRole(int userId, string role)

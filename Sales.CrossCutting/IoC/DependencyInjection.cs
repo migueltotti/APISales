@@ -120,6 +120,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<ISendEmailService, SendEmailService>();
+        services.AddScoped<IEncryptService, EncryptService>();
         
         // Add Strategy Pattern
         services.AddScoped<ICategoryFilterStrategy, CategoryNameFilter>();
