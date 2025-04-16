@@ -253,8 +253,8 @@ public class UsersController(IUserService _service,
         // UserDataDbContext User Update logic.
         var userForUpdate = await GenerateUpdatedUser(userDtoInput, result.value.Item2);
         
-        if(userForUpdate is not null) 
-            await _userManager.UpdateAsync(userForUpdate);
+        // if(userForUpdate is not null) 
+        //     await _userManager.UpdateAsync(userForUpdate);
         
         return Ok(result.value.Item1);
     }
@@ -363,7 +363,7 @@ public class UsersController(IUserService _service,
             userForUpdate = await _userManager
                 .FindByEmailAsync(updatedFields["Email"]);
             
-            userForUpdate.Email = userDtoInput.Email;
+            userForUpdate.Email = email;
         }
         else
         {
@@ -373,6 +373,12 @@ public class UsersController(IUserService _service,
         
         if (updatedFields.ContainsKey("Name"))
             userForUpdate.UserName = userDtoInput.GenerateUserName();
+
+        if (updatedFields.TryGetValue("Role", out string? value))
+        {
+            var result = await _userManager.RemoveFromRoleAsync(userForUpdate, value);
+            var result2 = await _userManager.AddToRoleAsync(userForUpdate, userDtoInput.Role.ToString());
+        }
             
         return userForUpdate;
     } 
