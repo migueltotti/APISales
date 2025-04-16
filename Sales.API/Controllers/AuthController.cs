@@ -5,6 +5,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Sales.Application.DTOs.TokenDTO;
 using Sales.Application.Interfaces;
 using Sales.Infrastructure.Identity;
@@ -22,8 +23,9 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly IValidator<LoginModel> _loginValidator;
     private readonly IValidator<RegisterModel> _registerValidator;
+    private readonly IEncryptService _encryptService;
 
-    public AuthController(ITokenService tokenService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration config, ILogger<AuthController> logger, IValidator<LoginModel> loginValidator, IValidator<RegisterModel> registerValidator)
+    public AuthController(ITokenService tokenService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration config, ILogger<AuthController> logger, IValidator<LoginModel> loginValidator, IValidator<RegisterModel> registerValidator, IEncryptService encryptService)
     {
         _tokenService = tokenService;
         _userManager = userManager;
@@ -31,12 +33,18 @@ public class AuthController : ControllerBase
         _config = config;
         _logger = logger;
         _registerValidator = registerValidator;
+        _encryptService = encryptService;
         _loginValidator = loginValidator;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
+        if (model is null)
+            return BadRequest("Data is null");
+        
+        model.Password = _encryptService.Decrypt(model.Password);
+        
         var result = await _loginValidator.ValidateAsync(model);
 
         if (!result.IsValid)

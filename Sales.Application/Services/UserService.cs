@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Mapping.Extentions;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
@@ -23,8 +24,9 @@ public class UserService : IUserService
     private readonly IMapper _mapper;
     private readonly IUserFilterFactory _userFilterFactory;
     private readonly ICacheService _cacheService;
+    private readonly IEncryptService _encryptService;
 
-    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory, ICacheService cacheService, IValidator<UserUpdateDTO> updateValidator)
+    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory, ICacheService cacheService, IValidator<UserUpdateDTO> updateValidator, IEncryptService encryptService)
     {
         _uof = uof;
         _validator = validator;
@@ -32,6 +34,7 @@ public class UserService : IUserService
         _userFilterFactory = userFilterFactory;
         _cacheService = cacheService;
         _updateValidator = updateValidator;
+        _encryptService = encryptService;
     }
 
     public async Task<IEnumerable<UserDTOOutput>> GetAllUsers()
@@ -154,22 +157,36 @@ public class UserService : IUserService
         {
             return Result<UserDTOOutput>.Failure(UserErrors.DataIsNull);
         }
+
+        var userInput = userDtoInput with { Password = _encryptService.Decrypt(userDtoInput.Password) };
         
-        var validation = await _validator.ValidateAsync(userDtoInput);
+        var validation = await _validator.ValidateAsync(userInput);
 
         if (!validation.IsValid)
         {
             return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
         }
         
-        var userExists = await GetUserBy(u => u.Email == userDtoInput.Email);
+        var userExists = await GetUserBy(u => u.Email == userInput.Email);
 
         if (userExists.value is not null)
         {
             return Result<UserDTOOutput>.Failure(UserErrors.UserExists);
         }
 
-        var user = _mapper.Map<User>(userDtoInput);
+        var passwordEncrypted = _encryptService.Encrypt(userInput.Password);
+
+        var user = new User(
+            userInput.UserId,
+            userInput.Name,
+            userInput.Email,
+            passwordEncrypted,
+            userInput.Cpf,
+            userInput.Points,
+            userInput.DateBirth,
+            userInput.Role,
+            userInput.AffiliateId
+        );
 
         var userCreated = _uof.UserRepository.Create(user);
         await _uof.CommitChanges();
@@ -232,6 +249,7 @@ public class UserService : IUserService
         return Result<(UserDTOOutput, Dictionary<string, string>)>.Success((userDtoUpdated, updatedFields));
     }
 
+    // oldPassword and newPassword come encrypted to the method 
     public async Task<Result<UserDTOOutput>> UpdateUserPassword(int userId, string oldPassword, string newPassword)
     { 
         var user = await _uof.UserRepository.GetByIdAsync(userId);
@@ -239,13 +257,22 @@ public class UserService : IUserService
         if(user is null)
             return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
         
-        if(!user.Password.Equals(oldPassword))
+        // Compare decrypted passwords
+        var newPasswordDecrypted = _encryptService.Decrypt(newPassword);
+        var oldPasswordDecrypted = _encryptService.Decrypt(oldPassword);
+        var userPasswordDecrypted = _encryptService.Decrypt(user.Password!);
+        
+        if(!userPasswordDecrypted.Equals(oldPasswordDecrypted))
             return Result<UserDTOOutput>.Failure(UserErrors.PasswordMismatch);
         
-        if (user.Password.Equals(newPassword) || oldPassword.Equals(newPassword))
+        if (userPasswordDecrypted.Equals(newPasswordDecrypted) || oldPasswordDecrypted.Equals(newPasswordDecrypted))
             return Result<UserDTOOutput>.Failure(UserErrors.PasswordsEqualError);
-
+        
+        // change the old password to the new already encrypted password
         user.UpdatePassword(newPassword);
+        
+        _uof.UserRepository.Update(user);
+        await _uof.CommitChanges();
         
         return Result<UserDTOOutput>.Success(_mapper.Map<UserDTOOutput>(user));
     }

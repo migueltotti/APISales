@@ -7,16 +7,10 @@ namespace Sales.Application.Services;
 
 public class EncryptService : IEncryptService
 {
-    private readonly string _publicKey;
-    private readonly string _privateKey;
-    private readonly IConfiguration _configuration;
-
-    public EncryptService(IConfiguration configuration)
-    {
-        _configuration = configuration;
-        _privateKey = _configuration["PRIVATE_KEY"] ?? throw new ArgumentNullException("OpenSSL null private key");
-        _publicKey = _configuration["PUBLIC_KEY"] ?? throw new ArgumentNullException("OpenSSL null public key");
-    }
+    private readonly string _publicKey = Environment.GetEnvironmentVariable("PUBLIC_KEY") 
+                                         ?? throw new ArgumentNullException("OpenSSL null public key");
+    private readonly string _privateKey = Environment.GetEnvironmentVariable("PRIVATE_KEY") 
+                                          ?? throw new ArgumentNullException("OpenSSL null private key");
 
     public string Encrypt(string value)
     {
@@ -32,9 +26,9 @@ public class EncryptService : IEncryptService
             var encryptedValue = rsa.Encrypt(valueInBytes, false);
                 
             // convert to base64
-            var encrypetValueIn64 = Convert.ToBase64String(encryptedValue);
+            var encryptedValueIn64 = Convert.ToBase64String(encryptedValue);
 
-            return encrypetValueIn64;
+            return encryptedValueIn64;
         }
         finally
         {

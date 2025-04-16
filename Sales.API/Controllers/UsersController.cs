@@ -27,7 +27,8 @@ namespace Sales.API.Controllers;
 public class UsersController(IUserService _service,
     IShoppingCartService _shoppingCartService,
     UserManager<ApplicationUser> _userManager,
-    ILogger<UsersController> _logger) : ControllerBase
+    ILogger<UsersController> _logger,
+    IEncryptService _encryptService) : ControllerBase
 {
 
     [HttpGet("getUsers")]
@@ -135,6 +136,17 @@ public class UsersController(IUserService _service,
 
     // Users unauthorized can create a User
     
+    [HttpPost("RSA/Encrypt")]
+    public ActionResult Encrypt([FromBody] string value)
+    {
+        return Ok(_encryptService.Encrypt(value));
+    }
+    [HttpPost("RSA/Decrypt")]
+    public ActionResult Decrypt([FromBody] string valueIn64)
+    {
+        return Ok(_encryptService.Decrypt(valueIn64));
+    }
+    
     [HttpPost]
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
     {
@@ -164,7 +176,9 @@ public class UsersController(IUserService _service,
                 UserName = userDtoInput.GenerateUserName()
             };
 
-            var resultUser = await _userManager.CreateAsync(user, userDtoInput.Password);
+            var userPasswordDecrypted = _encryptService.Decrypt(userDtoInput.Password);
+
+            var resultUser = await _userManager.CreateAsync(user, userPasswordDecrypted);
 
             if (!resultUser.Succeeded)
             {
@@ -286,9 +300,13 @@ public class UsersController(IUserService _service,
             
             return BadRequest(Result<UserDTOOutput>.Failure(UserErrors.NotFound).GenerateErrorResponse());
         }
-            
+
+        var oldPasswordDecrypted = _encryptService.Decrypt(changePasswordDto.oldPassword);
+        var newPasswordDecrypted = _encryptService.Decrypt(changePasswordDto.newPassword);
         
-        var updatePasswordResult = await _userManager.ChangePasswordAsync(userForUpdatePassword, changePasswordDto.oldPassword, changePasswordDto.newPassword);
+        
+        var updatePasswordResult = await _userManager.
+            ChangePasswordAsync(userForUpdatePassword, oldPasswordDecrypted, newPasswordDecrypted);
 
         if (!updatePasswordResult.Succeeded)
         {
