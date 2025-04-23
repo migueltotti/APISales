@@ -36,15 +36,15 @@ public class GeneratePOSReportConsumer : IConsumer<GeneratePOSReportEvent>
             // TODO:
             // Send report by Email
             await _emailService.SendEmailAsync(
-                "m.totti@aluno.ifsp.edu.br", // get user requested report email
+                context.Message.EmailDestination,
                 $"Relatório do Dia {reportDate}",
-                $"Segue o relatório solicitado pelo usuario: {"qalquer nome"} \nFormato: {context.Message.ReportType.ToString()}", // get user requested report name
+                $"Segue o relatório solicitado pelo usuario: {context.Message.EmailDestination} \nFormato: {context.Message.ReportType.ToString()}", // get user requested report name
                     "relatorios",
                 new Attachment 
                 {
                     Data = reportMemoryStream,
-                    ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // get specific contentType by report request type
-                    Filename = $"Relatorio-{fileNameDate}.xlsx" // get specific extension by report request type
+                    ContentType = strategy.GetReportContentType(), // get specific contentType by report request type
+                    Filename = $"Relatorio-{fileNameDate}{strategy.GetReportExtensionType()}" // get specific extension by report request type
                 }
             );
         }

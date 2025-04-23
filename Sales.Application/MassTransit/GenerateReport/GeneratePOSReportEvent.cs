@@ -8,5 +8,6 @@ public record GeneratePOSReportEvent(
     Guid GenerateReportEventId,
     OrderReportDTO OrderReport,
     WorkDayDTOOutput WorkDayReport,
-    ReportType ReportType
+    ReportType ReportType,
+    string EmailDestination
 );

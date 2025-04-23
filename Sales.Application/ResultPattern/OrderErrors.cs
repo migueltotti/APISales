@@ -35,6 +35,11 @@ public class OrderErrors
     
     public static readonly Error DateNullParameter = new Error(
         "OrderDateNullParameter", 
-        "Parameter of type date must not be null.", 
+        "Parameter of type date must not be null and email must not be empty.", 
+        HttpStatusCode.BadRequest);
+    
+    public static readonly Error InvalidEmail = new Error(
+        "OrderReportInvalidEmail", 
+        "Email must be in valid format.", 
         HttpStatusCode.BadRequest);
 }

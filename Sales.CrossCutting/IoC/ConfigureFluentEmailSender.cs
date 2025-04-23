@@ -16,7 +16,7 @@ public static class ConfigureFluentEmailSender
         //         password: configuration["EmailSettings:Password"]
         //     );
 
-        services.AddFluentEmail(configuration["EmailSettings:FromEmail"], configuration["EmailSettings:FromName"])
+        services.AddFluentEmail(configuration["FROM_EMAIL"], configuration["FROM_NAME"])
             .AddSendGridSender(configuration["SENDGRID_API_KEY"]);
 
         return services;

@@ -12,7 +12,7 @@ public class CustomValidators
 
     public static bool PasswordFormat(string? password)
     {
-        return Regex.IsMatch(password, "^(?=.*\\d)(?=.*[!@#\\$%^&*])(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])\\S.{8,30}$");
+        return Regex.IsMatch(password, "^(?=.*\\d)(?=.*[!@#\\$%^&*])(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z])\\S.{7,30}$");
         // Must contain at least 8 characters, a-z, A-Z, 0-9 and no line breakers or whitespaces 
     }
 

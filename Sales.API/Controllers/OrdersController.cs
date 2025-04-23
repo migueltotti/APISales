@@ -264,9 +264,10 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
     [HttpPost]
     [Route("GenerateReport/{date:datetime}")]
     [Authorize("AdminEmployeeOnly")]
-    public async Task<ActionResult<OrderReportDTO>> GenerateOrderReport(DateTime date, [FromQuery] ReportType reportType)
+    public async Task<ActionResult<OrderReportDTO>> GenerateOrderReport(DateTime date, 
+        [FromQuery] ReportType reportType, [FromQuery] string destination)
     {
-        var orderReport = await _service.GenerateOrderReport(date, reportType);
+        var orderReport = await _service.GenerateOrderReport(date, reportType, destination);
         
         return orderReport.isSuccess switch
         {

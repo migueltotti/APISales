@@ -265,4 +265,6 @@ public class GeneratePOSEXCELReport : IGenerateReport
     }
 
     public ReportType GetReportType() => ReportType.POS_EXCEL;
+    public string GetReportContentType() => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public string GetReportExtensionType() => ".xlsx";
 }

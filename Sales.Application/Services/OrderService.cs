@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using AutoMapper;
 using FluentValidation;
 using FluentValidation.Results;
@@ -610,10 +611,13 @@ public class OrderService : IOrderService
         ));
     }
     
-    public async Task<Result<object>> GenerateOrderReport(DateTime? date, ReportType reportType)
+    public async Task<Result<object>> GenerateOrderReport(DateTime? date, ReportType reportType, string emailDest)
     {
-        if (date is null)
+        if (date is null || string.IsNullOrEmpty(emailDest) || string.IsNullOrWhiteSpace(emailDest))
             return Result<object>.Failure(OrderErrors.DateNullParameter);
+        
+        if(!Regex.Match(emailDest, @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$").Success)
+            return Result<object>.Failure(OrderErrors.InvalidEmail);
         
         // get orderReport
         var orderReport = await GetOrderReport(date);
@@ -656,12 +660,12 @@ public class OrderService : IOrderService
                 Guid.NewGuid(),
                 orderReport.value,
                 workDayReport.value,
-                reportType
-            )
-        );
+                reportType,
+                emailDest
+        ));
 
         return Result<object>.Success(
-            new { message = "Report created successfully!" }   
+            new { message = "Report sent successfully!" }   
         );
     }
     

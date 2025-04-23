@@ -33,5 +33,5 @@ public interface IOrderService
     Task<Result<IEnumerable<ProductDTOOutput>>> GetProductsByOrderId(int orderId);
     Task<Result<OrderDTOOutput>> RemoveProduct(int orderId, int productId);
     Task<Result<OrderReportDTO>> GetOrderReport(DateTime? date);    
-    Task<Result<object>> GenerateOrderReport(DateTime? date, ReportType reportType);   
+    Task<Result<object>> GenerateOrderReport(DateTime? date, ReportType reportType, string emailDest);   
 }

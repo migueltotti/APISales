@@ -253,9 +253,6 @@ public class UsersController(IUserService _service,
         // UserDataDbContext User Update logic.
         var userForUpdate = await GenerateUpdatedUser(userDtoInput, result.value.Item2);
         
-        // if(userForUpdate is not null) 
-        //     await _userManager.UpdateAsync(userForUpdate);
-        
         return Ok(result.value.Item1);
     }
     
@@ -303,7 +300,6 @@ public class UsersController(IUserService _service,
 
         var oldPasswordDecrypted = _encryptService.Decrypt(changePasswordDto.oldPassword);
         var newPasswordDecrypted = _encryptService.Decrypt(changePasswordDto.newPassword);
-        
         
         var updatePasswordResult = await _userManager.
             ChangePasswordAsync(userForUpdatePassword, oldPasswordDecrypted, newPasswordDecrypted);
