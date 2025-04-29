@@ -9,35 +9,39 @@ public sealed class Order
     public decimal TotalValue { get; private set; }
     public DateTime OrderDate { get; private set; }
     public Status OrderStatus { get; private set; }
+    public string? Holder { get; private set; }
+    public string? Note { get; private set; }
 
     // Order n : 1 User
-    public int UserId { get; private set; }
+    public int? UserId { get; private set; }
     public User? User { get; private set; } 
     
     // Order n : n Product
-    public ICollection<Product>? Products { get; private set; }
+    public ICollection<LineItem>? LineItems { get; private set; } = new List<LineItem>();
 
     private Order()
     {
     }
-    
-    public Order(int orderId, decimal totalValue, DateTime orderDate, int userId, Status orderStatus = Status.Preparing)
+
+    public Order(int orderId, decimal totalValue, DateTime orderDate, string? holder ,string? note, int? userId, Status orderStatus = Status.Preparing)
     {
         OrderId = orderId;
         TotalValue = totalValue;
         OrderDate = orderDate;
-        UserId = userId;
         OrderStatus = orderStatus;
-        Products = new Collection<Product>();
+        Holder = holder;
+        Note = note;
+        UserId = userId;
     }
 
-    public Order(decimal totalValue, DateTime orderDate, int userId, Status orderStatus = Status.Preparing)
+    public Order(decimal totalValue, DateTime orderDate, string? holder , string? note, int? userId, Status orderStatus = Status.Preparing)
     {
         TotalValue = totalValue;
         OrderDate = orderDate;
-        UserId = userId;
         OrderStatus = orderStatus;
-        Products = new Collection<Product>();
+        Holder = holder;
+        Note = note;
+        UserId = userId;
     }
 
     public void IncreaseValue(decimal value)
@@ -58,5 +62,24 @@ public sealed class Order
     public void FinishOrder()
     {
         this.OrderStatus = Status.Finished;
+    }
+
+    public void ChangeHolder(string? newHolder)
+    {
+        Holder = newHolder;
+    }
+    
+    public void ChangeNote(string? newNote)
+    {
+        Note = newNote;
+    }
+
+    
+    public void AddProducts(List<LineItem> products)
+    {
+        foreach (var prod in products)
+        {
+            LineItems.Add(prod);
+        }
     }
 }

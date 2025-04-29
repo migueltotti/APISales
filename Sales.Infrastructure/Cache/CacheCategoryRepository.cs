@@ -47,9 +47,15 @@ public class CacheCategoryRepository : ICategoryRepository
                 return category;
             }
             
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = CacheExpirationTime.OneDay
+            };
+            
             await _distributedCache.SetStringAsync(
                 key,
-                JsonSerializer.Serialize(category));
+                JsonSerializer.Serialize(category),
+                cacheOptions);
             
             return category;
         }

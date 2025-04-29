@@ -4,7 +4,7 @@ using Sales.Infrastructure.Context;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class AffiliateRepository(SalesDbContext context) : Repository<Affiliate>(context), IAffiliateRepository
+public class AffiliateRepository(TestDbContext context) : Repository<Affiliate>(context), IAffiliateRepository
 {
     public Task<Affiliate?> GetByIdAsync(int id)
     {

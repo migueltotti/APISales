@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Sales.Application.DTOs.UserDTO;
 using Sales.Application.Interfaces;
+using Sales.Application.Mapping.Extentions;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.ModelsParameters;
 using Sales.Application.ResultPattern;
@@ -19,15 +20,21 @@ public class UserService : IUserService
 {
     private readonly IUnitOfWork _uof;
     private readonly IValidator<UserDTOInput> _validator;
+    private readonly IValidator<UserUpdateDTO> _updateValidator;
     private readonly IMapper _mapper;
     private readonly IUserFilterFactory _userFilterFactory;
+    private readonly ICacheService _cacheService;
+    private readonly IEncryptService _encryptService;
 
-    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory)
+    public UserService(IUnitOfWork uof, IValidator<UserDTOInput> validator, IMapper mapper, IUserFilterFactory userFilterFactory, ICacheService cacheService, IValidator<UserUpdateDTO> updateValidator, IEncryptService encryptService)
     {
         _uof = uof;
         _validator = validator;
         _mapper = mapper;
         _userFilterFactory = userFilterFactory;
+        _cacheService = cacheService;
+        _updateValidator = updateValidator;
+        _encryptService = encryptService;
     }
 
     public async Task<IEnumerable<UserDTOOutput>> GetAllUsers()
@@ -150,22 +157,36 @@ public class UserService : IUserService
         {
             return Result<UserDTOOutput>.Failure(UserErrors.DataIsNull);
         }
+
+        var userInput = userDtoInput with { Password = _encryptService.Decrypt(userDtoInput.Password) };
         
-        var validation = await _validator.ValidateAsync(userDtoInput);
+        var validation = await _validator.ValidateAsync(userInput);
 
         if (!validation.IsValid)
         {
             return Result<UserDTOOutput>.Failure(UserErrors.IncorrectFormatData, validation.Errors);
         }
         
-        var userExists = await GetUserBy(u => u.Email == userDtoInput.Email);
+        var userExists = await GetUserBy(u => u.Email == userInput.Email);
 
         if (userExists.value is not null)
         {
             return Result<UserDTOOutput>.Failure(UserErrors.UserExists);
         }
 
-        var user = _mapper.Map<User>(userDtoInput);
+        var passwordEncrypted = _encryptService.Encrypt(userInput.Password);
+
+        var user = new User(
+            userInput.UserId,
+            userInput.Name,
+            userInput.Email,
+            passwordEncrypted,
+            userInput.Cpf,
+            userInput.Points,
+            userInput.DateBirth,
+            userInput.Role,
+            userInput.AffiliateId
+        );
 
         var userCreated = _uof.UserRepository.Create(user);
         await _uof.CommitChanges();
@@ -175,7 +196,7 @@ public class UserService : IUserService
         return Result<UserDTOOutput>.Success(userDtoCreated);
     }
 
-    public async Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserDTOInput userDtoInput, int id)
+    public async Task<Result<(UserDTOOutput, Dictionary<string, string>)>> UpdateUser(UserUpdateDTO userDtoInput, int id)
     {
         if (userDtoInput is null)
         {
@@ -194,7 +215,7 @@ public class UserService : IUserService
             return Result<(UserDTOOutput, Dictionary<string, string>)>.Failure(UserErrors.NotFound);
         }
         
-        var validation = await _validator.ValidateAsync(userDtoInput);
+        var validation = await _updateValidator.ValidateAsync(userDtoInput);
 
         if (!validation.IsValid)
         {
@@ -203,14 +224,62 @@ public class UserService : IUserService
 
         var updatedFields = IdentifyUpdatedFields(userDtoInput, user);
         
-        var userForUpdate = _mapper.Map<User>(userDtoInput);
+        //var userForUpdate = _mapper.Map<User>(userDtoInput);
+        var userForUpdate = new User(
+            user.UserId,
+            userDtoInput.Name,
+            userDtoInput.Email,
+            user.Password,
+            userDtoInput.Cpf,
+            user.Points,
+            userDtoInput.DateBirth,
+            userDtoInput.Role,
+            userDtoInput.AffiliateId
+        );
 
         var userUpdate = _uof.UserRepository.Update(userForUpdate);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"user-{id}");
+        
         await _uof.CommitChanges();
 
         var userDtoUpdated = _mapper.Map<UserDTOOutput>(userUpdate);
         
         return Result<(UserDTOOutput, Dictionary<string, string>)>.Success((userDtoUpdated, updatedFields));
+    }
+
+    // oldPassword and newPassword come encrypted to the method 
+    public async Task<Result<UserDTOOutput>> UpdateUserPassword(int userId, string oldPassword, string newPassword)
+    { 
+        var user = await _uof.UserRepository.GetByIdAsync(userId);
+        
+        if(user is null)
+            return Result<UserDTOOutput>.Failure(UserErrors.NotFound);
+        
+        // Compare decrypted passwords
+        var newPasswordDecrypted = _encryptService.Decrypt(newPassword);
+        var oldPasswordDecrypted = _encryptService.Decrypt(oldPassword);
+        var userPasswordDecrypted = _encryptService.Decrypt(user.Password!);
+        
+        if(!userPasswordDecrypted.Equals(oldPasswordDecrypted))
+            return Result<UserDTOOutput>.Failure(UserErrors.PasswordMismatch);
+        
+        if (userPasswordDecrypted.Equals(newPasswordDecrypted) || oldPasswordDecrypted.Equals(newPasswordDecrypted))
+            return Result<UserDTOOutput>.Failure(UserErrors.PasswordsEqualError);
+        
+        // change the old password to the new already encrypted password
+        user.UpdatePassword(newPassword);
+        
+        _uof.UserRepository.Update(user);
+        await _uof.CommitChanges();
+        
+        return Result<UserDTOOutput>.Success(_mapper.Map<UserDTOOutput>(user));
+    }
+
+    public Task<Result<UserDTOOutput>> UpdateUserRole(int userId, string role)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<Result<UserDTOOutput>> DeleteUser(int? id)
@@ -223,6 +292,10 @@ public class UserService : IUserService
         }
 
         var userDeleted = _uof.UserRepository.Delete(user);
+        
+        // remove old data from cache
+        await _cacheService.RemoveAsync($"user-{id}");
+        
         await _uof.CommitChanges();
 
         var userDtoDeleted = _mapper.Map<UserDTOOutput>(userDeleted);
@@ -230,7 +303,7 @@ public class UserService : IUserService
         return Result<UserDTOOutput>.Success(userDtoDeleted);
     }
 
-    private Dictionary<string, string> IdentifyUpdatedFields(UserDTOInput userDtoInput, User user)
+    private Dictionary<string, string> IdentifyUpdatedFields(UserUpdateDTO userDtoInput, User user)
     {
         var updatedFields = new Dictionary<string, string>();
         
@@ -239,9 +312,6 @@ public class UserService : IUserService
         
         if(userDtoInput.Email != user.Email)
             updatedFields.Add("Email", user.Email!);
-        
-        if(userDtoInput.Password != user.Password)
-            updatedFields.Add("Password", user.Password!);
         
         if(userDtoInput.Role != user.Role)
             updatedFields.Add("Role", user.Role.ToString());

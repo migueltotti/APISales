@@ -18,6 +18,9 @@ public sealed class User
     // User 1 : n Order
     public ICollection<Order>? Orders { get; private set; }
     
+    // User 1 : n WorkDay 
+    public ICollection<WorkDay>? WorkDays { get; private set; }
+    
     // User n : 1 Affiliate
     public int AffiliateId { get; private set; }    
     public Affiliate? Affiliate { get; private set; }
@@ -49,5 +52,20 @@ public sealed class User
         DateBirth = dateBirth;
         Role = role;
         AffiliateId = affiliateId;
+    }
+
+    public void UpdatePassword(string newPassword)
+    {
+        if (string.IsNullOrEmpty(newPassword))
+        {
+            throw new ArgumentNullException(nameof(newPassword));
+        }
+
+        if (!newPassword.Equals(newPassword.Trim()))
+        {
+            throw new ArgumentNullException(nameof(newPassword));
+        }
+
+        Password = newPassword;
     }
 }

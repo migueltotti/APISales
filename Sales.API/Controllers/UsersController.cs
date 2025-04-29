@@ -14,6 +14,7 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Application.ResultPattern;
 using Sales.Domain.Interfaces;
 using Sales.Domain.Models;
 using Sales.Domain.Models.Enums;
@@ -26,7 +27,8 @@ namespace Sales.API.Controllers;
 public class UsersController(IUserService _service,
     IShoppingCartService _shoppingCartService,
     UserManager<ApplicationUser> _userManager,
-    ILogger<UsersController> _logger) : ControllerBase
+    ILogger<UsersController> _logger,
+    IEncryptService _encryptService) : ControllerBase
 {
 
     [HttpGet("getUsers")]
@@ -112,6 +114,7 @@ public class UsersController(IUserService _service,
     }
     
     [HttpGet("email/{email}")]
+    [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<UserDTOOutput>> GetUserByEmail(string email)
     {
         var result = await _service.GetUserByEmail(email);
@@ -132,6 +135,17 @@ public class UsersController(IUserService _service,
     }
 
     // Users unauthorized can create a User
+    
+    [HttpPost("RSA/Encrypt")]
+    public ActionResult Encrypt([FromBody] string value)
+    {
+        return Ok(_encryptService.Encrypt(value));
+    }
+    [HttpPost("RSA/Decrypt")]
+    public ActionResult Decrypt([FromBody] string valueIn64)
+    {
+        return Ok(_encryptService.Decrypt(valueIn64));
+    }
     
     [HttpPost]
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)
@@ -162,7 +176,9 @@ public class UsersController(IUserService _service,
                 UserName = userDtoInput.GenerateUserName()
             };
 
-            var resultUser = await _userManager.CreateAsync(user, userDtoInput.Password);
+            var userPasswordDecrypted = _encryptService.Decrypt(userDtoInput.Password);
+
+            var resultUser = await _userManager.CreateAsync(user, userPasswordDecrypted);
 
             if (!resultUser.Succeeded)
             {
@@ -212,7 +228,7 @@ public class UsersController(IUserService _service,
     
     [HttpPut("{id:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<UserDTOOutput>> Put(UserDTOInput userDtoInput, int id)
+    public async Task<ActionResult<UserDTOOutput>> Put(UserUpdateDTO userDtoInput, int id)
     {
         var result = await _service.UpdateUser(userDtoInput, id);
 
@@ -237,10 +253,71 @@ public class UsersController(IUserService _service,
         // UserDataDbContext User Update logic.
         var userForUpdate = await GenerateUpdatedUser(userDtoInput, result.value.Item2);
         
-        if(userForUpdate is not null) 
-            await _userManager.UpdateAsync(userForUpdate);
-        
         return Ok(result.value.Item1);
+    }
+    
+    [HttpPut("ChangePassword/{userId:int:min(1)}")]
+    [Authorize("AllowAnyUser")]
+    public async Task<ActionResult<UserDTOOutput>> ChangePassword(int userId, [FromBody] ChangePasswordDTO changePasswordDto)
+    {
+        if(!changePasswordDto.userId.Equals(userId))
+            return BadRequest(new { message = "User id mismatch" });
+        
+        var result = await _service.UpdateUserPassword(userId, changePasswordDto.oldPassword, changePasswordDto.newPassword);
+
+        if (!result.isSuccess)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                result.error,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            switch (result.error.HttpStatusCode)
+            {
+                case HttpStatusCode.NotFound:
+                    return NotFound(result.GenerateErrorResponse());
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(result.GenerateErrorResponse());
+            }
+        }
+        
+        // UserDataDbContext User Update logic.
+        var userForUpdatePassword = await _userManager.FindByEmailAsync(result.value.Email);
+
+        if (userForUpdatePassword is null)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                UserErrors.NotFound,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            return BadRequest(Result<UserDTOOutput>.Failure(UserErrors.NotFound).GenerateErrorResponse());
+        }
+
+        var oldPasswordDecrypted = _encryptService.Decrypt(changePasswordDto.oldPassword);
+        var newPasswordDecrypted = _encryptService.Decrypt(changePasswordDto.newPassword);
+        
+        var updatePasswordResult = await _userManager.
+            ChangePasswordAsync(userForUpdatePassword, oldPasswordDecrypted, newPasswordDecrypted);
+
+        if (!updatePasswordResult.Succeeded)
+        {
+            _logger.LogWarning(
+                "Request failed {@Error}, {@RequestName}, {@DateTime}",
+                updatePasswordResult.Errors,
+                nameof(_service.UpdateUser),
+                DateTime.Now
+            );
+            
+            return BadRequest(Result<UserDTOOutput>.Failure(UserErrors.PasswordChangeError).GenerateErrorResponse());
+        } 
+            
+        
+        return Ok(result.value);
     }
 
     [HttpDelete("{userId:int:min(1)}")]
@@ -265,12 +342,12 @@ public class UsersController(IUserService _service,
         // UserDataDbContext User Update logic implemented inside Action Method Delete in UsersController.
 
         var getUserResult = await _userManager.FindByEmailAsync(deleteUserResult.value.Email);
-        var deleteUserAuthenticationResult = await _userManager.DeleteAsync(getUserResult!);
+        var deleteUserAuthenticationResult = await _userManager.DeleteAsync(getUserResult);
         
         return Ok($"User with id = {deleteUserResult.value.UserId} was deleted successfully");
     }
 
-    private async Task<ApplicationUser?> GenerateUpdatedUser(UserDTOInput userDtoInput, Dictionary<string, string> updatedFields)
+    private async Task<ApplicationUser?> GenerateUpdatedUser(UserUpdateDTO userDtoInput, Dictionary<string, string> updatedFields)
     {
         ApplicationUser? userForUpdate;
         
@@ -282,7 +359,7 @@ public class UsersController(IUserService _service,
             userForUpdate = await _userManager
                 .FindByEmailAsync(updatedFields["Email"]);
             
-            userForUpdate.Email = userDtoInput.Email;
+            userForUpdate.Email = email;
         }
         else
         {
@@ -292,16 +369,11 @@ public class UsersController(IUserService _service,
         
         if (updatedFields.ContainsKey("Name"))
             userForUpdate.UserName = userDtoInput.GenerateUserName();
-            
 
-        if (updatedFields.ContainsKey("Password"))
+        if (updatedFields.TryGetValue("Role", out string? value))
         {
-            // update password logic 
-        }
-
-        if (updatedFields.ContainsKey("Role"))
-        {
-            // update role logic 
+            var result = await _userManager.RemoveFromRoleAsync(userForUpdate, value);
+            var result2 = await _userManager.AddToRoleAsync(userForUpdate, userDtoInput.Role.ToString());
         }
             
         return userForUpdate;

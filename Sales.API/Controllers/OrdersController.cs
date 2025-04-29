@@ -8,6 +8,7 @@ using Sales.Application.Interfaces;
 using Sales.Application.Parameters;
 using Sales.Application.Parameters.Extension;
 using Sales.Application.Parameters.ModelsParameters;
+using Sales.Domain.Models.Enums;
 
 namespace Sales.API.Controllers;
 
@@ -20,6 +21,19 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)
     {
         var ordersPaged = await _service.GetAllOrders(parameters);
+        
+        var metadata = ordersPaged.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(ordersPaged.ToList());
+    }
+    
+    [HttpGet("Products/DateTimeNow")]
+    [Authorize("AdminEmployeeOnly")]
+    public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetAllOrdersWithProductsByDateTimeNow([FromQuery] OrderParameters parameters)
+    {
+        var ordersPaged = await _service.GetAllOrdersWithProductsByDateTimeNow(parameters);
         
         var metadata = ordersPaged.GenerateMetadataHeader();
         
@@ -67,6 +81,19 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         return Ok(ordersPaged.ToList());
     }
     
+    [HttpGet("NumberOfOrdersBySundays")]
+    [Authorize("AdminEmployeeOnly")]
+    public async Task<ActionResult<IEnumerable<OrderWeekReportDTO>>> GetNumberOfOrdersFromTodayToLastSundays([FromQuery] OrderParameters parameters)
+    {
+        var result = await _service.GetNumberOfOrdersFromTodayToLastSundays(parameters);
+        
+        var metadata = result.value.GenerateMetadataHeader();
+        
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
+        
+        return Ok(result.value);
+    }
+    
     [HttpGet("Product")]
     [Authorize("AdminEmployeeOnly")]
     public async Task<ActionResult<IEnumerable<OrderDTOOutput>>> GetOrdersByProduct([FromQuery] OrderParameters parameters)
@@ -106,20 +133,6 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         return Ok(ordersPaged.ToList());
     }
     
-    [HttpGet("Products/{userId:int:min(1)}")]
-    //[Authorize("AllowAnyUser")]
-    public async Task<ActionResult<IEnumerable<OrderProductsDTO>>> GetOrdersWithProductsByUserId(int userId, [FromQuery] QueryStringParameters parameters)
-    {
-        var ordersProductsPaged = await _service.GetAllOrdersWithProductsByUserId(userId, parameters);
-        
-        var metadata = ordersProductsPaged.GenerateMetadataHeader();
-        
-        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
-        
-        return Ok(ordersProductsPaged.ToList());
-    }
-    
-    
     [HttpGet("{id:int:min(1)}", Name = "GetOrder")]
     [Authorize("AllowAnyUser")]
     public async Task<ActionResult<OrderDTOOutput>> Get(int id)
@@ -139,7 +152,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
-        };
+        }
     }
     
     [HttpPost]
@@ -161,7 +174,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return BadRequest(result.GenerateErrorResponse());
-        };
+        }
     }
     
     [HttpPut("{id:int:min(1)}")]
@@ -173,7 +186,8 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         switch (result.isSuccess)
         {
             case true:
-                return Ok($"Order with id = {result.value.OrderId} has been update successfully");
+                return Ok(
+                    new {message = $"Order with id = {result.value.OrderId} has been update successfully"});
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -198,7 +212,8 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         switch(result.isSuccess)
         {
             case true:
-                return Ok($"Order with id = {result.value.OrderId} has been deleted successfully");
+                return Ok(
+                    new {message = $"Order with id = {result.value.OrderId} has been deleted successfully"});
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -207,7 +222,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
-        };
+        }
     }
     
     [HttpGet]
@@ -229,17 +244,36 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
-        };
+        }
     }
 
     [HttpGet]
-    [Route("OrderReport")]
+    [Route("ReportByDate")]
     [Authorize("AdminEmployeeOnly")]
-    public async Task<ActionResult<OrderReportDTO>> GetOrderReport([FromQuery] DateTime minDate, [FromQuery] DateTime maxDate)
+    public async Task<ActionResult<OrderReportDTO>> GetOrderReport([FromQuery] DateTime date)
     {
-        var orderReport = await _service.GetOrderReport(minDate, maxDate);
+        var orderReport = await _service.GetOrderReport(date);
         
-        return Ok(orderReport);
+        return orderReport.isSuccess switch
+        {
+            true => Ok(orderReport.value),
+            false => BadRequest(orderReport.GenerateErrorResponse())
+        };
+    }
+    
+    [HttpPost]
+    [Route("GenerateReport/{date:datetime}")]
+    [Authorize("AdminEmployeeOnly")]
+    public async Task<ActionResult<OrderReportDTO>> GenerateOrderReport(DateTime date, 
+        [FromQuery] ReportType reportType, [FromQuery] string destination)
+    {
+        var orderReport = await _service.GenerateOrderReport(date, reportType, destination);
+        
+        return orderReport.isSuccess switch
+        {
+            true => Ok(orderReport.value),
+            false => BadRequest(orderReport.GenerateErrorResponse())
+        };
     }
     
     [HttpPost]
@@ -252,7 +286,8 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         switch (result.isSuccess)
         {
             case true:
-                return Ok($"Product with id = {productId} was added successfully on Order with id = {orderId}");
+                return Ok(new 
+                {message = $"Product with id = {productId} was added successfully on Order with id = {orderId}"});
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -265,20 +300,21 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     return NotFound(result.GenerateErrorResponse());
                 
                 return BadRequest(result.GenerateErrorResponse());
-        };
+        }
     }
 
     [HttpDelete]
     [Route("{orderId:int:min(1)}/RemoveProduct/{productId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<OrderProductsDTO>> RemoveProduct(int orderId, int productId)
+    public async Task<ActionResult<OrderDTOOutput>> RemoveProduct(int orderId, int productId)
     {
         var result = await _service.RemoveProduct(orderId, productId);
         
         switch(result.isSuccess)
         {
             case true:
-                return Ok($"Product with id = {productId} was removed from Order with id = {orderId} successfully");
+                return Ok(
+                    new {message = $"Product with id = {productId} was removed from Order with id = {orderId} successfully"});
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -287,14 +323,14 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
-        };
+        }
     }
     
     [HttpPost("CreateAndSend/{userId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<OrderDTOOutput>> CreateAndSendOrder(int userId)
+    public async Task<ActionResult<OrderDTOOutput>> CreateAndSendOrder(int userId, [FromQuery] string? note = null)
     {
-        var result = await _service.CreateAndSendOrder(userId);
+        var result = await _service.CreateAndSendOrder(userId, note);
         
         switch(result.isSuccess)
         {
@@ -311,19 +347,19 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     return NotFound(result.GenerateErrorResponse());
                 
                 return BadRequest(result.GenerateErrorResponse());
-        };
+        }
     }
     
     [HttpPost("sent/{orderId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<OrderDTOOutput>> SentOrder(int orderId)
+    public async Task<ActionResult<OrderDTOOutput>> SentOrder(int orderId, [FromQuery] string? note = null)
     {
-        var result = await _service.SentOrder(orderId);
+        var result = await _service.SentOrder(orderId, note);
         
         switch(result.isSuccess)
         {
             case true:
-                return Ok($"Order with id = {result.value.OrderId} sent successfully");
+                return Ok(new {message = $"Order with id = {result.value.OrderId} sent successfully"});
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -332,7 +368,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
-        };
+        }
     }
 
     [HttpPost("finish/{orderId:int:min(1)}")]
@@ -344,7 +380,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
         switch(result.isSuccess)
         {
             case true:
-                return Ok($"Order with id = {result.value.OrderId} finished successfully");
+                return Ok(new {message = $"Order with id = {result.value.OrderId} finished successfully"});
             case false:
                 _logger.LogWarning(
                     "Request failed {@Error}, {@RequestName}, {@DateTime}",
@@ -353,7 +389,7 @@ public class OrdersController(IOrderService _service, IShoppingCartService _shop
                     DateTime.Now
                 );
                 return NotFound(result.GenerateErrorResponse());
-        };
+        }
     }
 }
 

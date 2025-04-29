@@ -13,7 +13,7 @@ namespace Sales.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProductsController(IProductService _service, ILogger<ProductsController> _logger) : ControllerBase
+public class ProductsController(IProductService _service, IOrderService _orderService, ILogger<ProductsController> _logger) : ControllerBase
 {
     [HttpGet]   
     public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> Get([FromQuery] QueryStringParameters parameters)    
@@ -63,10 +63,21 @@ public class ProductsController(IProductService _service, ILogger<ProductsContro
         return Ok(productsPaged.ToList());
     }
     
+    [HttpGet("ProductsBestSellingCount")]
+    public async Task<ActionResult<IEnumerable<ProductDTOOutput>>> GetBest5SellingProducts([FromQuery] ProductParameters parameters)    
+    {
+        var result = await _orderService.Get5BestSellingProductsByNumberOfMonths(parameters);
+
+        return result.isSuccess switch
+        {
+            true => Ok(result.value),
+            false => BadRequest(result.GenerateErrorResponse())
+        };
+    }
+    
     [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
     public async Task<ActionResult<ProductDTOOutput>> Get(int id)
     {
-        //var result = await _service.GetProductBy(p => p.ProductId == id);
         var result = await _service.GetProductById(id);
         
         switch(result.isSuccess)

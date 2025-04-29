@@ -11,4 +11,4 @@ public record ProductDTOOutput(
     int StockQuantity,
     string ImageUrl,
     int CategoryId
-    );
+);

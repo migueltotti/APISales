@@ -26,9 +26,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasMaxLength(80)
             .IsRequired();
 
-        builder.HasMany(x => x.Orders)
-            .WithMany(x => x.Products);
-
         builder.HasData(
             new Product(1, "Coca-Cola 250", "Coca Cola 250ml garrafinha", 3.5m, TypeValue.Uni, "coca-cola-250.jpg", 10, 2),
             new Product(2, "Pão Caseiro", "Pão Caseiro feito no dia", 9.9m, TypeValue.Uni, "pao-caseiro.jpg", 3, 2),

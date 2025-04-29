@@ -41,9 +41,15 @@ public class CacheAffiliateRepository : IAffiliateRepository
                 return affiliate;
             }
             
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = CacheExpirationTime.OneDay
+            };
+            
             await _distributedCache.SetStringAsync(
                 key,
-                JsonSerializer.Serialize(affiliate));
+                JsonSerializer.Serialize(affiliate),
+                cacheOptions);
             
             return affiliate;
         }

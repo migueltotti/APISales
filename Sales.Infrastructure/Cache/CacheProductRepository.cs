@@ -40,9 +40,15 @@ public class CacheProductRepository : IProductRepository
                 return product;
             }
             
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = CacheExpirationTime.OneDay
+            };
+            
             await _distributedCache.SetStringAsync(
                 key,
-                JsonSerializer.Serialize(product));
+                JsonSerializer.Serialize(product),
+                cacheOptions);
             
             return product;
         }

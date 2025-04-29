@@ -7,9 +7,9 @@ namespace Sales.Infrastructure.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly SalesDbContext _context;
+    protected readonly TestDbContext _context;
     
-    public Repository(SalesDbContext context)
+    public Repository(TestDbContext context)
     {
         _context = context;
     }

@@ -10,5 +10,10 @@ public class ProductErrors
     public static readonly Error IdMismatch = new Error("ProductIdMismatch", "Past Id does not match product id", HttpStatusCode.BadRequest);
     public static readonly Error StockUnavailable = new Error("ProductStockUnavailable", "Past product stock is no more available", HttpStatusCode.BadRequest);
     public static readonly Error DuplicateData = new Error("ProductDuplicateData", "Past product with the same name already exists in stock", HttpStatusCode.BadRequest);
+    
+    public static readonly Error MonthsCountNullParameter = new Error(
+        "ProductMonthsCountNullParameter", 
+        "Parameter of type months_count must not be null.", 
+        HttpStatusCode.BadRequest);
 
 }

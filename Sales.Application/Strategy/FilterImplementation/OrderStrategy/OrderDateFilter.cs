@@ -13,9 +13,10 @@ public class OrderDateFilter : IOrderFilterStrategy
         {
             orders = parameters.To switch
             {
-                null => orders.Where(o => o.OrderDate >= parameters.From)
+                null => orders.Where(o => o.OrderDate.Day >= parameters.From.Value.Day)
                     .OrderBy(o => o.OrderDate),
-                not null => orders.Where(o => o.OrderDate >= parameters.From && o.OrderDate <= parameters.To)
+                not null => orders.Where(o => o.OrderDate.Day  >= parameters.From.Value.Day &&
+                                                            o.OrderDate.Day  <= parameters.To.Value.Day)
                     .OrderBy(o => o.OrderDate)
             };
         }

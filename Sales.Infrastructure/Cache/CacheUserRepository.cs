@@ -61,9 +61,15 @@ public class CacheUserRepository : IUserRepository
                 return user;
             }
             
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = CacheExpirationTime.OneDay
+            };
+            
             await _distributedCache.SetStringAsync(
                 key,
-                JsonSerializer.Serialize(user));
+                JsonSerializer.Serialize(user),
+                cacheOptions);
             
             return user;
         }

@@ -41,7 +41,7 @@ public class ShoppingCartsController(IShoppingCartService _shoppingCartService) 
     
     [HttpPost("{userId:int:min(1)}/AddProduct/{productId:int:min(1)}")]
     [Authorize("AllowAnyUser")]
-    public async Task<ActionResult<ShoppingCartDTOOutput>> AddProductToShoppingCart(int userId, int productId, [FromQuery] decimal amount)
+    public async Task<ActionResult<ShoppingCartDTOOutput>> AddProductToShoppingCart(int userId, int productId, [FromQuery] decimal amount = 1)
     {
         var result = await _shoppingCartService.AddProductToShoppingCartAsync(userId, productId, amount);
 
