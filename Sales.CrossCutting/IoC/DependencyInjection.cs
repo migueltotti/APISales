@@ -40,49 +40,17 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var mySqlConnectionString = configuration.GetConnectionString("DefaultMySqlConnection") ?? throw new NullReferenceException("MySQL connection string is null");
-        var postGreSqlConnectionString = configuration.GetConnectionString("DefaultPostGresConnection") ?? throw new NullReferenceException("PostGreSQL connection string is null");
-        var testConnectionString = configuration.GetConnectionString("TestDbMySqlConnection") ?? throw new NullReferenceException("Test connection string is null");
-        var rabbitConnectionString = configuration.GetConnectionString("RabbitMQ") ?? throw new NullReferenceException("Test connection string is null");
-        
-        // Add DataBase connection
-        services.AddDbContext<SalesDbContext>(options => 
-                options.UseMySql(mySqlConnectionString,
-                new MySqlServerVersion(new Version(8, 0, 38))));
-        
-        // Add Database UsersData - PostGres connection
-        services.AddEntityFrameworkNpgsql().AddDbContext<UsersDataDbContext>(options =>
-            options.UseNpgsql(postGreSqlConnectionString));
-        
-        // Test DataBase
-        services.AddDbContext<TestDbContext>(options => 
-            options.UseMySql(testConnectionString,
-                new MySqlServerVersion(new Version(8, 0, 38))));
-        
-        // Identity tables configuration
-        services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<UsersDataDbContext>()
-            .AddDefaultTokenProviders();
-        
-        // Adding configuration for supporting unique emails on IdentityTables
-        services.Configure<IdentityOptions>(options =>
-        {
-            options.User.RequireUniqueEmail = true;
-        });
+        // Add MySql DataBase
+        services.AddDataBase(configuration);
 
         // Configure Redis
-        services.AddStackExchangeRedisCache(redisOptions =>
-        {
-            string connection = configuration.GetConnectionString("Redis")!;
-
-            redisOptions.Configuration = connection;
-        });
+        services.AddCache(configuration);
         
         // Add RabbitMq to MassTransit
         services.AddRabbitMQ(configuration);
         
         // Add FluentEmail.SMTP
-        services.RegisterFluentEmailSender(configuration);
+        services.RegisterFluentEmailSender();
         
         // Add Repositories
         services.AddScoped<UserRepository>();
