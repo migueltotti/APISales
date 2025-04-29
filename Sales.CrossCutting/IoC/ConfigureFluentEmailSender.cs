@@ -5,7 +5,7 @@ namespace Sales.CrossCutting.IoC;
 
 public static class ConfigureFluentEmailSender
 {
-    public static IServiceCollection RegisterFluentEmailSender(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection RegisterFluentEmailSender(this IServiceCollection services)
     {
         // services
         //     .AddFluentEmail(configuration["EmailSettings:FromEmail"])
@@ -15,10 +15,13 @@ public static class ConfigureFluentEmailSender
         //         username: configuration["EmailSettings:FromEmail"],
         //         password: configuration["EmailSettings:Password"]
         //     );
+        var fromEmail = Environment.GetEnvironmentVariable("FROM_EMAIL");
+        var fromName = Environment.GetEnvironmentVariable("FROM_NAME");
+        var sendGridApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
 
-        services.AddFluentEmail(configuration["FROM_EMAIL"], configuration["FROM_NAME"])
-            .AddSendGridSender(configuration["SENDGRID_API_KEY"]);
+        services.AddFluentEmail(fromEmail, fromName)
+            .AddSendGridSender(sendGridApiKey);
 
-        return services;
+        return services;    
     }
 }
