@@ -10,7 +10,7 @@ namespace Sales.Infrastructure.Repositories;
 
 public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRepository
 {
-    public ShoppingCartRepository(TestDbContext context) : base(context)
+    public ShoppingCartRepository(MergeDbContext context) : base(context)
     {
     }
 

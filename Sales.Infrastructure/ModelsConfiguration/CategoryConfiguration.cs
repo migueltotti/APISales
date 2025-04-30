@@ -22,10 +22,10 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .HasForeignKey(p => p.CategoryId);
 
         builder.HasData(
-           new Category(1, "Carnes Bovinas", "carnes-bovinas.jpg"),
-           new Category(2, "Produtos Diversos", "produtos-diversos.jpg"),
+           new Category(1, "Bonivos", "bovinos.jpg"),
+           new Category(2, "Suínos", "suinos.jpg"),
            new Category(3, "Aves", "aves.jpg"),
-           new Category(4, "Carnes Suinas", "carnes-suinas.jpg")
+           new Category(4, "Diversos", "diversos.jpg")
         );
     }
 }

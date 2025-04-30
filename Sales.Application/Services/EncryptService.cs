@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
-using Sales.Application.Interfaces;
+using Sales.Domain.Interfaces;
 
 namespace Sales.Application.Services;
 

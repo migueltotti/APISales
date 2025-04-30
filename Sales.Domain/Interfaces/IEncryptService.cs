@@ -1,4 +1,4 @@
-namespace Sales.Application.Interfaces;
+namespace Sales.Domain.Interfaces;
 
 public interface IEncryptService
 {

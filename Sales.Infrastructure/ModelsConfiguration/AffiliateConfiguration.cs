@@ -23,9 +23,7 @@ public class AffiliateConfiguration : IEntityTypeConfiguration<Affiliate>
             .HasForeignKey(u => u.AffiliateId);
 
         builder.HasData(
-            new Affiliate(1, "Nenhuma Afiliacao", 0.00m),
-            new Affiliate(3, "Duratex", 5.00m),
-            new Affiliate(4, "Teste", 10.00m)
-            );
+            new Affiliate(1, "Nenhuma Afiliação", 0.00m)
+        );
     }
 }

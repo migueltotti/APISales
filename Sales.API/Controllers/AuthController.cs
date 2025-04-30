@@ -5,9 +5,9 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Sales.Application.DTOs.TokenDTO;
 using Sales.Application.Interfaces;
+using Sales.Domain.Interfaces;
 using Sales.Infrastructure.Identity;
 
 namespace Sales.API.Controllers;
