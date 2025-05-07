@@ -11,10 +11,10 @@ public static class ConfigureDataBase
 {
     public static IServiceCollection AddDataBase(this IServiceCollection services, IConfiguration configuration)
     {
-        var mySqlConnectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING") ?? throw new NullReferenceException("MySQL connection string is null");
+        //var mySqlConnectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING") ?? throw new NullReferenceException("MySQL connection string is null");
         var postGreSqlConnectionString = configuration.GetConnectionString("DefaultPostGresConnection") ?? throw new NullReferenceException("PostGreSQL connection string is null");
         var testConnectionString = configuration.GetConnectionString("TestDbMySqlConnection") ?? throw new NullReferenceException("Test connection string is null");
-        var mergeDbConnectionString = configuration.GetConnectionString("mergeDbConnectionString") ?? throw new NullReferenceException("Merge Db connection string is null");
+        var mergeDbConnectionString = Environment.GetEnvironmentVariable("mergeDbConnectionString") ?? throw new NullReferenceException("Merge Db connection string is null");
         
         // Add DataBase connection
         /*services.AddDbContext<SalesDbContext>(options => 
