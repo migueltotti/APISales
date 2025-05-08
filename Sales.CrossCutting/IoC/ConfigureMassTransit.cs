@@ -13,6 +13,10 @@ public static class ConfigureMassTransit
     {
         var rabbitConnectionString = configuration.GetConnectionString("RabbitMQ") ??
                                      throw new NullReferenceException("RabbitMQ connection string is null");
+        var username = Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? 
+                                    throw new NullReferenceException("RABBITMQ_USER environment variable is null");
+        var password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? 
+                   throw new NullReferenceException("RABBITMQ_PASSWORD environment variable is null");
         
         services.AddMassTransit(busConfigurator =>
         {
@@ -24,8 +28,8 @@ public static class ConfigureMassTransit
             {
                 cfg.Host(new Uri(rabbitConnectionString), host =>
                 {
-                    host.Username("guest");
-                    host.Password("guest");
+                    host.Username(username);
+                    host.Password(password);
                 });
 
                 // configure queue and exchange
