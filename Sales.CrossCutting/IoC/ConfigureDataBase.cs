@@ -52,6 +52,7 @@ public static class ConfigureDataBase
         services.Configure<IdentityOptions>(options =>
         {
             options.User.RequireUniqueEmail = true;
+            options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@áàâãäÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇñÑýÿÝŸœŒøØåÅæÆß\n";
         });
 
         return services;

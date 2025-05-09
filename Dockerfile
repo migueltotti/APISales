@@ -20,6 +20,7 @@ RUN dotnet publish --no-restore -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_ENVIRONMENT=Development
 ENV ASPNETCORE_HTTP_PORTS=5001
 #ENV ASPNETCORE_HTTPS_PORTS=5002
 EXPOSE 5001
