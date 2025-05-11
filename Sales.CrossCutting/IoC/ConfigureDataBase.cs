@@ -40,8 +40,7 @@ public static class ConfigureDataBase
         
         //Merge DataBase
         services.AddDbContext<MergeDbContext>(options => 
-            options.UseMySql(mergeDbConnectionString,
-                new MySqlServerVersion(new Version(8, 0, 38))));
+            options.UseMySql(mergeDbConnectionString, ServerVersion.AutoDetect(mergeDbConnectionString)));
         
         // Merge Identity tables configuration
         services.AddIdentity<ApplicationUser, IdentityRole>()

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales.Infrastructure.Context;
 
@@ -11,9 +12,11 @@ using Sales.Infrastructure.Context;
 namespace Sales.Infrastructure.Migrations.MergeDb
 {
     [DbContext(typeof(MergeDbContext))]
-    partial class MergeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250509211643_Fix Default Table Data")]
+    partial class FixDefaultTableData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

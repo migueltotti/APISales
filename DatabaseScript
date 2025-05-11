@@ -1,0 +1,458 @@
+﻿CREATE TABLE IF NOT EXISTS `__EFMigrationsHistory` (
+    `MigrationId` varchar(150) CHARACTER SET utf8mb4 NOT NULL,
+    `ProductVersion` varchar(32) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK___EFMigrationsHistory` PRIMARY KEY (`MigrationId`)
+) CHARACTER SET=utf8mb4;
+
+START TRANSACTION;
+
+ALTER DATABASE CHARACTER SET utf8mb4;
+
+CREATE TABLE `Affiliate` (
+    `AffiliateId` int NOT NULL AUTO_INCREMENT,
+    `Name` varchar(50) CHARACTER SET utf8mb4 NOT NULL,
+    `Discount` decimal(4,2) NOT NULL,
+    CONSTRAINT `PK_Affiliate` PRIMARY KEY (`AffiliateId`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetRoles` (
+    `Id` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `Name` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `NormalizedName` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `ConcurrencyStamp` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_AspNetRoles` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetUsers` (
+    `Id` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `RefreshToken` longtext CHARACTER SET utf8mb4 NULL,
+    `RefreshTokenExpiryTime` datetime(6) NOT NULL,
+    `UserName` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `NormalizedUserName` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `Email` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `NormalizedEmail` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `EmailConfirmed` tinyint(1) NOT NULL,
+    `PasswordHash` longtext CHARACTER SET utf8mb4 NULL,
+    `SecurityStamp` longtext CHARACTER SET utf8mb4 NULL,
+    `ConcurrencyStamp` longtext CHARACTER SET utf8mb4 NULL,
+    `PhoneNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `PhoneNumberConfirmed` tinyint(1) NOT NULL,
+    `TwoFactorEnabled` tinyint(1) NOT NULL,
+    `LockoutEnd` datetime(6) NULL,
+    `LockoutEnabled` tinyint(1) NOT NULL,
+    `AccessFailedCount` int NOT NULL,
+    CONSTRAINT `PK_AspNetUsers` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Category` (
+    `CategoryId` int NOT NULL AUTO_INCREMENT,
+    `Name` varchar(50) CHARACTER SET utf8mb4 NOT NULL,
+    `ImageUrl` varchar(250) CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Category` PRIMARY KEY (`CategoryId`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `User` (
+    `UserId` int NOT NULL AUTO_INCREMENT,
+    `Name` varchar(80) CHARACTER SET utf8mb4 NOT NULL,
+    `Email` varchar(80) CHARACTER SET utf8mb4 NOT NULL,
+    `Password` varchar(400) CHARACTER SET utf8mb4 NOT NULL,
+    `Cpf` varchar(14) CHARACTER SET utf8mb4 NULL,
+    `Points` decimal(6,2) NOT NULL,
+    `DateBirth` date NOT NULL,
+    `Role` int NOT NULL,
+    `AffiliateId` int NOT NULL,
+    CONSTRAINT `PK_User` PRIMARY KEY (`UserId`),
+    CONSTRAINT `FK_User_Affiliate_AffiliateId` FOREIGN KEY (`AffiliateId`) REFERENCES `Affiliate` (`AffiliateId`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetRoleClaims` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `RoleId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `ClaimType` longtext CHARACTER SET utf8mb4 NULL,
+    `ClaimValue` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_AspNetRoleClaims` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_AspNetRoleClaims_AspNetRoles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `AspNetRoles` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetUserClaims` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `ClaimType` longtext CHARACTER SET utf8mb4 NULL,
+    `ClaimValue` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_AspNetUserClaims` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_AspNetUserClaims_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetUserLogins` (
+    `LoginProvider` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `ProviderKey` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `ProviderDisplayName` longtext CHARACTER SET utf8mb4 NULL,
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_AspNetUserLogins` PRIMARY KEY (`LoginProvider`, `ProviderKey`),
+    CONSTRAINT `FK_AspNetUserLogins_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetUserRoles` (
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `RoleId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_AspNetUserRoles` PRIMARY KEY (`UserId`, `RoleId`),
+    CONSTRAINT `FK_AspNetUserRoles_AspNetRoles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `AspNetRoles` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_AspNetUserRoles_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `AspNetUserTokens` (
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `LoginProvider` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `Name` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `Value` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_AspNetUserTokens` PRIMARY KEY (`UserId`, `LoginProvider`, `Name`),
+    CONSTRAINT `FK_AspNetUserTokens_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Product` (
+    `ProductId` int NOT NULL AUTO_INCREMENT,
+    `Name` varchar(50) CHARACTER SET utf8mb4 NOT NULL,
+    `Description` varchar(175) CHARACTER SET utf8mb4 NULL,
+    `Value` decimal(10,2) NOT NULL,
+    `TypeValue` int NOT NULL,
+    `ImageUrl` varchar(250) CHARACTER SET utf8mb4 NULL,
+    `StockQuantity` int NOT NULL DEFAULT 0,
+    `CategoryId` int NOT NULL,
+    CONSTRAINT `PK_Product` PRIMARY KEY (`ProductId`),
+    CONSTRAINT `FK_Product_Category_CategoryId` FOREIGN KEY (`CategoryId`) REFERENCES `Category` (`CategoryId`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Order` (
+    `OrderId` int NOT NULL AUTO_INCREMENT,
+    `TotalValue` decimal(10,2) NOT NULL,
+    `OrderDate` datetime NOT NULL,
+    `OrderStatus` int NOT NULL,
+    `Holder` varchar(50) CHARACTER SET utf8mb4 NULL,
+    `Note` varchar(300) CHARACTER SET utf8mb4 NULL,
+    `UserId` int NULL,
+    CONSTRAINT `PK_Order` PRIMARY KEY (`OrderId`),
+    CONSTRAINT `FK_Order_User_UserId` FOREIGN KEY (`UserId`) REFERENCES `User` (`UserId`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `ShoppingCart` (
+    `ShoppingCartId` int NOT NULL AUTO_INCREMENT,
+    `TotalValue` double NOT NULL,
+    `ProductsCount` int NOT NULL DEFAULT 0,
+    `UserId` int NOT NULL,
+    CONSTRAINT `PK_ShoppingCart` PRIMARY KEY (`ShoppingCartId`),
+    CONSTRAINT `FK_ShoppingCart_User_UserId` FOREIGN KEY (`UserId`) REFERENCES `User` (`UserId`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `WorkDay` (
+    `WorkDayId` int NOT NULL AUTO_INCREMENT,
+    `EmployeeId` int NOT NULL,
+    `EmployeeName` varchar(80) CHARACTER SET utf8mb4 NOT NULL,
+    `StartDayTime` datetime(6) NOT NULL,
+    `FinishDayTime` datetime(6) NULL,
+    `NumberOfOrders` int NOT NULL DEFAULT 0,
+    `NumberOfCanceledOrders` int NOT NULL DEFAULT 0,
+    CONSTRAINT `PK_WorkDay` PRIMARY KEY (`WorkDayId`),
+    CONSTRAINT `FK_WorkDay_User_EmployeeId` FOREIGN KEY (`EmployeeId`) REFERENCES `User` (`UserId`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `LineItem` (
+    `LineItemId` int NOT NULL AUTO_INCREMENT,
+    `OrderId` int NOT NULL,
+    `ProductId` int NOT NULL,
+    `Amount` decimal(8,3) NOT NULL,
+    `Price` decimal(8,2) NOT NULL,
+    CONSTRAINT `PK_LineItem` PRIMARY KEY (`LineItemId`),
+    CONSTRAINT `FK_LineItem_Order_OrderId` FOREIGN KEY (`OrderId`) REFERENCES `Order` (`OrderId`) ON DELETE CASCADE,
+    CONSTRAINT `FK_LineItem_Product_ProductId` FOREIGN KEY (`ProductId`) REFERENCES `Product` (`ProductId`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `ShoppingCartProducts` (
+    `ShoppingCartId` int NOT NULL,
+    `ProductId` int NOT NULL,
+    `Checked` tinyint(1) NOT NULL DEFAULT TRUE,
+    `Amount` decimal(10,3) NOT NULL,
+    CONSTRAINT `PK_ShoppingCartProducts` PRIMARY KEY (`ProductId`, `ShoppingCartId`),
+    CONSTRAINT `FK_ShoppingCartProducts_Product_ProductId` FOREIGN KEY (`ProductId`) REFERENCES `Product` (`ProductId`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ShoppingCartProducts_ShoppingCart_ShoppingCartId` FOREIGN KEY (`ShoppingCartId`) REFERENCES `ShoppingCart` (`ShoppingCartId`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+INSERT INTO `Affiliate` (`AffiliateId`, `Discount`, `Name`)
+VALUES (1, 0.0, 'Nenhuma Afiliacao'),
+(3, 5.0, 'Duratex'),
+(4, 10.0, 'Teste');
+
+INSERT INTO `Category` (`CategoryId`, `ImageUrl`, `Name`)
+VALUES (1, 'carnes-bovinas.jpg', 'Carnes Bovinas'),
+(2, 'produtos-diversos.jpg', 'Produtos Diversos'),
+(3, 'aves.jpg', 'Aves'),
+(4, 'carnes-suinas.jpg', 'Carnes Suinas');
+
+INSERT INTO `Order` (`OrderId`, `Holder`, `Note`, `OrderDate`, `OrderStatus`, `TotalValue`, `UserId`)
+VALUES (7, 'Miguel Totti', NULL, TIMESTAMP '2024-09-30 08:33:16', 3, 83.49, NULL);
+
+INSERT INTO `Product` (`ProductId`, `CategoryId`, `Description`, `ImageUrl`, `Name`, `StockQuantity`, `TypeValue`, `Value`)
+VALUES (1, 2, 'Coca Cola 250ml garrafinha', 'coca-cola-250.jpg', 'Coca-Cola 250', 10, 2, 3.5),
+(2, 2, 'Pão Caseiro feito no dia', 'pao-caseiro.jpg', 'Pão Caseiro', 3, 2, 9.9),
+(3, 1, 'Picanha', 'picanha.jpg', 'Picanha', 5, 1, 69.99),
+(4, 2, 'TesteProduto', 'TesteProduto.jpg', 'Teste Produto', 10, 1, 10.0),
+(5, 3, 'Teste2Produto', 'Teste2.jpg', 'Teste2', 10, 2, 69.99);
+
+INSERT INTO `User` (`UserId`, `AffiliateId`, `Cpf`, `DateBirth`, `Email`, `Name`, `Password`, `Points`, `Role`)
+VALUES (1, 1, '111.111.111-11', DATE '0001-01-01', 'migueltotti2005@gmail.com', 'Miguel Totti de Oliveira', 'testemiguel', 0.0, 2),
+(2, 1, '222.222.222-22', DATE '0002-02-02', 'isadorapaludeto15@gmail.com', 'Isadora Leao Paludeto', 'testeisadora', 0.0, 2),
+(31, 1, '331.331.331-31', DATE '0003-03-03', 'testeadmin@gmail.com', 'TesteAdmin', 'testeadmin', 0.0, 2),
+(32, 1, '332.332.332-32', DATE '0003-03-03', 'testeemployee@gmail.com', 'TesteEmployee', 'testeemployee', 0.0, 1),
+(33, 1, '333.333.333-33', DATE '0003-03-03', 'testecustomer@gmail.com', 'TesteCustomer', 'testecustomer', 0.0, 0),
+(35, 3, '444.444.444-44', DATE '2024-09-20', 'TESTEAFILIACAO@gmail.com', 'TESTEAFILIACAO', 'TESTEAFaaaLIACAO213123@#@#', 0.0, 0),
+(36, 1, '777.777.777-77', DATE '2024-09-26', 'TesteUsuarioToken@gmail.com', 'TesteUsuarioToken', 'TesteToken1234@', 0.0, 0),
+(38, 1, '890.123.434-22', DATE '2024-09-27', 'testedeusercomrole@gmail.com', 'Teste de User com Role', 'Testeusserrole1@', 0.0, 1);
+
+INSERT INTO `Order` (`OrderId`, `Holder`, `Note`, `OrderDate`, `OrderStatus`, `TotalValue`, `UserId`)
+VALUES (1, '', '', TIMESTAMP '2024-09-19 15:50:45', 3, 10.0, 1),
+(2, '', 'Sem tomate', TIMESTAMP '2024-09-20 15:50:45', 2, 20.0, 2),
+(3, '', '', TIMESTAMP '2024-09-19 15:51:39', 1, 30.0, 1),
+(4, '', 'Cortado em tiras', TIMESTAMP '2024-09-19 15:53:36', 3, 40.0, 2),
+(5, '', '', TIMESTAMP '2024-09-20 17:47:58', 1, 0.0, 2),
+(6, '', 'Duplo', TIMESTAMP '2024-09-30 08:33:16', 3, 83.49, 2);
+
+INSERT INTO `LineItem` (`LineItemId`, `Amount`, `OrderId`, `Price`, `ProductId`)
+VALUES (1, 3.0, 1, 3.5, 1),
+(2, 1.0, 1, 9.9, 2);
+
+CREATE INDEX `IX_AspNetRoleClaims_RoleId` ON `AspNetRoleClaims` (`RoleId`);
+
+CREATE UNIQUE INDEX `RoleNameIndex` ON `AspNetRoles` (`NormalizedName`);
+
+CREATE INDEX `IX_AspNetUserClaims_UserId` ON `AspNetUserClaims` (`UserId`);
+
+CREATE INDEX `IX_AspNetUserLogins_UserId` ON `AspNetUserLogins` (`UserId`);
+
+CREATE INDEX `IX_AspNetUserRoles_RoleId` ON `AspNetUserRoles` (`RoleId`);
+
+CREATE INDEX `EmailIndex` ON `AspNetUsers` (`NormalizedEmail`);
+
+CREATE UNIQUE INDEX `UserNameIndex` ON `AspNetUsers` (`NormalizedUserName`);
+
+CREATE INDEX `IX_LineItem_OrderId` ON `LineItem` (`OrderId`);
+
+CREATE INDEX `IX_LineItem_ProductId` ON `LineItem` (`ProductId`);
+
+CREATE INDEX `IX_Order_UserId` ON `Order` (`UserId`);
+
+CREATE INDEX `IX_Product_CategoryId` ON `Product` (`CategoryId`);
+
+CREATE UNIQUE INDEX `IX_ShoppingCart_UserId` ON `ShoppingCart` (`UserId`);
+
+CREATE INDEX `IX_ShoppingCartProducts_ShoppingCartId` ON `ShoppingCartProducts` (`ShoppingCartId`);
+
+CREATE INDEX `IX_User_AffiliateId` ON `User` (`AffiliateId`);
+
+CREATE INDEX `IX_WorkDay_EmployeeId` ON `WorkDay` (`EmployeeId`);
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20250429225807_Initial Migration', '8.0.8');
+
+COMMIT;
+
+START TRANSACTION;
+
+DELETE FROM `Affiliate`
+WHERE `AffiliateId` = 4;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `LineItem`
+WHERE `LineItemId` = 1;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `LineItem`
+WHERE `LineItemId` = 2;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 2;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 3;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 4;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 5;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 6;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 7;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Product`
+WHERE `ProductId` = 4;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Product`
+WHERE `ProductId` = 5;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 31;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 32;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 33;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 35;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 36;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 38;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Affiliate`
+WHERE `AffiliateId` = 3;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `Order`
+WHERE `OrderId` = 1;
+SELECT ROW_COUNT();
+
+
+DELETE FROM `User`
+WHERE `UserId` = 2;
+SELECT ROW_COUNT();
+
+
+UPDATE `Affiliate` SET `Name` = 'Nenhuma Afiliação'
+WHERE `AffiliateId` = 1;
+SELECT ROW_COUNT();
+
+
+INSERT INTO `AspNetRoles` (`Id`, `ConcurrencyStamp`, `Name`, `NormalizedName`)
+VALUES ('8a19b5bc-91ed-4399-8953-046eb2e1de37', NULL, 'Customer', NULL),
+('a5d55a1d-a654-452d-a24a-6f69985c11e3', NULL, 'Admin', NULL),
+('b890f0aa-7486-4aa9-ba41-c76609a76476', NULL, 'Employee', NULL);
+
+UPDATE `Category` SET `ImageUrl` = 'bovinos.jpg', `Name` = 'Bonivos'
+WHERE `CategoryId` = 1;
+SELECT ROW_COUNT();
+
+
+UPDATE `Category` SET `ImageUrl` = 'suinos.jpg', `Name` = 'Suínos'
+WHERE `CategoryId` = 2;
+SELECT ROW_COUNT();
+
+
+UPDATE `Category` SET `ImageUrl` = 'diversos.jpg', `Name` = 'Diversos'
+WHERE `CategoryId` = 4;
+SELECT ROW_COUNT();
+
+
+UPDATE `User` SET `Cpf` = '000.000.000-00', `Email` = 'admin@gmail.com', `Name` = 'admin', `Password` = 'Z8L6b+2GT7wDLhVNt84f61Ubb1L15ovQZMV4FNEsFCNxUOqpuqMuuGuSaIw83AhKgLN3+jokPTBeutx8kyCny4miTf2AfDZq+7OGLIS4paIP+ehC7pnRBDHSRhXMVwmXsH/17hWjfyrC+pGdqLze/snvMsZIulVIMNl1C/bNf2s='
+WHERE `UserId` = 1;
+SELECT ROW_COUNT();
+
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20250429232749_Default Data', '8.0.8');
+
+COMMIT;
+
+START TRANSACTION;
+
+UPDATE `AspNetRoles` SET `ConcurrencyStamp` = 'b626c02b-4235-40b2-893c-d76a350746e7', `NormalizedName` = 'CUSTOMER'
+WHERE `Id` = '8a19b5bc-91ed-4399-8953-046eb2e1de37';
+SELECT ROW_COUNT();
+
+
+UPDATE `AspNetRoles` SET `ConcurrencyStamp` = '16bca873-8f31-4cb4-ba36-e614c7ac4aa1', `NormalizedName` = 'ADMIN'
+WHERE `Id` = 'a5d55a1d-a654-452d-a24a-6f69985c11e3';
+SELECT ROW_COUNT();
+
+
+UPDATE `AspNetRoles` SET `ConcurrencyStamp` = 'b4e347da-0a49-4c41-9fd9-57894a766584', `NormalizedName` = 'EMPLOYEE'
+WHERE `Id` = 'b890f0aa-7486-4aa9-ba41-c76609a76476';
+SELECT ROW_COUNT();
+
+
+INSERT INTO `AspNetUsers` (`Id`, `AccessFailedCount`, `ConcurrencyStamp`, `Email`, `EmailConfirmed`, `LockoutEnabled`, `LockoutEnd`, `NormalizedEmail`, `NormalizedUserName`, `PasswordHash`, `PhoneNumber`, `PhoneNumberConfirmed`, `RefreshToken`, `RefreshTokenExpiryTime`, `SecurityStamp`, `TwoFactorEnabled`, `UserName`)
+VALUES ('4de2810f-b57a-4aa0-b364-057c809160f9', 0, '19947c07-0772-45e5-8bce-7014b9ad8ac3', 'admin@gmail.com', FALSE, TRUE, NULL, 'ADMIN@GMAIL.COM', 'ADMIN-DMAAMM', 'AQAAAAIAAYagAAAAEEyRyv+ur5EUUt/0XE1Ptn12KryCQTpV1UEtn6sghOSd7bvnKIEPGUv94bMFvsIVeg==', NULL, FALSE, NULL, TIMESTAMP '2025-04-29 21:06:58', 'ee16ee52-93fe-4acf-8bb9-317cfadf63a9', FALSE, 'Admin-dmaamm');
+
+UPDATE `User` SET `Name` = 'Admin', `Password` = 'dHD+oA/Wkqs3YJ4JdWblRNFixjj8A2b2R4d+K2GNfKGhr7i56EwQ2YgFYcdbTAXFwnYEyjFjloYhCYcdiBJZOZpy/Q99ZDmk/fHTGOl3oTgQluSsV00wDwth1xaqVOsiuzG9YyNKeL1VdFTT1BW++Y3k3SxhC/niNC4od384zEU='
+WHERE `UserId` = 1;
+SELECT ROW_COUNT();
+
+
+INSERT INTO `AspNetUserRoles` (`RoleId`, `UserId`)
+VALUES ('a5d55a1d-a654-452d-a24a-6f69985c11e3', '4de2810f-b57a-4aa0-b364-057c809160f9');
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20250430000658_Default Data Ajust', '8.0.8');
+
+COMMIT;
+
+START TRANSACTION;
+
+UPDATE `AspNetRoles` SET `ConcurrencyStamp` = 'bf4a4cdf-108f-46b2-a153-f6b79f20a2da'
+WHERE `Id` = '8a19b5bc-91ed-4399-8953-046eb2e1de37';
+SELECT ROW_COUNT();
+
+
+UPDATE `AspNetRoles` SET `ConcurrencyStamp` = '35fbed1d-f043-483f-99f2-b0b3ce7ebbb0'
+WHERE `Id` = 'a5d55a1d-a654-452d-a24a-6f69985c11e3';
+SELECT ROW_COUNT();
+
+
+UPDATE `AspNetRoles` SET `ConcurrencyStamp` = 'f1cb4829-f5a5-4784-a752-f6aaefe91450'
+WHERE `Id` = 'b890f0aa-7486-4aa9-ba41-c76609a76476';
+SELECT ROW_COUNT();
+
+
+UPDATE `AspNetUsers` SET `RefreshTokenExpiryTime` = TIMESTAMP '2025-05-09 18:16:41', `SecurityStamp` = 'ec7a621a-4889-4b59-ab5b-4ce5f64e6b39'
+WHERE `Id` = '4de2810f-b57a-4aa0-b364-057c809160f9';
+SELECT ROW_COUNT();
+
+
+UPDATE `Category` SET `Name` = 'Bovinos'
+WHERE `CategoryId` = 1;
+SELECT ROW_COUNT();
+
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20250509211643_Fix Default Table Data', '8.0.8');
+
+COMMIT;
+
