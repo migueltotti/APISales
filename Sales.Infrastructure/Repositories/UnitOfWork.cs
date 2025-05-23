@@ -6,7 +6,7 @@ using Sales.Infrastructure.Cache;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class UnitOfWork(MergeDbContext context, IDistributedCache distributedCache) : IUnitOfWork
+public class UnitOfWork(SalesDbContext context, IDistributedCache distributedCache) : IUnitOfWork
 {
     private IUserRepository? _userRepository;
     private ICategoryRepository? _categoryRepository;

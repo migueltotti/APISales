@@ -6,7 +6,7 @@ namespace Sales.Infrastructure.Repositories;
 
 public class ProductRepository : Repository<Product>, IProductRepository
 {
-    public ProductRepository(MergeDbContext context) : base(context)
+    public ProductRepository(SalesDbContext context) : base(context)
     {
     }
 

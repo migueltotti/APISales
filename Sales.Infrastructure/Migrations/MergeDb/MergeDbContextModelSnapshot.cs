@@ -10,7 +10,7 @@ using Sales.Infrastructure.Context;
 
 namespace Sales.Infrastructure.Migrations.MergeDb
 {
-    [DbContext(typeof(MergeDbContext))]
+    [DbContext(typeof(SalesDbContext))]
     partial class MergeDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

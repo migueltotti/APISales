@@ -11,7 +11,7 @@ using Sales.Infrastructure.Context;
 
 namespace Sales.Infrastructure.Migrations.MergeDb
 {
-    [DbContext(typeof(MergeDbContext))]
+    [DbContext(typeof(SalesDbContext))]
     [Migration("20250430000658_Default Data Ajust")]
     partial class DefaultDataAjust
     {

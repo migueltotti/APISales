@@ -5,7 +5,7 @@ using Sales.Domain.Models;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class UserRepository(MergeDbContext context) : Repository<User>(context), IUserRepository
+public class UserRepository(SalesDbContext context) : Repository<User>(context), IUserRepository
 {
     public async Task<User?> GetByIdAsync(int id)
     {

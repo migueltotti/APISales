@@ -4,7 +4,7 @@ using Sales.Domain.Interfaces;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class CategoryRepository(MergeDbContext context) : Repository<Category>(context), ICategoryRepository
+public class CategoryRepository(SalesDbContext context) : Repository<Category>(context), ICategoryRepository
 {
     public async Task<Category?> GetByIdAsync(int id)
     {
