@@ -26,10 +26,5 @@ public class LineItemConfiguration : IEntityTypeConfiguration<LineItem>
         builder.HasOne(li => li.Order)
             .WithMany(o => o.LineItems)
             .HasForeignKey(li => li.OrderId);
-
-        builder.HasData(
-            new LineItem(1, 1, 1, 3, 3.5m),
-            new LineItem(2, 1, 2, 1, 9.9m)
-        );
     }
 }

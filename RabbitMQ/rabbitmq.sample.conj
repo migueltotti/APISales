@@ -1,0 +1,6 @@
+# rabbitmq.conf
+# set the appropriate configuration for memory, default user and password 
+vm_memory_high_watermark.relative = PERCENTAGE_OF_MEMORY_FOR_WATERMARK_EX_0.3_EQUALS_30%
+loopback_users.guest = YES_OR_NO_TO_KEEP_USER_GUEST
+default_user = YOUR_DEFAULT_USER_NAME
+default_pass = YOUR_DEFAULT_USER_PASSWORD

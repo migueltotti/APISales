@@ -136,7 +136,7 @@ public class UsersController(IUserService _service,
 
     // Users unauthorized can create a User
     
-    [HttpPost("RSA/Encrypt")]
+    /*[HttpPost("RSA/Encrypt")]
     public ActionResult Encrypt([FromBody] string value)
     {
         return Ok(_encryptService.Encrypt(value));
@@ -145,7 +145,7 @@ public class UsersController(IUserService _service,
     public ActionResult Decrypt([FromBody] string valueIn64)
     {
         return Ok(_encryptService.Decrypt(valueIn64));
-    }
+    }*/
     
     [HttpPost]
     public async Task<ActionResult<UserDTOOutput>> Post(UserDTOInput userDtoInput)

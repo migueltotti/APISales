@@ -20,7 +20,10 @@ public class Program
     public static void Main(string[] args)
     {
         // Load env_variables values from .env file
-        DotEnv.Load();
+        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+        {
+            DotEnv.Load();
+        }
         
         var builder = WebApplication.CreateBuilder(args);
         
@@ -73,7 +76,7 @@ public class Program
         // IMPORTANT!!!
         // AddInfrastructure() must come before AddAuthentication
         // `cause the service AddIdentity<>()... has to be set before the AddAuthentication
-        var secretKey = builder.Configuration["SECRET_KEY"]
+        var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY")
                         ?? throw new ArgumentNullException("Invalid SecretKey!");
 
         builder.Services.AddAuthentication(options =>

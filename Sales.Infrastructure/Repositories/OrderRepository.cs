@@ -10,7 +10,7 @@ namespace Sales.Infrastructure.Repositories;
 
 public class OrderRepository : Repository<Order>, IOrderRepository
 {
-    public OrderRepository(TestDbContext context) : base(context)
+    public OrderRepository(SalesDbContext context) : base(context)
     {
     }
 

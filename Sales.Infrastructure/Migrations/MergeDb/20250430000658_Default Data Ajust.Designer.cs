@@ -9,11 +9,11 @@ using Sales.Infrastructure.Context;
 
 #nullable disable
 
-namespace Sales.Infrastructure.Migrations.TesteMigrations
+namespace Sales.Infrastructure.Migrations.MergeDb
 {
-    [DbContext(typeof(TestDbContext))]
-    [Migration("20250329220339_add WorkDay entity")]
-    partial class addWorkDayentity
+    [DbContext(typeof(SalesDbContext))]
+    [Migration("20250430000658_Default Data Ajust")]
+    partial class DefaultDataAjust
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,168 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "a5d55a1d-a654-452d-a24a-6f69985c11e3",
+                            ConcurrencyStamp = "16bca873-8f31-4cb4-ba36-e614c7ac4aa1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "b890f0aa-7486-4aa9-ba41-c76609a76476",
+                            ConcurrencyStamp = "b4e347da-0a49-4c41-9fd9-57894a766584",
+                            Name = "Employee",
+                            NormalizedName = "EMPLOYEE"
+                        },
+                        new
+                        {
+                            Id = "8a19b5bc-91ed-4399-8953-046eb2e1de37",
+                            ConcurrencyStamp = "b626c02b-4235-40b2-893c-d76a350746e7",
+                            Name = "Customer",
+                            NormalizedName = "CUSTOMER"
+                        });
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "4de2810f-b57a-4aa0-b364-057c809160f9",
+                            RoleId = "a5d55a1d-a654-452d-a24a-6f69985c11e3"
+                        });
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
 
             modelBuilder.Entity("Sales.Domain.Models.Affiliate", b =>
                 {
@@ -51,19 +213,7 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                         {
                             AffiliateId = 1,
                             Discount = 0.00m,
-                            Name = "Nenhuma Afiliacao"
-                        },
-                        new
-                        {
-                            AffiliateId = 3,
-                            Discount = 5.00m,
-                            Name = "Duratex"
-                        },
-                        new
-                        {
-                            AffiliateId = 4,
-                            Discount = 10.00m,
-                            Name = "Teste"
+                            Name = "Nenhuma Afiliação"
                         });
                 });
 
@@ -92,14 +242,14 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                         new
                         {
                             CategoryId = 1,
-                            ImageUrl = "carnes-bovinas.jpg",
-                            Name = "Carnes Bovinas"
+                            ImageUrl = "bovinos.jpg",
+                            Name = "Bonivos"
                         },
                         new
                         {
                             CategoryId = 2,
-                            ImageUrl = "produtos-diversos.jpg",
-                            Name = "Produtos Diversos"
+                            ImageUrl = "suinos.jpg",
+                            Name = "Suínos"
                         },
                         new
                         {
@@ -110,8 +260,8 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                         new
                         {
                             CategoryId = 4,
-                            ImageUrl = "carnes-suinas.jpg",
-                            Name = "Carnes Suinas"
+                            ImageUrl = "diversos.jpg",
+                            Name = "Diversos"
                         });
                 });
 
@@ -144,24 +294,6 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("LineItem", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            LineItemId = 1,
-                            Amount = 3m,
-                            OrderId = 1,
-                            Price = 3.5m,
-                            ProductId = 1
-                        },
-                        new
-                        {
-                            LineItemId = 2,
-                            Amount = 1m,
-                            OrderId = 1,
-                            Price = 9.9m,
-                            ProductId = 2
-                        });
                 });
 
             modelBuilder.Entity("Sales.Domain.Models.Order", b =>
@@ -198,76 +330,6 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Order", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            OrderId = 1,
-                            Holder = "",
-                            Note = "",
-                            OrderDate = new DateTime(2024, 9, 19, 15, 50, 45, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 3,
-                            TotalValue = 10.00m,
-                            UserId = 1
-                        },
-                        new
-                        {
-                            OrderId = 2,
-                            Holder = "",
-                            Note = "Sem tomate",
-                            OrderDate = new DateTime(2024, 9, 20, 15, 50, 45, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 2,
-                            TotalValue = 20.00m,
-                            UserId = 2
-                        },
-                        new
-                        {
-                            OrderId = 3,
-                            Holder = "",
-                            Note = "",
-                            OrderDate = new DateTime(2024, 9, 19, 15, 51, 39, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 1,
-                            TotalValue = 30.00m,
-                            UserId = 1
-                        },
-                        new
-                        {
-                            OrderId = 4,
-                            Holder = "",
-                            Note = "Cortado em tiras",
-                            OrderDate = new DateTime(2024, 9, 19, 15, 53, 36, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 3,
-                            TotalValue = 40.00m,
-                            UserId = 2
-                        },
-                        new
-                        {
-                            OrderId = 5,
-                            Holder = "",
-                            Note = "",
-                            OrderDate = new DateTime(2024, 9, 20, 17, 47, 58, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 1,
-                            TotalValue = 0.00m,
-                            UserId = 2
-                        },
-                        new
-                        {
-                            OrderId = 6,
-                            Holder = "",
-                            Note = "Duplo",
-                            OrderDate = new DateTime(2024, 9, 30, 8, 33, 16, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 3,
-                            TotalValue = 83.49m,
-                            UserId = 2
-                        },
-                        new
-                        {
-                            OrderId = 7,
-                            Holder = "Miguel Totti",
-                            OrderDate = new DateTime(2024, 9, 30, 8, 33, 16, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 3,
-                            TotalValue = 83.49m
-                        });
                 });
 
             modelBuilder.Entity("Sales.Domain.Models.Product", b =>
@@ -345,28 +407,6 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                             Name = "Picanha",
                             StockQuantity = 5,
                             TypeValue = 1,
-                            Value = 69.99m
-                        },
-                        new
-                        {
-                            ProductId = 4,
-                            CategoryId = 2,
-                            Description = "TesteProduto",
-                            ImageUrl = "TesteProduto.jpg",
-                            Name = "Teste Produto",
-                            StockQuantity = 10,
-                            TypeValue = 1,
-                            Value = 10.00m
-                        },
-                        new
-                        {
-                            ProductId = 5,
-                            CategoryId = 3,
-                            Description = "Teste2Produto",
-                            ImageUrl = "Teste2.jpg",
-                            Name = "Teste2",
-                            StockQuantity = 10,
-                            TypeValue = 2,
                             Value = 69.99m
                         });
                 });
@@ -474,97 +514,13 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                         {
                             UserId = 1,
                             AffiliateId = 1,
-                            Cpf = "111.111.111-11",
+                            Cpf = "000.000.000-00",
                             DateBirth = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "migueltotti2005@gmail.com",
-                            Name = "Miguel Totti de Oliveira",
-                            Password = "testemiguel",
+                            Email = "admin@gmail.com",
+                            Name = "Admin",
+                            Password = "dHD+oA/Wkqs3YJ4JdWblRNFixjj8A2b2R4d+K2GNfKGhr7i56EwQ2YgFYcdbTAXFwnYEyjFjloYhCYcdiBJZOZpy/Q99ZDmk/fHTGOl3oTgQluSsV00wDwth1xaqVOsiuzG9YyNKeL1VdFTT1BW++Y3k3SxhC/niNC4od384zEU=",
                             Points = 0.00m,
                             Role = 2
-                        },
-                        new
-                        {
-                            UserId = 2,
-                            AffiliateId = 1,
-                            Cpf = "222.222.222-22",
-                            DateBirth = new DateTime(2, 2, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "isadorapaludeto15@gmail.com",
-                            Name = "Isadora Leao Paludeto",
-                            Password = "testeisadora",
-                            Points = 0.00m,
-                            Role = 2
-                        },
-                        new
-                        {
-                            UserId = 31,
-                            AffiliateId = 1,
-                            Cpf = "331.331.331-31",
-                            DateBirth = new DateTime(3, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "testeadmin@gmail.com",
-                            Name = "TesteAdmin",
-                            Password = "testeadmin",
-                            Points = 0.00m,
-                            Role = 2
-                        },
-                        new
-                        {
-                            UserId = 32,
-                            AffiliateId = 1,
-                            Cpf = "332.332.332-32",
-                            DateBirth = new DateTime(3, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "testeemployee@gmail.com",
-                            Name = "TesteEmployee",
-                            Password = "testeemployee",
-                            Points = 0.00m,
-                            Role = 1
-                        },
-                        new
-                        {
-                            UserId = 33,
-                            AffiliateId = 1,
-                            Cpf = "333.333.333-33",
-                            DateBirth = new DateTime(3, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "testecustomer@gmail.com",
-                            Name = "TesteCustomer",
-                            Password = "testecustomer",
-                            Points = 0.00m,
-                            Role = 0
-                        },
-                        new
-                        {
-                            UserId = 35,
-                            AffiliateId = 3,
-                            Cpf = "444.444.444-44",
-                            DateBirth = new DateTime(2024, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "TESTEAFILIACAO@gmail.com",
-                            Name = "TESTEAFILIACAO",
-                            Password = "TESTEAFaaaLIACAO213123@#@#",
-                            Points = 0.00m,
-                            Role = 0
-                        },
-                        new
-                        {
-                            UserId = 36,
-                            AffiliateId = 1,
-                            Cpf = "777.777.777-77",
-                            DateBirth = new DateTime(2024, 9, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "TesteUsuarioToken@gmail.com",
-                            Name = "TesteUsuarioToken",
-                            Password = "TesteToken1234@",
-                            Points = 0.00m,
-                            Role = 0
-                        },
-                        new
-                        {
-                            UserId = 38,
-                            AffiliateId = 1,
-                            Cpf = "890.123.434-22",
-                            DateBirth = new DateTime(2024, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "testedeusercomrole@gmail.com",
-                            Name = "Teste de User com Role",
-                            Password = "Testeusserrole1@",
-                            Points = 0.00m,
-                            Role = 1
                         });
                 });
 
@@ -584,7 +540,7 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                         .HasMaxLength(80)
                         .HasColumnType("varchar(80)");
 
-                    b.Property<DateTime>("FinishDayTime")
+                    b.Property<DateTime?>("FinishDayTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("NumberOfCanceledOrders")
@@ -605,6 +561,146 @@ namespace Sales.Infrastructure.Migrations.TesteMigrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("WorkDay", (string)null);
+                });
+
+            modelBuilder.Entity("Sales.Infrastructure.Identity.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "4de2810f-b57a-4aa0-b364-057c809160f9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "19947c07-0772-45e5-8bce-7014b9ad8ac3",
+                            Email = "admin@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = true,
+                            NormalizedEmail = "ADMIN@GMAIL.COM",
+                            NormalizedUserName = "ADMIN-DMAAMM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEyRyv+ur5EUUt/0XE1Ptn12KryCQTpV1UEtn6sghOSd7bvnKIEPGUv94bMFvsIVeg==",
+                            PhoneNumberConfirmed = false,
+                            RefreshTokenExpiryTime = new DateTime(2025, 4, 29, 21, 6, 58, 149, DateTimeKind.Local).AddTicks(3992),
+                            SecurityStamp = "ee16ee52-93fe-4acf-8bb9-317cfadf63a9",
+                            TwoFactorEnabled = false,
+                            UserName = "Admin-dmaamm"
+                        });
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Sales.Domain.Models.LineItem", b =>

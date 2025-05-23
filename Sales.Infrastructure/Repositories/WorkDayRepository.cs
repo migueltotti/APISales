@@ -7,7 +7,7 @@ namespace Sales.Infrastructure.Repositories;
 
 public class WorkDayRepository : Repository<WorkDay>, IWorkDayRepository
 {
-    public WorkDayRepository(TestDbContext context) : base(context)
+    public WorkDayRepository(SalesDbContext context) : base(context)
     {
     }
 

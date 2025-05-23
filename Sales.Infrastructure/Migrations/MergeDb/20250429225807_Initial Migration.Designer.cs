@@ -9,11 +9,11 @@ using Sales.Infrastructure.Context;
 
 #nullable disable
 
-namespace Sales.Infrastructure.Migrations.MySQLMigrations
+namespace Sales.Infrastructure.Migrations.MergeDb
 {
     [DbContext(typeof(SalesDbContext))]
-    [Migration("20241121134023_Shopping Cart Ajustments")]
-    partial class ShoppingCartAjustments
+    [Migration("20250429225807_Initial Migration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,19 +25,136 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("OrderProduct", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
-                    b.Property<int>("OrdersOrderId")
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("ProductsProductId")
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.HasKey("OrdersOrderId", "ProductsProductId");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.HasIndex("ProductsProductId");
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
 
-                    b.ToTable("OrderProduct");
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("Sales.Domain.Models.Affiliate", b =>
@@ -130,6 +247,55 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         });
                 });
 
+            modelBuilder.Entity("Sales.Domain.Models.LineItem", b =>
+                {
+                    b.Property<int>("LineItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("LineItemId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(8, 3)
+                        .HasColumnType("decimal(8,3)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LineItemId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("LineItem", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            LineItemId = 1,
+                            Amount = 3m,
+                            OrderId = 1,
+                            Price = 3.5m,
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            LineItemId = 2,
+                            Amount = 1m,
+                            OrderId = 1,
+                            Price = 9.9m,
+                            ProductId = 2
+                        });
+                });
+
             modelBuilder.Entity("Sales.Domain.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -137,6 +303,14 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("OrderId"));
+
+                    b.Property<string>("Holder")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime");
@@ -148,7 +322,7 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("OrderId");
@@ -161,6 +335,8 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         new
                         {
                             OrderId = 1,
+                            Holder = "",
+                            Note = "",
                             OrderDate = new DateTime(2024, 9, 19, 15, 50, 45, 0, DateTimeKind.Unspecified),
                             OrderStatus = 3,
                             TotalValue = 10.00m,
@@ -169,14 +345,18 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         new
                         {
                             OrderId = 2,
+                            Holder = "",
+                            Note = "Sem tomate",
                             OrderDate = new DateTime(2024, 9, 20, 15, 50, 45, 0, DateTimeKind.Unspecified),
-                            OrderStatus = 3,
+                            OrderStatus = 2,
                             TotalValue = 20.00m,
                             UserId = 2
                         },
                         new
                         {
                             OrderId = 3,
+                            Holder = "",
+                            Note = "",
                             OrderDate = new DateTime(2024, 9, 19, 15, 51, 39, 0, DateTimeKind.Unspecified),
                             OrderStatus = 1,
                             TotalValue = 30.00m,
@@ -185,6 +365,8 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         new
                         {
                             OrderId = 4,
+                            Holder = "",
+                            Note = "Cortado em tiras",
                             OrderDate = new DateTime(2024, 9, 19, 15, 53, 36, 0, DateTimeKind.Unspecified),
                             OrderStatus = 3,
                             TotalValue = 40.00m,
@@ -193,6 +375,8 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         new
                         {
                             OrderId = 5,
+                            Holder = "",
+                            Note = "",
                             OrderDate = new DateTime(2024, 9, 20, 17, 47, 58, 0, DateTimeKind.Unspecified),
                             OrderStatus = 1,
                             TotalValue = 0.00m,
@@ -201,10 +385,20 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         new
                         {
                             OrderId = 6,
+                            Holder = "",
+                            Note = "Duplo",
                             OrderDate = new DateTime(2024, 9, 30, 8, 33, 16, 0, DateTimeKind.Unspecified),
                             OrderStatus = 3,
                             TotalValue = 83.49m,
                             UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 7,
+                            Holder = "Miguel Totti",
+                            OrderDate = new DateTime(2024, 9, 30, 8, 33, 16, 0, DateTimeKind.Unspecified),
+                            OrderStatus = 3,
+                            TotalValue = 83.49m
                         });
                 });
 
@@ -506,28 +700,190 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                         });
                 });
 
-            modelBuilder.Entity("OrderProduct", b =>
+            modelBuilder.Entity("Sales.Domain.Models.WorkDay", b =>
                 {
-                    b.HasOne("Sales.Domain.Models.Order", null)
+                    b.Property<int>("WorkDayId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("WorkDayId"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmployeeName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<DateTime?>("FinishDayTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("NumberOfCanceledOrders")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("NumberOfOrders")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("StartDayTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("WorkDayId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("WorkDay", (string)null);
+                });
+
+            modelBuilder.Entity("Sales.Infrastructure.Identity.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
-                        .HasForeignKey("OrdersOrderId")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sales.Domain.Models.Product", null)
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
-                        .HasForeignKey("ProductsProductId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Sales.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sales.Domain.Models.LineItem", b =>
+                {
+                    b.HasOne("Sales.Domain.Models.Order", "Order")
+                        .WithMany("LineItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sales.Domain.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Sales.Domain.Models.Order", b =>
                 {
                     b.HasOne("Sales.Domain.Models.User", "User")
                         .WithMany("Orders")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
@@ -580,6 +936,17 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                     b.Navigation("Affiliate");
                 });
 
+            modelBuilder.Entity("Sales.Domain.Models.WorkDay", b =>
+                {
+                    b.HasOne("Sales.Domain.Models.User", "Employee")
+                        .WithMany("WorkDays")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("Sales.Domain.Models.Affiliate", b =>
                 {
                     b.Navigation("Users");
@@ -590,9 +957,16 @@ namespace Sales.Infrastructure.Migrations.MySQLMigrations
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("Sales.Domain.Models.Order", b =>
+                {
+                    b.Navigation("LineItems");
+                });
+
             modelBuilder.Entity("Sales.Domain.Models.User", b =>
                 {
                     b.Navigation("Orders");
+
+                    b.Navigation("WorkDays");
                 });
 #pragma warning restore 612, 618
         }
