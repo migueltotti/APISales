@@ -131,10 +131,10 @@ public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRep
     {
         var rowsAffected = await _context.Database.ExecuteSqlAsync(
             $"""
-              UPDATE shoppingcartproducts s
-              SET checked = 1
-              WHERE s.shoppingcartid = {shoppingCartProduct.ShoppingCartId}
-              AND s.productid = {shoppingCartProduct.ProductId};
+              UPDATE ShoppingCartProducts s
+              SET Checked = 1
+              WHERE s.ShoppingCartId = {shoppingCartProduct.ShoppingCartId}
+              AND s.Productid = {shoppingCartProduct.ProductId};
               """
         );
 
@@ -145,10 +145,10 @@ public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRep
     {
         var rowsAffected = await _context.Database.ExecuteSqlAsync(
             $"""
-             UPDATE shoppingcartproducts s
-             SET checked = 0
-             WHERE s.shoppingcartid = {shoppingCartProduct.ShoppingCartId}
-               AND s.productid = {shoppingCartProduct.ProductId};
+             UPDATE ShoppingCartProducts s
+             SET Checked = 0
+             WHERE s.ShoppingCartId = {shoppingCartProduct.ShoppingCartId}
+               AND s.ProductId = {shoppingCartProduct.ProductId};
              """
         );
 
@@ -159,10 +159,10 @@ public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRep
     {
         var rowsAffected = await _context.Database.ExecuteSqlAsync(
             $"""
-             UPDATE shoppingcartproducts s
-             SET amount = {shoppingCartProduct.Amount}
-             WHERE s.shoppingCartId = {shoppingCartProduct.ShoppingCartId}
-               AND s.productId = {shoppingCartProduct.ProductId};
+             UPDATE ShoppingCartProducts s
+             SET Amount = {shoppingCartProduct.Amount}
+             WHERE s.ShoppingCartId = {shoppingCartProduct.ShoppingCartId}
+               AND s.ProductId = {shoppingCartProduct.ProductId};
              """
         );
 

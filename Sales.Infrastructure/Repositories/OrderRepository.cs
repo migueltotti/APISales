@@ -70,9 +70,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         var orders = _context.Orders.FromSqlInterpolated(
             $""""
              SELECT o.* 
-             FROM `order` o
-             JOIN lineitem li ON li.OrderId = o.OrderId 
-             JOIN product p ON p.ProductId = li.ProductId
+             FROM `Order` o
+             JOIN LineItem li ON li.OrderId = o.OrderId 
+             JOIN Product p ON p.ProductId = li.ProductId
              WHERE p.Name LIKE (concat('%', {productName}, '%'));
              """"
         );
@@ -84,9 +84,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         var products = _context.Products.FromSqlInterpolated(
             $"""
                  SELECT p.ProductId, p.Name, p.Description, p.Value, p.TypeValue, p.ImageUrl, p.StockQuantity, p.CategoryId
-                 FROM `order` o
-                 JOIN lineitem li On li.OrderId = o.OrderId
-                 JOIN product p ON li.ProductId = p.ProductId
+                 FROM `Order` o
+                 JOIN LineItem li On li.OrderId = o.OrderId
+                 JOIN Product p ON li.ProductId = p.ProductId
                  WHERE o.OrderDate >= {minDate} AND  o.OrderDate <= {maxDate}
               """);
         
@@ -98,8 +98,8 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         var orders = _context.Orders.FromSqlInterpolated(
             $"""
                SELECT o.*
-               FROM `order` o
-               JOIN `user` u On u.UserId = o.UserId
+               FROM `Order` o
+               JOIN `User` u On u.UserId = o.UserId
                WHERE u.AffiliateId = {affiliateId}
             """);
 
@@ -140,9 +140,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         var products = _context.Products.FromSqlInterpolated(
             $"""
              SELECT p.* 
-             FROM product p
-             JOIN lineitem li ON li.ProductId = p.ProductId
-             JOIN `order` o ON o.OrderId = li.OrderId
+             FROM Product p
+             JOIN LineItem li ON li.ProductId = p.ProductId
+             JOIN `Order` o ON o.OrderId = li.OrderId
              WHERE o.OrderId = {orderId}
              """).AsNoTracking();
         

@@ -151,6 +151,14 @@ public class Program
         builder.Host.UseSerilog((context, configuration) => 
             configuration.ReadFrom.Configuration(context.Configuration));
 
+        /*builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(443, listenOptions =>
+            {
+                listenOptions.UseHttps("/https/cert.pfx", Environment.GetEnvironmentVariable("CERT_PASSWD"));
+            });
+        });*/
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

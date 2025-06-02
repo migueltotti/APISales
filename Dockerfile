@@ -21,5 +21,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENV ASPNETCORE_HTTP_PORTS=80
+#ENV ASPNETCORE_HTTP_PORTS=443
 EXPOSE 80
+#EXPOSE 443
 ENTRYPOINT ["dotnet", "Sales.API.dll"]
